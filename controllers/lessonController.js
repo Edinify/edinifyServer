@@ -240,9 +240,16 @@ export const updateLessonInMainPanel = async (req, res) => {
 
   try {
     if (role === "student") {
+      const newStudentInfo = req.body?.students[0];
       const updatedLesson = await Lesson.findOneAndUpdate(
         { _id: id, "students.student": req.user.id },
-        { $set: { "students.$.attendance": req.body.students[0].attendance } },
+        {
+          $set: {
+            "students.$.attendance": newStudentInfo.attendance,
+            "students.$.ratingByStudent": newStudentInfo.ratingByStudent,
+            "students.$.noteByStudent": newStudentInfo.noteByStudent,
+          },
+        },
         { new: true }
       ).populate("teacher course students.student");
 
