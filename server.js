@@ -24,7 +24,6 @@ import {
 import cron from "node-cron";
 
 dotenv.config();
-// 
 const app = express();
 const port = process.env.PORT;
 const uri = process.env.DB_URI;
