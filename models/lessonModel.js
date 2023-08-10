@@ -39,6 +39,14 @@ const lessonSchema = new Schema(
             type: Number,
             default: 0,
           },
+          ratingByStudent: {
+            type: Number,
+            default: 0,
+          },
+          noteByStudent: {
+            type: String,
+            default: "",
+          },
         },
       ],
       required: true,

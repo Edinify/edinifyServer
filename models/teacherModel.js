@@ -62,6 +62,10 @@ const teacherSchema = new Schema(
       enum: ["AZ", "RU", "EN"],
       required: true,
     },
+    birthday: {
+      type: Date,
+      required: true,
+    },
     otp: Number,
   },
   { timestamps: true }
