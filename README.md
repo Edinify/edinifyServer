@@ -1,2 +1,2 @@
-# edinifyServer
-edinify server  production for enteskedu
+# Entesk_crm
+main crm server 
