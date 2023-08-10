@@ -54,7 +54,7 @@ app.use("/api/demo", demoSmtpRoutes);
 app.use("/api/expense", expenseRoutes);
 
 app.get("/", (req, res) => {
-  res.send("salam");
+  res.send("hello");
 });
 
 mongoose
