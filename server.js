@@ -62,10 +62,10 @@ mongoose
     console.log("connected database");
     app.listen(port, () => {
       console.log(`listen server at ${port}`);
-      cron.schedule("0 0 * * *", () => {
-        createNotificationForBirthday();
-        deleteNotificationsForBirthday();
-      });
+      // cron.schedule("0 0 * * *", () => {
+      //   createNotificationForBirthday();
+      //   deleteNotificationsForBirthday();
+      // });
     });
   })
   .catch((err) => console.log(err));
