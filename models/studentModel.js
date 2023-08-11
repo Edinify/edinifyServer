@@ -8,7 +8,11 @@ const studentSchema = new Schema(
       type: String,
       required: true,
     },
-    parentName: {
+    motherName: {
+      type: String,
+      required: true,
+    },
+    fatherName: {
       type: String,
       required: true,
     },
@@ -25,7 +29,11 @@ const studentSchema = new Schema(
       type: Date,
       required: true,
     },
-    phone: {
+    motherPhone: {
+      type: String,
+      required: true,
+    },
+    fatherPhone: {
       type: String,
       required: true,
     },
