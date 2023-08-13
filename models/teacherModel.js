@@ -58,7 +58,7 @@ const teacherSchema = new Schema(
       required: true,
     },
     sector: {
-      type: String,
+      type: Boolean,
       enum: ["AZ", "RU", "EN"],
       required: true,
     },
