@@ -50,9 +50,9 @@ const studentSchema = new Schema(
       required: true,
     },
     sector: {
-      type: String,
-      enum: ["AZ", "RU", "EN"],
-      required: true,
+      az: Boolean,
+      en: Boolean,
+      ru: Boolean,
     },
     courses: [
       {
