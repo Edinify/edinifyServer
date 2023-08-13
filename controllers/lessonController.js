@@ -88,7 +88,11 @@ export const getWeeklyLessonsForCurrentTable = async (req, res) => {
   const { teacherId } = req.query;
   const currentDate = new Date();
   const startWeek = new Date(
-    currentDate.setDate(currentDate.getDate() - currentDate.getDay() + 1)
+    currentDate.setDate(
+      currentDate.getDate() -
+        (currentDate.getDay() === 0 ? 7 : currentDate.getDay()) +
+        1
+    )
   );
   const endWeek = new Date(currentDate.setDate(currentDate.getDate() + 6));
 
@@ -114,10 +118,6 @@ export const getWeeklyLessonsForCurrentTable = async (req, res) => {
     res.status(500).json({ message: { error: err.message } });
   }
 };
-
-const startWeek = new Date();
-
-startWeek.setDate(startWeek.getDate() - startWeek.getDay() + 1);
 
 // Get weekly lessons for main panel
 export const getWeeklyLessonsForMainPanel = async (req, res) => {
