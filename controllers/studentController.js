@@ -77,6 +77,7 @@ export const getStudentsByCourseId = async (req, res) => {
     const students = await Student.find({
       courses: courseId,
       lessonAmount: { $gt: 0 },
+      status: true,
     });
 
     const newStudents = await Promise.all(

@@ -54,6 +54,10 @@ const studentSchema = new Schema(
       en: Boolean,
       ru: Boolean,
     },
+    whereFrom: {
+      type: String,
+      required: true,
+    },
     courses: [
       {
         type: mongoose.Schema.Types.ObjectId,
