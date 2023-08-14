@@ -122,7 +122,6 @@ export const getStudentsByCourseId = async (req, res) => {
 export const updateStudent = async (req, res) => {
   const { id } = req.params;
   let updatedData = req.body;
-  console.log(req.body);
 
   try {
     const existingStudent = await Student.findOne({ email: updatedData.email });

@@ -370,14 +370,29 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
     });
 
     const currentWeekStart = new Date();
+    const currentWeekEnd = new Date();
 
     currentWeekStart.setDate(
       currentWeekStart.getDate() -
         (currentWeekStart.getDay() === 0 ? 7 : currentWeekStart.getDay()) +
         1
     );
+    currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
 
-    console.log(currentWeekStart, "---");
+    currentWeekStart.setHours(0, 0, 0, 0);
+    currentWeekEnd.setHours(23, 59, 59, 999);
+
+    const checkCurrentWeeklyLessons = await Lesson.countDocuments({
+      date: {
+        $gte: currentWeekStart,
+        $lte: currentWeekEnd,
+      },
+    });
+
+    if (checkCurrentWeeklyLessons > 0) {
+      return res.status(400).json({ message: "already create current table" });
+    }
+
     const currentTableData = await Promise.all(
       mainTableData.map(async (data) => {
         const date = new Date(currentWeekStart);
