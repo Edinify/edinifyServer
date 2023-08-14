@@ -30,7 +30,7 @@ const uri = process.env.DB_URI;
 
 app.use(
   cors({
-    origin: "https://victorious-wave-0a146e20f.3.azurestaticapps.net/",
+    origin: "*",
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],
     exposedHeaders: ["Content-Type"],
