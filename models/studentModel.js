@@ -55,8 +55,8 @@ const studentSchema = new Schema(
       ru: Boolean,
     },
     whereFrom: {
-      type: String,
-      required: true,
+      mainArea: String,
+      part: String
     },
     courses: [
       {
