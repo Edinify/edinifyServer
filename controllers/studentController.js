@@ -119,6 +119,7 @@ export const getStudentsByCourseId = async (req, res) => {
 };
 
 // Update student
+
 export const updateStudent = async (req, res) => {
   const { id } = req.params;
   let updatedData = req.body;
