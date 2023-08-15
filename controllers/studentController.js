@@ -77,6 +77,7 @@ export const getStudentsByCourseId = async (req, res) => {
     const students = await Student.find({
       courses: courseId,
       lessonAmount: { $gt: 0 },
+      status: true,
     });
 
     const newStudents = await Promise.all(
@@ -118,10 +119,10 @@ export const getStudentsByCourseId = async (req, res) => {
 };
 
 // Update student
+
 export const updateStudent = async (req, res) => {
   const { id } = req.params;
   let updatedData = req.body;
-  console.log(req.body);
 
   try {
     const existingStudent = await Student.findOne({ email: updatedData.email });

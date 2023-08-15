@@ -77,6 +77,7 @@ export const getWeeklyLessonsForMainTable = async (req, res) => {
       role: "main",
     }).populate("teacher course students.student");
 
+    console.log(lessons);
     res.status(200).json(lessons);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
@@ -369,35 +370,47 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
     });
 
     const currentWeekStart = new Date();
+    const currentWeekEnd = new Date();
 
-    if (currentWeekStart.getDay() !== 0) {
-      currentWeekStart.setDate(
-        currentWeekStart.getDate() - currentWeekStart.getDay() + 1
-      );
-    } else {
-      if (currentWeekStart.getHours() > 19) {
-        currentWeekStart.setDate(currentWeekStart.getDate() + 1);
-      } else {
-        currentWeekStart.setDate(currentWeekStart.getDate() - 6);
-      }
+    currentWeekStart.setDate(
+      currentWeekStart.getDate() -
+        (currentWeekStart.getDay() === 0 ? 7 : currentWeekStart.getDay()) +
+        1
+    );
+    currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+
+    currentWeekStart.setHours(0, 0, 0, 0);
+    currentWeekEnd.setHours(23, 59, 59, 999);
+
+    const checkCurrentWeeklyLessons = await Lesson.countDocuments({
+      date: {
+        $gte: currentWeekStart,
+        $lte: currentWeekEnd,
+      },
+    });
+
+    if (checkCurrentWeeklyLessons > 0) {
+      return res.status(400).json({ message: "already create current table" });
     }
 
-    const currentTableData = mainTableData.map(async (data) => {
-      const date = new Date(currentWeekStart);
-      date.setDate(date.getDate() + data.day - 1);
+    const currentTableData = await Promise.all(
+      mainTableData.map(async (data) => {
+        const date = new Date(currentWeekStart);
+        date.setDate(date.getDate() + data.day - 1);
 
-      const teacher = await Teacher.findById(data.teacher);
+        const teacher = await Teacher.findById(data.teacher);
 
-      const dataObj = data.toObject();
-      delete dataObj._id;
-      delete dataObj.status;
-      return {
-        ...dataObj,
-        date: date,
-        role: "current",
-        salary: teacher.salary,
-      };
-    });
+        const dataObj = data.toObject();
+        delete dataObj._id;
+        delete dataObj.status;
+        return {
+          ...dataObj,
+          date: date,
+          role: "current",
+          salary: teacher.salary,
+        };
+      })
+    );
 
     await Lesson.insertMany(currentTableData);
 
