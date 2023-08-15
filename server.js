@@ -15,6 +15,7 @@ import profileRoutes from "./routes/profileRoutes.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import demoSmtpRoutes from "./routes/demoSmtpRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
+import incomeRoutes from "./routes/incomeRoutes.js";
 // import updateButtonRoutes from "./routes/updateButtonRoutes.js";
 import {
   createNotificationForBirthday,
@@ -52,6 +53,7 @@ app.use("/api/user/profile", profileRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/demo", demoSmtpRoutes);
 app.use("/api/expense", expenseRoutes);
+app.use("/api/income", incomeRoutes);
 
 app.get("/", (req, res) => {
   res.send("hello");
