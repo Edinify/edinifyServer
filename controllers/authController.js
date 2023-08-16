@@ -86,10 +86,16 @@ export const registerStudent = async (req, res) => {
       (currThirdDate.getDate() === studentBirthdayDate &&
         currThirdDate.getMonth() + 1 === studentBirthdayMonth)
     ) {
+      const Admins = await Admin.find();
+      const adminsIdsList = Admins.map((admin) => ({ admin: admin._id }));
+
+      console.log(adminsIdsList);
+
       await Notification.create({
         role: "birthday",
         student: student._id,
         isBirthday: true,
+        isViewedAdmin: adminsIdsList,
       });
     }
 

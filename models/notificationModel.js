@@ -13,6 +13,13 @@ const notificationSchema = new Schema(
         "update-teacher-table",
       ],
     },
+    admin: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Admin",
+      required: function () {
+        return this.role === "count";
+      },
+    },
     student: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
@@ -49,8 +56,18 @@ const notificationSchema = new Schema(
       },
     },
     isViewedAdmin: {
-      type: Boolean,
-      default: false,
+      type: [
+        {
+          admin: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true,
+          },
+          viewed: {
+            type: Boolean,
+            default: false,
+          },
+        },
+      ],
     },
     isViewedTeacher: {
       type: Boolean,

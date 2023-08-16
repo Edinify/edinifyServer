@@ -1,3 +1,4 @@
+import { Admin } from "../models/adminModel.js";
 import { Notification } from "../models/notificationModel.js";
 import { Student } from "../models/studentModel.js";
 
@@ -21,11 +22,15 @@ export const createNotificationForBirthday = async () => {
       status: true,
     });
 
+    const admins = await Admin.find();
+    const adminsIdsList = admins.map((admin) => admin._id);
+
     birthdayStudents.map(async (student) => {
       await Notification.create({
         role: "birthday",
         student: student._id,
         isBirthday: true,
+        isViewedAdmin: adminsIdsList,
       });
     });
   } catch (err) {
@@ -61,11 +66,15 @@ export const createNotificationForLessonsCount = async (students) => {
       (student) => student.lessonAmount === 0
     );
 
+    const admins = await Admin.find();
+    const adminsIdsList = admins.map((admin) => admin._id);
+
     completedCourseStudents.map(async (student) => {
       await Notification.create({
         role: "count",
         student: student._id,
         isZeroClassCount: true,
+        isViewedAdmin: adminsIdsList,
       });
     });
 
@@ -102,7 +111,9 @@ export const getNotificationsForTeacher = async (req, res) => {
           teacher: id,
         },
       ],
-    }).populate("student");
+    })
+      .select("-isViewedAdmin")
+      .populate("student");
 
     res.status(200).json(notifications);
   } catch (err) {
@@ -117,7 +128,7 @@ export const getNotificationsForStudent = async (req, res) => {
     const notifications = await Notification.find({
       role: { $in: ["count", "update-student-table"] },
       student: id,
-    });
+    }).select("-isViewedAdmin");
 
     res.status(200).json(notifications);
   } catch (err) {
@@ -184,15 +195,19 @@ export const deleteNotificationsForBirthday = async (req, res) => {
 
 // Do as notification seen
 export const doAsNotificationsSeen = async (req, res) => {
-  const { role } = req.user;
+  const { role, id } = req.user;
 
   try {
     let updatedNotifications;
 
     if (role === "admin") {
       updatedNotifications = await Notification.updateMany(
-        { isViewedAdmin: false },
-        { isViewedAdmin: true },
+        { "isViewedAdmin.viewed": false, "isViewedAdmin.admin": id },
+        {
+          $set: {
+            "isViewedAdmin.$.viewed": true,
+          },
+        },
         { new: true }
       );
     } else if (role === "teacher") {
