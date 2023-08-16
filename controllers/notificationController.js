@@ -93,6 +93,8 @@ export const getNotificationsForAdmin = async (req, res) => {
       role: { $in: ["birthday", "count"] },
     }).populate("student");
 
+    console.log(notifications);
+
     res.status(200).json(notifications);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
