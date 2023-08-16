@@ -89,8 +89,6 @@ export const registerStudent = async (req, res) => {
       const Admins = await Admin.find();
       const adminsIdsList = Admins.map((admin) => ({ admin: admin._id }));
 
-      console.log(adminsIdsList);
-
       await Notification.create({
         role: "birthday",
         student: student._id,

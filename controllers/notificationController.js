@@ -22,8 +22,8 @@ export const createNotificationForBirthday = async () => {
       status: true,
     });
 
-    const admins = await Admin.find();
-    const adminsIdsList = admins.map((admin) => admin._id);
+    const Admins = await Admin.find();
+    const adminsIdsList = Admins.map((admin) => ({ admin: admin._id }));
 
     birthdayStudents.map(async (student) => {
       await Notification.create({
@@ -66,8 +66,10 @@ export const createNotificationForLessonsCount = async (students) => {
       (student) => student.lessonAmount === 0
     );
 
-    const admins = await Admin.find();
-    const adminsIdsList = admins.map((admin) => admin._id);
+    const Admins = await Admin.find();
+    const adminsIdsList = Admins.map((admin) => ({ admin: admin._id }));
+    console.log(adminsIdsList);
+    console.log(completedCourseStudents);
 
     completedCourseStudents.map(async (student) => {
       await Notification.create({
@@ -202,7 +204,7 @@ export const doAsNotificationsSeen = async (req, res) => {
   try {
     let updatedNotifications;
 
-    if (role === "admin") {
+    if (role === "admin" || role === "super-admin") {
       updatedNotifications = await Notification.updateMany(
         { "isViewedAdmin.viewed": false, "isViewedAdmin.admin": id },
         {
