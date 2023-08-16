@@ -235,6 +235,7 @@ export const updateLessonInTable = async (req, res) => {
 };
 
 // Update lesson in main panel
+
 export const updateLessonInMainPanel = async (req, res) => {
   const { id } = req.params;
   const { role } = req.user;
@@ -293,7 +294,7 @@ export const updateLessonInMainPanel = async (req, res) => {
     updatedLesson.earnings = earnings;
     await updatedLesson.save();
 
-    if (role === "admin" && req.body.status !== lesson.status) {
+    if ((role === "admin" || role === "super-admin") && req.body.status !== lesson.status) {
       const students = updatedLesson.students.map((item) => item.student._id);
       if (req.body.status === "confirmed") {
         await Student.updateMany(
