@@ -51,7 +51,7 @@ export const getTeachersForPagination = async (req, res) => {
       password: "",
     }));
 
-    res.status(200).json({ teacherList, totalPages });
+    res.status(200).json({ teachers: teacherList, totalPages });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
