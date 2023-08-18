@@ -80,10 +80,12 @@ export const updateTeacher = async (req, res) => {
       return res.status(400).json({ key: "email-already-exists" });
     }
 
-    if (updatedData.password) {
+    if (updatedData.password && updatedData.password.length > 5) {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(updatedData.password, salt);
       updatedData = { ...updatedData, password: hashedPassword };
+    } else {
+      delete updatedData.password;
     }
 
     const teacher = await Teacher.findById(id);
@@ -104,7 +106,10 @@ export const updateTeacher = async (req, res) => {
       });
     }
 
-    res.status(200).json(updatedTeacher);
+    const updatedTeacherObj = updatedTeacher.toObject();
+    updatedTeacherObj.password = "";
+
+    res.status(200).json(updatedTeacherObj);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }

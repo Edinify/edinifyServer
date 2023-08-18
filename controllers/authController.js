@@ -7,7 +7,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-import { Notification } from "../models/notificationModel.js";
+import { createNotificationForBirthdayAtCreateAndUpdateStudent } from "./notificationController.js";
 
 dotenv.config();
 
@@ -40,6 +40,7 @@ export const registerAdmin = async (req, res) => {
 // Register student
 export const registerStudent = async (req, res) => {
   const { email } = req.body;
+
   try {
     const existingAdmin = await Admin.findOne({ email });
     const existingStudent = await Student.findOne({ email });
@@ -69,33 +70,7 @@ export const registerStudent = async (req, res) => {
       "courses"
     );
 
-    const currFirstDate = new Date();
-    const currSecondDate = new Date();
-    const currThirdDate = new Date();
-    const studentBirthday = new Date(student.birthday);
-    currSecondDate.setDate(currSecondDate.getDate() + 1);
-    currThirdDate.setDate(currThirdDate.getDate() + 2);
-    const studentBirthdayDate = studentBirthday.getDate();
-    const studentBirthdayMonth = studentBirthday.getMonth() + 1;
-
-    if (
-      (currFirstDate.getDate() === studentBirthdayDate &&
-        currFirstDate.getMonth() + 1 === studentBirthdayMonth) ||
-      (currSecondDate.getDate() === studentBirthdayDate &&
-        currSecondDate.getMonth() + 1 === studentBirthdayMonth) ||
-      (currThirdDate.getDate() === studentBirthdayDate &&
-        currThirdDate.getMonth() + 1 === studentBirthdayMonth)
-    ) {
-      const Admins = await Admin.find();
-      const adminsIdsList = Admins.map((admin) => ({ admin: admin._id }));
-
-      await Notification.create({
-        role: "birthday",
-        student: student._id,
-        isBirthday: true,
-        isViewedAdmin: adminsIdsList,
-      });
-    }
+    createNotificationForBirthdayAtCreateAndUpdateStudent(student);
 
     const studentsCount = await Student.countDocuments();
     const lastPage = Math.ceil(studentsCount / 10);
@@ -182,7 +157,6 @@ export const login = async (req, res) => {
 };
 
 // FORGOTTEN PASSWORD
-
 // Send code to email
 export const sendCodeToEmail = async (req, res) => {
   const { email } = req.body;
@@ -195,7 +169,7 @@ export const sendCodeToEmail = async (req, res) => {
     const user = admin || student || teacher;
 
     if (!user) {
-      return res.status(404).json({ key: "User is not found" });
+      return res.status(404).json({ key: "user-not-found" });
     }
 
     let randomCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -234,7 +208,6 @@ export const sendCodeToEmail = async (req, res) => {
     await user.save();
 
     setTimeout(async () => {
-      console.log("salam set time out");
       user.otp = 0;
       await user.save();
     }, 120000);
@@ -255,7 +228,7 @@ export const checkOtpCode = async (req, res) => {
     const user = admin || student || teacher;
 
     if (!user) {
-      return res.status(404).json({ message: "User is not found" });
+      return res.status(404).json({ message: "invalid-otp" });
     }
 
     const userId = user._id;
@@ -282,7 +255,7 @@ export const changeForgottenPassword = async (req, res) => {
     const user = admin || student || teacher;
 
     if (!user) {
-      return res.status(404).json({ message: "User is not found" });
+      return res.status(404).json({ key: "user-not-found" });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -293,7 +266,7 @@ export const changeForgottenPassword = async (req, res) => {
 
     await user.save();
 
-    res.status(200).json("password changed successfully");
+    res.status(200).json({ key: "change-password" });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }

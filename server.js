@@ -18,11 +18,11 @@ import expenseRoutes from "./routes/expenseRoutes.js";
 import incomeRoutes from "./routes/incomeRoutes.js";
 // import updateButtonRoutes from "./routes/updateButtonRoutes.js";
 import {
-  createNotificationForBirthday,
+  createNotificationForBirthdayWithCron,
   deleteNotificationsForBirthday,
 } from "./controllers/notificationController.js";
 
-import cron from "node-cron";
+// import cron from "node-cron";
 
 dotenv.config();
 
@@ -66,7 +66,7 @@ mongoose
     app.listen(port, () => {
       console.log(`listen server at ${port}`);
       // cron.schedule("0 0 * * *", () => {
-      //   createNotificationForBirthday();
+      //   createNotificationForBirthdayWithCron();
       //   deleteNotificationsForBirthday();
       // });
     });

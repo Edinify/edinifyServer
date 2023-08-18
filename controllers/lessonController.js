@@ -143,8 +143,8 @@ export const getWeeklyLessonsForMainPanel = async (req, res) => {
 
     if (startDate && endDate) {
       filterObj.date = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate),
+        $gte: new Date(startDate).toISOString(),
+        $lte: new Date(endDate).toISOString(),
       };
     }
 
@@ -182,6 +182,8 @@ export const getWeeklyLessonsForMainPanel = async (req, res) => {
         "teacher course students.student"
       );
     }
+
+    console.log(lessons);
 
     res.status(200).json(lessons);
   } catch (err) {
@@ -294,7 +296,10 @@ export const updateLessonInMainPanel = async (req, res) => {
     updatedLesson.earnings = earnings;
     await updatedLesson.save();
 
-    if ((role === "admin" || role === "super-admin") && req.body.status !== lesson.status) {
+    if (
+      (role === "admin" || role === "super-admin") &&
+      req.body.status !== lesson.status
+    ) {
       const students = updatedLesson.students.map((item) => item.student._id);
       if (req.body.status === "confirmed") {
         await Student.updateMany(

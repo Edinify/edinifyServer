@@ -5,7 +5,7 @@ import { Student } from "../models/studentModel.js";
 // CREATE NOTIFICATION
 
 // Create notification for birthday
-export const createNotificationForBirthday = async () => {
+export const createNotificationForBirthdayWithCron = async () => {
   const currentDate = new Date();
   currentDate.setDate(currentDate.getDate() + 2);
   const currentDay = currentDate.getDate();
@@ -35,6 +35,38 @@ export const createNotificationForBirthday = async () => {
     });
   } catch (err) {
     console.log({ message: { error: err.message } });
+  }
+};
+
+export const createNotificationForBirthdayAtCreateAndUpdateStudent = async (
+  student
+) => {
+  const currFirstDate = new Date();
+  const currSecondDate = new Date();
+  const currThirdDate = new Date();
+  const studentBirthday = new Date(student.birthday);
+  currSecondDate.setDate(currSecondDate.getDate() + 1);
+  currThirdDate.setDate(currThirdDate.getDate() + 2);
+  const studentBirthdayDate = studentBirthday.getDate();
+  const studentBirthdayMonth = studentBirthday.getMonth() + 1;
+
+  if (
+    (currFirstDate.getDate() === studentBirthdayDate &&
+      currFirstDate.getMonth() + 1 === studentBirthdayMonth) ||
+    (currSecondDate.getDate() === studentBirthdayDate &&
+      currSecondDate.getMonth() + 1 === studentBirthdayMonth) ||
+    (currThirdDate.getDate() === studentBirthdayDate &&
+      currThirdDate.getMonth() + 1 === studentBirthdayMonth)
+  ) {
+    const Admins = await Admin.find();
+    const adminsIdsList = Admins.map((admin) => ({ admin: admin._id }));
+
+    await Notification.create({
+      role: "birthday",
+      student: student._id,
+      isBirthday: true,
+      isViewedAdmin: adminsIdsList,
+    });
   }
 };
 
