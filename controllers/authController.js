@@ -203,13 +203,22 @@ export const sendCodeToEmail = async (req, res) => {
       }
     });
 
-    user.otp = randomCode;
-
-    await user.save();
+    if (user.role === "admin") {
+      await Admin.findByIdAndUpdate(user._id, { otp: randomCode });
+    } else if (user.role === "teacher") {
+      await Teacher.findByIdAndUpdate(user._id, { otp: randomCode });
+    } else {
+      await Student.findByIdAndUpdate(user._id, { otp: randomCode });
+    }
 
     setTimeout(async () => {
-      user.otp = 0;
-      await user.save();
+      if (user.role === "admin") {
+        await Admin.findByIdAndUpdate(user._id, { otp: 0 });
+      } else if (user.role === "teacher") {
+        await Teacher.findByIdAndUpdate(user._id, { otp: 0 });
+      } else {
+        await Student.findByIdAndUpdate(user._id, { otp: 0 });
+      }
     }, 120000);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
@@ -233,9 +242,13 @@ export const checkOtpCode = async (req, res) => {
 
     const userId = user._id;
 
-    user.otp = 0;
-
-    await user.save();
+    if (user.role === "admin") {
+      await Admin.findByIdAndUpdate(userId, { otp: 0 });
+    } else if (user.role === "teacher") {
+      await Teacher.findByIdAndUpdate(userId, { otp: 0 });
+    } else {
+      await Student.findByIdAndUpdate(userId, { otp: 0 });
+    }
 
     res.status(200).json({ userId });
   } catch (err) {
@@ -262,9 +275,14 @@ export const changeForgottenPassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
     user.password = hashedPassword;
-    user.otp = 0;
 
-    await user.save();
+    if (user.role === "admin") {
+      await Admin.findByIdAndUpdate(user._id, { password: hashedPassword });
+    } else if (user.role === "teacher") {
+      await Teacher.findByIdAndUpdate(user._id, { password: hashedPassword });
+    } else {
+      await Student.findByIdAndUpdate(user._id, { password: hashedPassword });
+    }
 
     res.status(200).json({ key: "change-password" });
   } catch (err) {
