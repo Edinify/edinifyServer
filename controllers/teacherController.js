@@ -46,7 +46,12 @@ export const getTeachersForPagination = async (req, res) => {
         .populate("courses");
     }
 
-    res.status(200).json({ teachers, totalPages });
+    const teacherList = teachers.map((teacher) => ({
+      ...teacher.toObject(),
+      password: "",
+    }));
+
+    res.status(200).json({ teacherList, totalPages });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
