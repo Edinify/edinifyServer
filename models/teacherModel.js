@@ -66,6 +66,10 @@ const teacherSchema = new Schema(
       type: Date,
       required: true,
     },
+    deleted: {
+      type: Boolean,
+      default: false,
+    },
     otp: Number,
   },
   { timestamps: true }

@@ -11,18 +11,52 @@ import { createNotificationForBirthdayAtCreateAndUpdateStudent } from "./notific
 
 dotenv.config();
 
+// Register super admin
+export const registerSuperAdmin = async (req, res) => {
+  const { email, role } = req.body;
+
+  try {
+    const existingStudent = await Student.findOne({ email });
+    const existingTeacher = await Teacher.findOne({ email });
+    const existingAdmin = await Admin.findOne({ role: "super-admin" });
+
+    if (existingAdmin) {
+      return res.status(409).json({ message: "Super Admin already exists" });
+    }
+
+    if (existingStudent || existingTeacher) {
+      return res.status(409).json({ key: "email-already-exist" });
+    }
+
+    if (role !== "super-admin") {
+      return res
+        .status(400)
+        .json({ message: "The role field validation failed" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+    const admin = new Admin({ ...req.body, password: hashedPassword });
+    await admin.save();
+
+    res.status(201).json(admin);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Register admin
 export const registerAdmin = async (req, res) => {
   const { email } = req.body;
+
   try {
     const existingStudent = await Student.findOne({ email });
     const existingTeacher = await Teacher.findOne({ email });
     const existingAdmin = await Admin.findOne({ email });
 
     if (existingStudent || existingTeacher || existingAdmin) {
-      return res
-        .status(400)
-        .json({ message: "A user with the same email already exists" });
+      return res.status(409).json({ key: "email-already-exist" });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -84,6 +118,7 @@ export const registerStudent = async (req, res) => {
 // Register teacher
 export const registerTeacher = async (req, res) => {
   const { email } = req.body;
+
   try {
     const existingAdmin = await Admin.findOne({ email });
     const existingStudent = await Student.findOne({ email });
@@ -203,7 +238,7 @@ export const sendCodeToEmail = async (req, res) => {
       }
     });
 
-    if (user.role === "admin") {
+    if (user.role === "admin" || user.role === "super-admin") {
       await Admin.findByIdAndUpdate(user._id, { otp: randomCode });
     } else if (user.role === "teacher") {
       await Teacher.findByIdAndUpdate(user._id, { otp: randomCode });
@@ -212,7 +247,7 @@ export const sendCodeToEmail = async (req, res) => {
     }
 
     setTimeout(async () => {
-      if (user.role === "admin") {
+      if (user.role === "admin" || user.role === "super-admin") {
         await Admin.findByIdAndUpdate(user._id, { otp: 0 });
       } else if (user.role === "teacher") {
         await Teacher.findByIdAndUpdate(user._id, { otp: 0 });
@@ -242,7 +277,7 @@ export const checkOtpCode = async (req, res) => {
 
     const userId = user._id;
 
-    if (user.role === "admin") {
+    if (user.role === "admin" || user.role === "super-admin") {
       await Admin.findByIdAndUpdate(userId, { otp: 0 });
     } else if (user.role === "teacher") {
       await Teacher.findByIdAndUpdate(userId, { otp: 0 });
@@ -276,7 +311,7 @@ export const changeForgottenPassword = async (req, res) => {
 
     user.password = hashedPassword;
 
-    if (user.role === "admin") {
+    if (user.role === "admin" || user.role === "super-admin") {
       await Admin.findByIdAndUpdate(user._id, { password: hashedPassword });
     } else if (user.role === "teacher") {
       await Teacher.findByIdAndUpdate(user._id, { password: hashedPassword });
