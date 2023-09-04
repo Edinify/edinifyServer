@@ -106,7 +106,7 @@ export const registerStudent = async (req, res) => {
 
     createNotificationForBirthdayAtCreateAndUpdateStudent(student);
 
-    const studentsCount = await Student.countDocuments();
+    const studentsCount = await Student.countDocuments({ deleted: false });
     const lastPage = Math.ceil(studentsCount / 10);
 
     res.status(201).json({ student: studentWithCourses, lastPage });
@@ -141,7 +141,7 @@ export const registerTeacher = async (req, res) => {
       { $addToSet: { teachers: teacher._id } }
     );
 
-    const teachersCount = await Teacher.countDocuments();
+    const teachersCount = await Teacher.countDocuments({ deleted: false });
     const lastPage = Math.ceil(teachersCount / 10);
 
     res.status(201).json({ teacher, lastPage });

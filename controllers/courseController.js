@@ -66,7 +66,7 @@ export const createCourse = async (req, res) => {
     const newCourse = new Course(req.body);
     await newCourse.save();
 
-    const coursesCount = await Course.countDocuments();
+    const coursesCount = await Course.countDocuments({ deleted: false });
     const lastPage = Math.ceil(coursesCount / 10);
 
     res.status(201).json({ course: newCourse, lastPage });
