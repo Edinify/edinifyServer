@@ -4,7 +4,7 @@ import { Course } from "../models/courseModel.js";
 export const getCourses = async (req, res) => {
   try {
     const courses = await Course.find();
-    console.log("salam");
+
     res.status(200).json(courses);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
@@ -59,8 +59,25 @@ export const createCourse = async (req, res) => {
       name: { $regex: new RegExp(name, "i") },
     });
 
-    if (existingCourse) {
+    if (existingCourse && !existingCourse.deleted) {
       return res.status(409).json({ key: "course-already-exists" });
+    }
+
+    if (existingCourse && existingCourse.deleted) {
+      const newCourse = await Course.findByIdAndUpdate(existingCourse._id, {
+        deleted: false,
+      });
+      const courses = await Course.find({ deleted: false });
+
+      const index =
+        courses.findIndex(
+          (obj) => obj._id.toString() == existingCourse._id.toString()
+        ) + 1;
+      const lastPage = Math.ceil(index / 10);
+
+      console.log(index, lastPage);
+
+      return res.status(201).json({ course: newCourse, lastPage });
     }
 
     const newCourse = new Course(req.body);

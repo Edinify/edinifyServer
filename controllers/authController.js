@@ -75,18 +75,25 @@ export const registerAdmin = async (req, res) => {
 export const registerStudent = async (req, res) => {
   const { email } = req.body;
 
+  console.log(req.body);
   try {
     const existingAdmin = await Admin.findOne({ email });
     const existingStudent = await Student.findOne({ email });
     const existingTeacher = await Teacher.findOne({ email });
 
+    console.log(1);
+
     if (existingAdmin || existingStudent || existingTeacher) {
       return res.status(409).json({ key: "email-already-exist" });
     }
 
+    console.log(2);
+
     const coursesId = req.body.courses;
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+    console.log(3);
 
     const student = new Student({
       ...req.body,
@@ -95,19 +102,29 @@ export const registerStudent = async (req, res) => {
     });
     await student.save();
 
+    console.log(4);
+
     await Course.updateMany(
       { _id: { $in: coursesId } },
       { $addToSet: { students: student._id } }
     );
 
+    console.log(5);
+
     const studentWithCourses = await Student.findById(student._id).populate(
       "courses"
     );
 
+    console.log(6);
+
     createNotificationForBirthdayAtCreateAndUpdateStudent(student);
+
+    console.log(7);
 
     const studentsCount = await Student.countDocuments({ deleted: false });
     const lastPage = Math.ceil(studentsCount / 10);
+
+    console.log(8);
 
     res.status(201).json({ student: studentWithCourses, lastPage });
   } catch (error) {
