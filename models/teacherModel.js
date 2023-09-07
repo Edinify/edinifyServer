@@ -17,6 +17,14 @@ const teacherSchema = new Schema(
       type: String,
       required: true,
     },
+    fin: {
+      type: String,
+      required: true,
+    },
+    seria: {
+      type: String,
+      required: true,
+    },
     courses: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -35,12 +43,6 @@ const teacherSchema = new Schema(
       type: String,
       default: "teacher",
     },
-    fincode: {
-      type: String,
-    },
-    seriaNumber: {
-      type: String,
-    },
     phone: {
       type: String,
       required: true,
@@ -50,6 +52,10 @@ const teacherSchema = new Schema(
       required: true,
     },
     maritalStatus: {
+      type: String,
+      required: true,
+    },
+    healthStatus: {
       type: String,
       required: true,
     },
