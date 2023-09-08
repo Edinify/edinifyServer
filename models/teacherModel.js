@@ -32,8 +32,9 @@ const teacherSchema = new Schema(
       },
     ],
     salary: {
-      type: Number,
-      required: true,
+      monthly: { type: Boolean, required: true },
+      hourly: { type: Boolean, required: true },
+      value: { type: Number, required: true },
     },
     status: {
       type: Boolean,
