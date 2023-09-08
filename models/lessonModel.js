@@ -67,6 +67,9 @@ const lessonSchema = new Schema(
     task: {
       type: String,
     },
+    feedback: {
+      type: String
+    },
     salary: {
       type: Number,
       required: true,
