@@ -7,22 +7,56 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-import { Notification } from "../models/notificationModel.js";
-import Cookies from "js-cookie";
+import { createNotificationForBirthdayAtCreateAndUpdateStudent } from "./notificationController.js";
+
 dotenv.config();
+
+// Register super admin
+export const registerSuperAdmin = async (req, res) => {
+  const { email, role } = req.body;
+
+  try {
+    const existingStudent = await Student.findOne({ email });
+    const existingTeacher = await Teacher.findOne({ email });
+    const existingAdmin = await Admin.findOne({ role: "super-admin" });
+
+    if (existingAdmin) {
+      return res.status(409).json({ message: "Super Admin already exists" });
+    }
+
+    if (existingStudent || existingTeacher) {
+      return res.status(409).json({ key: "email-already-exist" });
+    }
+
+    if (role !== "super-admin") {
+      return res
+        .status(400)
+        .json({ message: "The role field validation failed" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+    const admin = new Admin({ ...req.body, password: hashedPassword });
+    await admin.save();
+
+    res.status(201).json(admin);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 // Register admin
 export const registerAdmin = async (req, res) => {
   const { email } = req.body;
+
   try {
     const existingStudent = await Student.findOne({ email });
     const existingTeacher = await Teacher.findOne({ email });
     const existingAdmin = await Admin.findOne({ email });
 
     if (existingStudent || existingTeacher || existingAdmin) {
-      return res
-        .status(400)
-        .json({ message: "A user with the same email already exists" });
+      return res.status(409).json({ key: "email-already-exist" });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -40,6 +74,7 @@ export const registerAdmin = async (req, res) => {
 // Register student
 export const registerStudent = async (req, res) => {
   const { email } = req.body;
+
   try {
     const existingAdmin = await Admin.findOne({ email });
     const existingStudent = await Student.findOne({ email });
@@ -69,29 +104,7 @@ export const registerStudent = async (req, res) => {
       "courses"
     );
 
-    const currFirstDate = new Date();
-    const currSecondDate = new Date();
-    const currThirdDate = new Date();
-    const studentBirthday = new Date(student.birthday);
-    currSecondDate.setDate(currSecondDate.getDate() + 1);
-    currThirdDate.setDate(currThirdDate.getDate() + 2);
-    const studentBirthdayDate = studentBirthday.getDate();
-    const studentBirthdayMonth = studentBirthday.getMonth() + 1;
-
-    if (
-      (currFirstDate.getDate() === studentBirthdayDate &&
-        currFirstDate.getMonth() + 1 === studentBirthdayMonth) ||
-      (currSecondDate.getDate() === studentBirthdayDate &&
-        currSecondDate.getMonth() + 1 === studentBirthdayMonth) ||
-      (currThirdDate.getDate() === studentBirthdayDate &&
-        currThirdDate.getMonth() + 1 === studentBirthdayMonth)
-    ) {
-      await Notification.create({
-        role: "birthday",
-        student: student._id,
-        isBirthday: true,
-      });
-    }
+    createNotificationForBirthdayAtCreateAndUpdateStudent(student);
 
     const studentsCount = await Student.countDocuments();
     const lastPage = Math.ceil(studentsCount / 10);
@@ -105,6 +118,7 @@ export const registerStudent = async (req, res) => {
 // Register teacher
 export const registerTeacher = async (req, res) => {
   const { email } = req.body;
+
   try {
     const existingAdmin = await Admin.findOne({ email });
     const existingStudent = await Student.findOne({ email });
@@ -162,7 +176,6 @@ export const login = async (req, res) => {
     const RefreshToken = createRefreshToken(user);
     saveTokensToDatabase(user._id, RefreshToken, AccessToken);
     // send refresh token to cookies
-    // Cookies.remove('refreshtoken', { path: '/api/user/auth/refresh_token' });
     res.cookie("refreshtoken", RefreshToken, {
       httpOnly: true,
       path: "/api/user/auth/refresh_token",
@@ -180,7 +193,6 @@ export const login = async (req, res) => {
 };
 
 // FORGOTTEN PASSWORD
-
 // Send code to email
 export const sendCodeToEmail = async (req, res) => {
   const { email } = req.body;
@@ -193,7 +205,7 @@ export const sendCodeToEmail = async (req, res) => {
     const user = admin || student || teacher;
 
     if (!user) {
-      return res.status(404).json({ key: "User is not found" });
+      return res.status(404).json({ key: "user-not-found" });
     }
 
     let randomCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -227,14 +239,22 @@ export const sendCodeToEmail = async (req, res) => {
       }
     });
 
-    user.otp = randomCode;
-
-    await user.save();
+    if (user.role === "admin" || user.role === "super-admin") {
+      await Admin.findByIdAndUpdate(user._id, { otp: randomCode });
+    } else if (user.role === "teacher") {
+      await Teacher.findByIdAndUpdate(user._id, { otp: randomCode });
+    } else {
+      await Student.findByIdAndUpdate(user._id, { otp: randomCode });
+    }
 
     setTimeout(async () => {
-      console.log("salam set time out");
-      user.otp = 0;
-      await user.save();
+      if (user.role === "admin" || user.role === "super-admin") {
+        await Admin.findByIdAndUpdate(user._id, { otp: 0 });
+      } else if (user.role === "teacher") {
+        await Teacher.findByIdAndUpdate(user._id, { otp: 0 });
+      } else {
+        await Student.findByIdAndUpdate(user._id, { otp: 0 });
+      }
     }, 120000);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
@@ -253,14 +273,18 @@ export const checkOtpCode = async (req, res) => {
     const user = admin || student || teacher;
 
     if (!user) {
-      return res.status(404).json({ message: "User is not found" });
+      return res.status(404).json({ message: "invalid-otp" });
     }
 
     const userId = user._id;
 
-    user.otp = 0;
-
-    await user.save();
+    if (user.role === "admin" || user.role === "super-admin") {
+      await Admin.findByIdAndUpdate(userId, { otp: 0 });
+    } else if (user.role === "teacher") {
+      await Teacher.findByIdAndUpdate(userId, { otp: 0 });
+    } else {
+      await Student.findByIdAndUpdate(userId, { otp: 0 });
+    }
 
     res.status(200).json({ userId });
   } catch (err) {
@@ -280,18 +304,23 @@ export const changeForgottenPassword = async (req, res) => {
     const user = admin || student || teacher;
 
     if (!user) {
-      return res.status(404).json({ message: "User is not found" });
+      return res.status(404).json({ key: "user-not-found" });
     }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
     user.password = hashedPassword;
-    user.otp = 0;
 
-    await user.save();
+    if (user.role === "admin" || user.role === "super-admin") {
+      await Admin.findByIdAndUpdate(user._id, { password: hashedPassword });
+    } else if (user.role === "teacher") {
+      await Teacher.findByIdAndUpdate(user._id, { password: hashedPassword });
+    } else {
+      await Student.findByIdAndUpdate(user._id, { password: hashedPassword });
+    }
 
-    res.status(200).json("password changed successfully");
+    res.status(200).json({ key: "change-password" });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
@@ -302,7 +331,7 @@ const createAccessToken = (user) => {
   const AccessToken = jwt.sign(
     { email: user.email, role: user.role, id: user._id },
     process.env.SECRET_KEY,
-    { expiresIn: "10s" }
+    { expiresIn: "20s" }
   );
   
   return AccessToken;
@@ -313,7 +342,7 @@ const createRefreshToken = (user) => {
   const RefreshToken = jwt.sign(
     {mail: user.email, role: user.role, id: user._id },
     process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: "1m" }
+    { expiresIn: "5m" }
   );
   return RefreshToken;
 };

@@ -28,10 +28,12 @@ export const getStudentsForPagination = async (req, res) => {
 
       const allStudents = await Student.find({
         fullName: { $regex: regexSearchQuery },
+        deleted: false,
       });
 
       students = await Student.find({
         fullName: { $regex: regexSearchQuery },
+        deleted: false,
       })
         .skip((page - 1) * limit)
         .limit(limit)
@@ -39,31 +41,20 @@ export const getStudentsForPagination = async (req, res) => {
 
       totalPages = Math.ceil(allStudents.length / limit);
     } else {
-      const studentCount = await Student.countDocuments();
+      const studentCount = await Student.countDocuments({ deleted: false });
       totalPages = Math.ceil(studentCount / limit);
-      students = await Student.find()
+      students = await Student.find({ deleted: false })
         .skip((page - 1) * limit)
         .limit(limit)
         .populate("courses");
     }
 
-    res.status(200).json({ students, totalPages });
-  } catch (err) {
-    res.status(500).json({ message: { error: err.message } });
-  }
-};
+    const studentList = students.map((student) => ({
+      ...student.toObject(),
+      password: "",
+    }));
 
-// Get Student
-export const getStudent = async (req, res) => {
-  const { id } = req.user;
-  try {
-    const student = await Student.findById(id);
-
-    if (!student) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-
-    res.status(200).json(student);
+    res.status(200).json({ students: studentList, totalPages });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
@@ -77,6 +68,8 @@ export const getStudentsByCourseId = async (req, res) => {
     const students = await Student.find({
       courses: courseId,
       lessonAmount: { $gt: 0 },
+      status: true,
+      deleted: false,
     });
 
     const newStudents = await Promise.all(
@@ -121,19 +114,20 @@ export const getStudentsByCourseId = async (req, res) => {
 export const updateStudent = async (req, res) => {
   const { id } = req.params;
   let updatedData = req.body;
-  console.log(req.body);
 
   try {
     const existingStudent = await Student.findOne({ email: updatedData.email });
 
     if (existingStudent && existingStudent._id != id) {
-      return res.status(400).json({ key: "email-already-exists" });
+      return res.status(409).json({ key: "email-already-exists" });
     }
 
-    if (updatedData.password) {
+    if (updatedData.password && updatedData.password.length > 5) {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(updatedData.password, salt);
       updatedData = { ...updatedData, password: hashedPassword };
+    } else {
+      delete updatedData.password;
     }
 
     const student = await Student.findById(id);
@@ -163,23 +157,34 @@ export const updateStudent = async (req, res) => {
       );
     }
 
-    res.status(200).json(updatedStudent);
+    const updatedStudentObj = updatedStudent.toObject();
+    updatedStudentObj.password = "";
+
+    res.status(200).json(updatedStudentObj);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
 };
 
 // Delete student
-
 export const deleteStudent = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const deletedStudent = await Student.findByIdAndDelete(id);
-
-    if (!deletedStudent) {
+    const student = await Student.findById(id);
+    if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
+
+    const studentLessonCount = await Lesson.countDocuments({
+      "students.student": id,
+    });
+    if (studentLessonCount > 0) {
+      await Student.findByIdAndUpdate(id, { deleted: true });
+      return res.status(200).json({ message: "Student successfully deleted" });
+    }
+
+    await Student.findByIdAndDelete(id);
 
     res.status(200).json({ message: "Student successfully deleted" });
   } catch (err) {
@@ -188,7 +193,6 @@ export const deleteStudent = async (req, res) => {
 };
 
 // Update student password
-
 export const updateStudentPassword = async (req, res) => {
   const { oldPassword, newPassword } = req.body;
   const { id } = req.user;

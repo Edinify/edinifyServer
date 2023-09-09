@@ -16,6 +16,17 @@ export const getAdmin = async (req, res) => {
   }
 };
 
+// Get admins
+export const getAdmins = async (req, res) => {
+  try {
+    const admins = await Admin.find({ role: "admin" });
+
+    res.status(200).json(admins);
+  } catch (err) {
+    res.status(500).json({ message: { error: err.message } });
+  }
+};
+
 // Update admin password with old password
 export const updateAdminPassword = async (req, res) => {
   const { oldPassword, newPassword } = req.body;
@@ -49,7 +60,6 @@ export const updateAdminPassword = async (req, res) => {
 };
 
 // update admin password without checking oldpassword
-
 export const updateAdminPasswordWithoutCheckingOldPassword = async (
   req,
   res

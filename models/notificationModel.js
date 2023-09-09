@@ -49,8 +49,18 @@ const notificationSchema = new Schema(
       },
     },
     isViewedAdmin: {
-      type: Boolean,
-      default: false,
+      type: [
+        {
+          admin: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true,
+          },
+          viewed: {
+            type: Boolean,
+            default: false,
+          },
+        },
+      ],
     },
     isViewedTeacher: {
       type: Boolean,

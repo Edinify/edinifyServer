@@ -9,9 +9,6 @@ import {
 
 // Create lesson
 export const createLesson = async (req, res) => {
-  const { role } = req.user;
-  console.log("salam necəsən");
-
   try {
     const teacher = await Teacher.findById(req.body.teacher);
 
@@ -21,7 +18,7 @@ export const createLesson = async (req, res) => {
 
     await newLesson.save();
 
-    if (newLesson.role === "current" && role === "admin") {
+    if (newLesson.role === "current") {
       createNotificationForUpdate(newLesson.teacher._id, newLesson.students);
     }
 
@@ -49,26 +46,12 @@ export const getLesson = async (req, res) => {
   }
 };
 
-// Get lessons
-// export const getLessons = async (req, res) => {
-//   try {
-//     const lessons = await Lesson.find().populate(
-//       "teacher course students.student"
-//     );
-
-//     res.status(200).json(lessons);
-//   } catch (err) {
-//     res.status(500).json({ message: { error: err.message } });
-//   }
-// };
-// ------------------------------------------------------------------------------------
-
 // Get weekly lessons for main table
 export const getWeeklyLessonsForMainTable = async (req, res) => {
   const { teacherId } = req.query;
 
   try {
-    if (teacherId === "undefined") {
+    if (!teacherId || teacherId === "undefined") {
       return res.status(200).json([]);
     }
 
@@ -86,6 +69,7 @@ export const getWeeklyLessonsForMainTable = async (req, res) => {
 // Get weekly lessons for current table
 export const getWeeklyLessonsForCurrentTable = async (req, res) => {
   const { teacherId } = req.query;
+
   const currentDate = new Date();
   const startWeek = new Date(
     currentDate.setDate(
@@ -100,7 +84,7 @@ export const getWeeklyLessonsForCurrentTable = async (req, res) => {
   endWeek.setHours(23, 59, 59, 999);
 
   try {
-    if (teacherId === "undefined") {
+    if (!teacherId || teacherId === "undefined") {
       return res.status(200).json([]);
     }
 
@@ -142,8 +126,8 @@ export const getWeeklyLessonsForMainPanel = async (req, res) => {
 
     if (startDate && endDate) {
       filterObj.date = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate),
+        $gte: new Date(startDate).toISOString(),
+        $lte: new Date(endDate).toISOString(),
       };
     }
 
@@ -191,7 +175,6 @@ export const getWeeklyLessonsForMainPanel = async (req, res) => {
 // Update lesson in current and main table
 export const updateLessonInTable = async (req, res) => {
   const { id } = req.params;
-  const { role } = req.user;
 
   try {
     let newLesson = req.body;
@@ -220,7 +203,7 @@ export const updateLessonInTable = async (req, res) => {
     updatedLesson.earnings = earnings;
     await updatedLesson.save();
 
-    if (updatedLesson.role === "current" && role === "admin") {
+    if (updatedLesson.role === "current") {
       createNotificationForUpdate(
         updatedLesson.teacher._id,
         updatedLesson.students
@@ -268,7 +251,7 @@ export const updateLessonInMainPanel = async (req, res) => {
     const lesson = await Lesson.findById(id);
     let newLesson = req.body;
 
-    if (newLesson.teacher) {
+    if (newLesson.teacher && newLesson.teacher != lesson.teacher) {
       const teacher = await Teacher.findById(newLesson.teacher);
       newLesson.salary = teacher.salary;
     }
@@ -292,8 +275,9 @@ export const updateLessonInMainPanel = async (req, res) => {
     updatedLesson.earnings = earnings;
     await updatedLesson.save();
 
-    if (role === "admin" && req.body.status !== lesson.status) {
+    if (req.body.status !== lesson.status) {
       const students = updatedLesson.students.map((item) => item.student._id);
+
       if (req.body.status === "confirmed") {
         await Student.updateMany(
           { _id: { $in: students } },
@@ -320,7 +304,6 @@ export const updateLessonInMainPanel = async (req, res) => {
 };
 
 // Delete lesson in table panel
-
 export const deleteLessonInTablePanel = async (req, res) => {
   const { id } = req.params;
 
@@ -369,35 +352,47 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
     });
 
     const currentWeekStart = new Date();
+    const currentWeekEnd = new Date();
 
-    if (currentWeekStart.getDay() !== 0) {
-      currentWeekStart.setDate(
-        currentWeekStart.getDate() - currentWeekStart.getDay() + 1
-      );
-    } else {
-      if (currentWeekStart.getHours() > 19) {
-        currentWeekStart.setDate(currentWeekStart.getDate() + 1);
-      } else {
-        currentWeekStart.setDate(currentWeekStart.getDate() - 6);
-      }
+    currentWeekStart.setDate(
+      currentWeekStart.getDate() -
+        (currentWeekStart.getDay() === 0 ? 7 : currentWeekStart.getDay()) +
+        1
+    );
+    currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+
+    currentWeekStart.setHours(0, 0, 0, 0);
+    currentWeekEnd.setHours(23, 59, 59, 999);
+
+    const checkCurrentWeeklyLessons = await Lesson.countDocuments({
+      date: {
+        $gte: currentWeekStart,
+        $lte: currentWeekEnd,
+      },
+    });
+
+    if (checkCurrentWeeklyLessons > 0) {
+      return res.status(400).json({ message: "already create current table" });
     }
 
-    const currentTableData = mainTableData.map(async (data) => {
-      const date = new Date(currentWeekStart);
-      date.setDate(date.getDate() + data.day - 1);
+    const currentTableData = await Promise.all(
+      mainTableData.map(async (data) => {
+        const date = new Date(currentWeekStart);
+        date.setDate(date.getDate() + data.day - 1);
 
-      const teacher = await Teacher.findById(data.teacher);
+        const teacher = await Teacher.findById(data.teacher);
 
-      const dataObj = data.toObject();
-      delete dataObj._id;
-      delete dataObj.status;
-      return {
-        ...dataObj,
-        date: date,
-        role: "current",
-        salary: teacher.salary,
-      };
-    });
+        const dataObj = data.toObject();
+        delete dataObj._id;
+        delete dataObj.status;
+        return {
+          ...dataObj,
+          date: date,
+          role: "current",
+          salary: teacher.salary,
+        };
+      })
+    );
 
     await Lesson.insertMany(currentTableData);
 
