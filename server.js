@@ -23,6 +23,7 @@ import {
 } from "./controllers/notificationController.js";
 
 import cron from "node-cron";
+import { createMonthlySalary } from "./controllers/salaryController.js";
 
 dotenv.config();
 
@@ -67,6 +68,7 @@ mongoose
       console.log(`listen server at ${port}`);
       cron.schedule("* * * * *", () => {
         console.log('salam')
+        createMonthlySalary()
       //   createNotificationForBirthdayWithCron();
       //   deleteNotificationsForBirthday();
       });
