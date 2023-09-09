@@ -66,12 +66,12 @@ mongoose
     console.log("connected database");
     app.listen(port, () => {
       console.log(`listen server at ${port}`);
-      cron.schedule("* * * * *", () => {
-        console.log('salam')
-        createMonthlySalary()
+      // cron.schedule("* * * * *", () => {
+      //   console.log('salam')
+        // createMonthlySalary()
       //   createNotificationForBirthdayWithCron();
       //   deleteNotificationsForBirthday();
-      });
+      // });
     });
   })
   .catch((err) => console.log(err));
