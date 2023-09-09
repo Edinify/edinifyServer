@@ -100,13 +100,15 @@ export const registerStudent = async (req, res) => {
       { $addToSet: { students: student._id } }
     );
 
+    console.log(5);
+
     const studentWithCourses = await Student.findById(student._id).populate(
       "courses"
     );
 
     createNotificationForBirthdayAtCreateAndUpdateStudent(student);
 
-    const studentsCount = await Student.countDocuments();
+    const studentsCount = await Student.countDocuments({ deleted: false });
     const lastPage = Math.ceil(studentsCount / 10);
 
     res.status(201).json({ student: studentWithCourses, lastPage });
@@ -118,6 +120,8 @@ export const registerStudent = async (req, res) => {
 // Register teacher
 export const registerTeacher = async (req, res) => {
   const { email } = req.body;
+
+  console.log(req.body)
 
   try {
     const existingAdmin = await Admin.findOne({ email });
@@ -141,11 +145,12 @@ export const registerTeacher = async (req, res) => {
       { $addToSet: { teachers: teacher._id } }
     );
 
-    const teachersCount = await Teacher.countDocuments();
+    const teachersCount = await Teacher.countDocuments({ deleted: false });
     const lastPage = Math.ceil(teachersCount / 10);
 
     res.status(201).json({ teacher, lastPage });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: error.message });
   }
 };
