@@ -22,7 +22,7 @@ import {
   deleteNotificationsForBirthday,
 } from "./controllers/notificationController.js";
 
-// import cron from "node-cron";
+import cron from "node-cron";
 
 dotenv.config();
 
@@ -65,10 +65,11 @@ mongoose
     console.log("connected database");
     app.listen(port, () => {
       console.log(`listen server at ${port}`);
-      // cron.schedule("0 0 * * *", () => {
+      cron.schedule("* * * * *", () => {
+        console.log('salam')
       //   createNotificationForBirthdayWithCron();
       //   deleteNotificationsForBirthday();
-      // });
+      });
     });
   })
   .catch((err) => console.log(err));

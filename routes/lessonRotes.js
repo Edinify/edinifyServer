@@ -2,9 +2,7 @@ import express from "express";
 import {
   createCurrentLessonsFromMainLessons,
   createLesson,
-  deleteLessonInMainPanel,
   deleteLessonInTablePanel,
-  getLesson,
   getWeeklyLessonsForCurrentTable,
   getWeeklyLessonsForMainPanel,
   getWeeklyLessonsForMainTable,
@@ -26,23 +24,12 @@ router.post(
   authMiddleware,
   createCurrentLessonsFromMainLessons
 );
-router.patch(
-  "/main/panel/:id",
-  authMiddleware,
-  checkAdminAndSuperAdmin,
-  updateLessonInMainPanel
-);
+router.patch("/main/panel/:id", authMiddleware, updateLessonInMainPanel);
 router.patch(
   "/table/:id",
   authMiddleware,
   checkAdminAndSuperAdmin,
   updateLessonInTable
-);
-router.delete(
-  "/main/panel/:id",
-  authMiddleware,
-  checkAdminAndSuperAdmin,
-  deleteLessonInMainPanel
 );
 router.delete(
   "/table/panel/:id",
