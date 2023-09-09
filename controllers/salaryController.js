@@ -27,7 +27,7 @@ export const createMonthlySalary = async () => {
   }
 };
 
-createMonthlySalary();
+// createMonthlySalary();
 
 // Get salaries
 export const getSalaries = async (req, res) => {
