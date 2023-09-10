@@ -1,8 +1,35 @@
 import { Lesson } from "../models/lessonModel.js";
+import { Salary } from "../models/salarySchema.js";
 import { Teacher } from "../models/teacherModel.js";
 
-// Get salaries
+// Create monthly salary
+export const createMonthlySalary = async () => {
+  try {
+    const teachers = await Teacher.find({
+      deleted: false,
+      status: true,
+      "salary.monthly": true,
+    });
 
+    const salaries = teachers.map((teacher) => {
+      return {
+        teacherId: teacher._id,
+        confirmedCount: 0,
+        canceledCount: 0,
+        participantCount: 0,
+        salary: teacher.salary.value,
+      };
+    });
+
+    await Salary.insertMany(salaries);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+// createMonthlySalary();
+
+// Get salaries
 export const getSalaries = async (req, res) => {
   const { teacherId, startDate, endDate, searchQuery } = req.query;
   const page = parseInt(req.query.page) || 1;
@@ -101,11 +128,3 @@ export const getSalaries = async (req, res) => {
     res.status(500).json({ message: { error: err.message } });
   }
 };
-
-// const startOfMonth = new Date();
-// const endOfMonth = new Date();
-// startOfMonth.setDate(1);
-// startOfMonth.setHours(0, 0, 0, 0);
-// endOfMonth.setMonth(endOfMonth.getMonth() + 1);
-// endOfMonth.setDate(0);
-// endOfMonth.setHours(23, 59, 59, 999);

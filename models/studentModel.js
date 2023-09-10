@@ -25,6 +25,14 @@ const studentSchema = new Schema(
       type: String,
       required: true,
     },
+    fin: {
+      type: String,
+      required: true,
+    },
+    seria: {
+      type: String,
+      required: true,
+    },
     birthday: {
       type: Date,
       required: true,
@@ -34,6 +42,10 @@ const studentSchema = new Schema(
       required: true,
     },
     fatherPhone: {
+      type: String,
+      required: true,
+    },
+    emergencyPhone: {
       type: String,
       required: true,
     },
@@ -55,8 +67,8 @@ const studentSchema = new Schema(
       ru: Boolean,
     },
     whereFrom: {
-      type: String,
-      required: true,
+      mainArea: String,
+      part: String,
     },
     courses: [
       {
@@ -73,7 +85,7 @@ const studentSchema = new Schema(
       type: Boolean,
       default: true,
     },
-    school: {
+    educationalInstitution: {
       type: String,
       required: true,
     },
@@ -85,9 +97,9 @@ const studentSchema = new Schema(
       type: String,
       required: true,
     },
-    phoneUrgent: {
-      type: String,
-      required: true,
+    deleted: {
+      type: Boolean,
+      default: false,
     },
     otp: Number,
   },

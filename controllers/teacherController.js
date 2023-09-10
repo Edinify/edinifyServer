@@ -6,6 +6,21 @@ import bcrypt from "bcrypt";
 export const getTeachers = async (req, res) => {
   try {
     const teachers = await Teacher.find().populate("courses");
+
+    res.status(200).json(teachers);
+  } catch (err) {
+    res.status(500).json({ message: { error: err.message } });
+  }
+};
+
+// Get active teachers
+export const getActiveTeachers = async (req, res) => {
+  try {
+    const teachers = await Teacher.find({
+      deleted: false,
+      status: true,
+    }).populate("courses");
+
     res.status(200).json(teachers);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
@@ -25,44 +40,36 @@ export const getTeachersForPagination = async (req, res) => {
     if (searchQuery && searchQuery.trim() !== "") {
       const regexSearchQuery = new RegExp(searchQuery, "i");
 
-      const allTeachers = await Teacher.find({
+      const teachersCount = await Teacher.countDocuments({
         fullName: { $regex: regexSearchQuery },
+        deleted: false,
       });
 
       teachers = await Teacher.find({
         fullName: { $regex: regexSearchQuery },
+        deleted: false,
       })
         .skip((page - 1) * limit)
         .limit(limit)
         .populate("courses");
 
-      totalPages = Math.ceil(allTeachers.length / limit);
+      totalPages = Math.ceil(teachersCount / limit);
     } else {
-      const teacherCount = await Teacher.countDocuments();
-      totalPages = Math.ceil(teacherCount / limit);
-      teachers = await Teacher.find()
+      const teachersCount = await Teacher.countDocuments({ deleted: false });
+      totalPages = Math.ceil(teachersCount / limit);
+
+      teachers = await Teacher.find({ deleted: false })
         .skip((page - 1) * limit)
         .limit(limit)
         .populate("courses");
     }
 
-    res.status(200).json({ teachers, totalPages });
-  } catch (err) {
-    res.status(500).json({ message: { error: err.message } });
-  }
-};
+    const teacherList = teachers.map((teacher) => ({
+      ...teacher.toObject(),
+      password: "",
+    }));
 
-// Get Teacher
-export const getTeacher = async (req, res) => {
-  const { id } = req.user;
-  try {
-    const teacher = await Teacher.findById(id);
-
-    if (!teacher) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-
-    res.status(200).json(teacher);
+    res.status(200).json({ teachers: teacherList, totalPages });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
@@ -80,10 +87,12 @@ export const updateTeacher = async (req, res) => {
       return res.status(400).json({ key: "email-already-exists" });
     }
 
-    if (updatedData.password) {
+    if (updatedData.password && updatedData.password.length > 5) {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(updatedData.password, salt);
       updatedData = { ...updatedData, password: hashedPassword };
+    } else {
+      delete updatedData.password;
     }
 
     const teacher = await Teacher.findById(id);
@@ -104,30 +113,42 @@ export const updateTeacher = async (req, res) => {
       });
     }
 
-    res.status(200).json(updatedTeacher);
+    const updatedTeacherObj = updatedTeacher.toObject();
+    updatedTeacherObj.password = "";
+
+    res.status(200).json(updatedTeacherObj);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
 };
 
 // Delete teacher
-
 export const deleteTeacher = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const deletedTeacher = await Teacher.findByIdAndDelete(id);
-
-    if (!deletedTeacher) {
-      return res.status(404).json({ message: "Student not found" });
+    const teacher = await Teacher.findById(id);
+    if (!teacher) {
+      return res.status(404).json({ message: "Teacher not found" });
     }
 
-    res.status(200).json({ message: "Student successfully deleted" });
+    const teacherLessonsCount = await Lesson.countDocuments({
+      teacher: id,
+      role: "current",
+    });
+    if (teacherLessonsCount > 0) {
+      await Teacher.findByIdAndUpdate(id, { deleted: true });
+    } else {
+      await Teacher.findByIdAndDelete(id);
+    }
+
+    await Lesson.deleteMany({ teacher: id, role: "main" });
+
+    res.status(200).json({ message: "Teacher successfully deleted" });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
 };
-// fajk
 
 // Update teacher password
 export const updateTeacherPassword = async (req, res) => {

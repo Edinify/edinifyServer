@@ -15,9 +15,10 @@ import profileRoutes from "./routes/profileRoutes.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import demoSmtpRoutes from "./routes/demoSmtpRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
+import incomeRoutes from "./routes/incomeRoutes.js";
 // import updateButtonRoutes from "./routes/updateButtonRoutes.js";
 import {
-  createNotificationForBirthday,
+  createNotificationForBirthdayWithCron,
   deleteNotificationsForBirthday,
 } from "./controllers/notificationController.js";
 
@@ -30,7 +31,8 @@ const uri = process.env.DB_URI;
 
 app.use(
   cors({
-    origin: "*",
+    origin: "http://localhost:3000",
+    credentials:true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],
     exposedHeaders: ["Content-Type"],
@@ -51,6 +53,7 @@ app.use("/api/user/profile", profileRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/demo", demoSmtpRoutes);
 app.use("/api/expense", expenseRoutes);
+app.use("/api/income", incomeRoutes);
 
 app.get("/", (req, res) => {
   res.send("salam");
@@ -62,8 +65,10 @@ mongoose
     console.log("connected database");
     app.listen(port, () => {
       console.log(`listen server at ${port}`);
-      // cron.schedule("0 0 * * *", () => {
-      //   createNotificationForBirthday();
+      // cron.schedule("* * * * *", () => {
+      //   console.log('salam')
+        // createMonthlySalary()
+      //   createNotificationForBirthdayWithCron();
       //   deleteNotificationsForBirthday();
       // });
     });

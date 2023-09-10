@@ -67,9 +67,13 @@ const lessonSchema = new Schema(
     task: {
       type: String,
     },
+    feedback: {
+      type: String,
+    },
     salary: {
-      type: Number,
-      required: true,
+      monthly: { type: Boolean, required: true },
+      hourly: { type: Boolean, required: true },
+      value: { type: Number, required: true },
     },
     earnings: {
       type: Number,

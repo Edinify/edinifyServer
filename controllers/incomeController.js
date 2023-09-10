@@ -1,15 +1,14 @@
-import { Expense } from "../models/expenseModel.js";
+import { Income } from "../models/incomeModel.js";
 
-
-// Get expenses for pagination
-export const getExpensesForPagination = async (req, res) => {
+// Get incomes for pagination
+export const getIncomesForPagination = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
   const { startDate, endDate } = req.query;
 
   try {
     let totalPages;
-    let expenses;
+    let incomes;
 
     const filterObj = {};
 
@@ -23,63 +22,64 @@ export const getExpensesForPagination = async (req, res) => {
       };
     }
 
-    const expensesCount = await Expense.countDocuments(filterObj);
+    const incomesCount = await Income.countDocuments(filterObj);
 
-    totalPages = Math.ceil(expensesCount / limit);
+    totalPages = Math.ceil(incomesCount / limit);
 
-    expenses = await Expense.find(filterObj)
+    incomes = await Income.find(filterObj)
       .skip((page - 1) * limit)
       .limit(limit);
 
-    res.status(200).json({ expenses, totalPages });
+    res.status(200).json({ incomes, totalPages });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
 };
 
-// Create expense
-export const createExpense = async (req, res) => {
+// Create income
+export const createIncome = async (req, res) => {
+  console.log(req.body);
   try {
-    const newExpense = new Expense(req.body);
-    await newExpense.save();
+    const newIncome = new Income(req.body);
+    await newIncome.save();
 
-    const expensesCount = await Expense.countDocuments();
-    const lastPage = Math.ceil(expensesCount / 10);
+    const incomesCount = await Income.countDocuments();
+    const lastPage = Math.ceil(incomesCount / 10);
 
-    res.status(201).json({ expense: newExpense, lastPage });
+    res.status(201).json({ income: newIncome, lastPage });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// Update expense
-export const updateExpense = async (req, res) => {
+// Update income
+export const updateIncome = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const updatedExpense = await Expense.findByIdAndUpdate(id, req.body, {
+    const updatedIncome = await Income.findByIdAndUpdate(id, req.body, {
       new: true,
       runValidators: true,
     });
 
-    if (!updatedExpense) {
+    if (!updatedIncome) {
       return res.status(404).json({ message: "Expense not found" });
     }
 
-    res.status(200).json(updatedExpense);
+    res.status(200).json(updatedIncome);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
 };
 
-// Delete expense
-export const deleteExpense = async (req, res) => {
+// Delete income
+export const deleteIncome = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const deletedExpense = await Expense.findByIdAndDelete(id);
+    const deletedIncome = await Income.findByIdAndDelete(id);
 
-    if (!deletedExpense) {
+    if (!deletedIncome) {
       return res.status(404).json({ message: "Expense not found" });
     }
 
