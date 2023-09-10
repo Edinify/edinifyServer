@@ -6,6 +6,21 @@ import bcrypt from "bcrypt";
 export const getTeachers = async (req, res) => {
   try {
     const teachers = await Teacher.find().populate("courses");
+
+    res.status(200).json(teachers);
+  } catch (err) {
+    res.status(500).json({ message: { error: err.message } });
+  }
+};
+
+// Get active teachers
+export const getActiveTeachers = async (req, res) => {
+  try {
+    const teachers = await Teacher.find({
+      deleted: false,
+      status: true,
+    }).populate("courses");
+
     res.status(200).json(teachers);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
@@ -119,13 +134,15 @@ export const deleteTeacher = async (req, res) => {
 
     const teacherLessonsCount = await Lesson.countDocuments({
       teacher: id,
+      role: "current",
     });
     if (teacherLessonsCount > 0) {
       await Teacher.findByIdAndUpdate(id, { deleted: true });
-      res.status(200).json({ message: "Teacher successfully deleted" });
+    } else {
+      await Teacher.findByIdAndDelete(id);
     }
 
-    await Teacher.findByIdAndDelete(id);
+    await Lesson.deleteMany({ teacher: id, role: "main" });
 
     res.status(200).json({ message: "Teacher successfully deleted" });
   } catch (err) {

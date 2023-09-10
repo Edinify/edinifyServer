@@ -121,7 +121,7 @@ export const registerStudent = async (req, res) => {
 export const registerTeacher = async (req, res) => {
   const { email } = req.body;
 
-  console.log(req.body)
+  console.log(req.body);
 
   try {
     const existingAdmin = await Admin.findOne({ email });
