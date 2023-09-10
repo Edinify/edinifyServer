@@ -347,7 +347,7 @@ const createRefreshToken = (user) => {
   const RefreshToken = jwt.sign(
     {mail: user.email, role: user.role, id: user._id },
     process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: "5m" }
+    { expiresIn: "2m" }
   );
   return RefreshToken;
 };
