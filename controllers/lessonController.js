@@ -55,7 +55,6 @@ export const getWeeklyLessonsForMainTable = async (req, res) => {
 export const getWeeklyLessonsForCurrentTable = async (req, res) => {
   const { teacherId } = req.query;
 
-  console.log("salam");
   const currentDate = new Date();
   const startWeek = new Date(
     currentDate.setDate(
@@ -69,6 +68,7 @@ export const getWeeklyLessonsForCurrentTable = async (req, res) => {
   startWeek.setHours(0, 0, 0, 0);
   endWeek.setHours(23, 59, 59, 999);
 
+ 
   try {
     if (!teacherId || teacherId === "undefined") {
       return res.status(200).json([]);

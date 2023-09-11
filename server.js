@@ -23,7 +23,7 @@ import {
 } from "./controllers/notificationController.js";
 
 import cron from "node-cron";
-import { createMonthlySalary } from "./controllers/salaryController.js";
+
 
 dotenv.config();
 

@@ -24,6 +24,24 @@ const salarySchema = new Schema(
       type: Number,
       required: true,
     },
+    type: {
+      type: String,
+      enum: ["monthly", "hourly"],
+    },
+    bonus: {
+      value: {
+        type: Number,
+        default: 0,
+        required: true,
+      },
+      date: {
+        type: Date,
+      },
+      comment: {
+        type: String,
+        default: "",
+      },
+    },
     date: {
       type: Date,
       default: Date.now,

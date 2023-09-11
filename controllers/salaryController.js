@@ -2,8 +2,9 @@ import { Lesson } from "../models/lessonModel.js";
 import { Salary } from "../models/salarySchema.js";
 import { Teacher } from "../models/teacherModel.js";
 
-// Create monthly salary
-export const createMonthlySalary = async () => {
+// MONTHLY
+// Create monthly salaries at the beginning of each month
+export const createMonthlySalariesAtEachMonth = async () => {
   try {
     const teachers = await Teacher.find({
       deleted: false,
@@ -18,6 +19,7 @@ export const createMonthlySalary = async () => {
         canceledCount: 0,
         participantCount: 0,
         salary: teacher.salary.value,
+        type: "monthly",
       };
     });
 
@@ -27,7 +29,55 @@ export const createMonthlySalary = async () => {
   }
 };
 
-// createMonthlySalary();
+// Create a monthly salary at create teacher
+export const createMonthlySalaryAtCreateTeacher = async (
+  teacherId,
+  teacherSalary
+) => {
+  try {
+    await Salary.create({
+      teacherId: teacherId,
+      confirmedCount: 0,
+      canceledCount: 0,
+      participantCount: 0,
+      salary: teacherSalary,
+      type: "monthly",
+    });
+    console.log("success");
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+// HOURLY
+export const createOrUpdateHourlySalaryAtConfirmedLesson = async (
+  date,
+  teacherId
+) => {
+  try {
+    const salary = await Salary.findOne({
+      teacherId,
+      $expr: {
+        $and: [
+          { $eq: [{ $year: "$date" }, targetYear] },
+          { $eq: [{ $month: "$date" }, targetMonth] },
+        ],
+      },
+    });
+
+    await Salary.create({
+      teacherId: teacherId,
+      confirmedCount: 0,
+      canceledCount: 0,
+      participantCount: 0,
+      salary: teacherSalary,
+      type: "monthly",
+    });
+    console.log("success");
+  } catch (err) {
+    console.log(err);
+  }
+};
 
 // Get salaries
 export const getSalaries = async (req, res) => {
