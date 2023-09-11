@@ -24,6 +24,10 @@ const salarySchema = new Schema(
       type: Number,
       required: true,
     },
+    date: {
+      type: Date,
+      default: Date.now,
+    },
   },
   { timestamps: true }
 );
