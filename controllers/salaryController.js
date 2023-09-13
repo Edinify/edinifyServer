@@ -69,7 +69,7 @@ export const updateSalaryWhenUpdateTeacher = async (teacher) => {
 };
 
 // Update salary when update lesson
-export const updateSalaryWhenUpdateSalary = async (lesson) => {
+export const updateSalaryWhenUpdateLesson = async (lesson) => {
   const targetDate = new Date(lesson.date);
   const targetYear = targetDate.getFullYear();
   const targetMonth = targetDate.getMonth() + 1;
@@ -89,9 +89,11 @@ export const updateSalaryWhenUpdateSalary = async (lesson) => {
       },
     });
 
+    console.log(lessons);
     lessons.forEach((lesson) => {
       if (lesson.status === "confirmed") {
         confirmedCount++;
+        console.log("---------", lesson.students, "-----------");
         participantCount += lesson.students.filter(
           (student) => student.attendance === 1
         ).length;
@@ -125,99 +127,136 @@ export const updateSalaryWhenUpdateSalary = async (lesson) => {
 
 // Get salaries
 export const getSalaries = async (req, res) => {
-  const { teacherId, startDate, endDate, searchQuery } = req.query;
+  const { startDate, endDate, searchQuery } = req.query;
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
-
-  const filterObj = {
-    status: { $ne: "unviewed" },
-    role: "current",
-  };
-
-  if (teacherId) {
-    filterObj.teacher = teacherId;
-  }
-  if (startDate && endDate) {
-    filterObj.date = {
-      $gte: new Date(startDate),
-      $lte: new Date(endDate),
-    };
-  } else {
-    const startOfMonth = new Date();
-    const endOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-    endOfMonth.setMonth(endOfMonth.getMonth() + 1);
-    endOfMonth.setDate(0);
-    endOfMonth.setHours(23, 59, 59, 999);
-    filterObj.date = {
-      $gte: startOfMonth,
-      $lte: endOfMonth,
-    };
-  }
+  console.log(1);
+  console.log(startDate);
+  console.log(endDate);
+  console.log(searchQuery);
 
   try {
-    const lessons = await Lesson.find(filterObj);
     let teachers;
-    let totalPage;
+    let totalPages;
+    let salaries;
+    let result;
+    let filterObj = {};
 
-    if (teacherId) {
-      teachers = await Teacher.find({ _id: teacherId });
-      totalPage = 1;
-    } else {
+    if (searchQuery && searchQuery.trim() !== "") {
       const regexSearchQuery = new RegExp(searchQuery, "i");
+
+      console.log(2);
 
       const teachersCount = await Teacher.countDocuments({
         fullName: { $regex: regexSearchQuery },
+        deleted: false,
       });
+      console.log(3);
+      console.log(teachersCount, "teacher count");
 
       teachers = await Teacher.find({
         fullName: { $regex: regexSearchQuery },
+        deleted: false,
       })
         .skip((page - 1) * limit)
         .limit(limit);
 
-      totalPage = Math.ceil(teachersCount / limit);
+      console.log(4);
+      console.log(teachers, "teachers");
+
+      totalPages = Math.ceil(teachersCount / limit);
+    } else {
+      const teachersCount = await Teacher.countDocuments({ deleted: false });
+      console.log(5);
+      console.log(teachersCount);
+      totalPages = Math.ceil(teachersCount / limit);
+      teachers = await Teacher.find({ deleted: false })
+        .skip((page - 1) * limit)
+        .limit(limit);
+      console.log(6);
+      console.log(teachers, "teacher");
     }
 
-    const response = teachers.map((teacher) => {
-      const teacherLessons = lessons.filter(
-        (lesson) => lesson.teacher.toString() == teacher._id.toString()
+    const teachersIds = teachers.map((teacher) => teacher._id);
+
+    console.log(7);
+    console.log(teachersIds);
+    filterObj.teacherId = {
+      $in: teachersIds,
+    };
+
+    if (startDate && endDate) {
+      const targetStartDate = new Date(startDate);
+      const targetEndDate = new Date(endDate);
+
+      targetStartDate.setDate(1);
+      targetEndDate.setMonth(targetEndDate.getMonth() + 1);
+      targetEndDate.setDate(0);
+
+      targetStartDate.setHours(0, 0, 0, 0);
+      targetEndDate.setHours(23, 59, 59, 999);
+
+      filterObj.date = {
+        $gte: targetStartDate,
+        $lte: targetEndDate,
+      };
+      console.log(8);
+    } else {
+      console.log(9);
+      const targetDate = new Date();
+      const targetYear = targetDate.getFullYear();
+      const targetMonth = targetDate.getMonth() + 1;
+
+      filterObj.$expr = {
+        $and: [
+          { $eq: [{ $year: "$date" }, targetYear] },
+          { $eq: [{ $month: "$date" }, targetMonth] },
+        ],
+      };
+    }
+
+    salaries = await Salary.find(filterObj);
+    console.log(10);
+    console.log(salaries);
+
+    result = teachers.map((teacher) => {
+      const targetSalaries = salaries.filter(
+        (salary) => salary.teacherId.toString() === teacher._id.toString()
       );
 
-      const confirmed = teacherLessons.filter(
-        (lesson) => lesson.status === "confirmed"
-      );
+      let totalConfirmed = 0;
+      let totalCancelled = 0;
+      let totalSalary = 0;
+      let participantCount = 0;
+      let totalBonus = 0;
 
-      const cancelled = teacherLessons.filter(
-        (lesson) => lesson.status === "cancelled"
-      );
+      targetSalaries.forEach((salary) => {
+        totalConfirmed += salary.confirmedCount;
+        totalCancelled += salary.cancelledCount;
+        participantCount += salary.participantCount;
+        totalBonus += salary.bonus || 0;
 
-      const participantCount = confirmed.reduce((total, current) => {
-        return (total += current.students.filter(
-          (item) => item.attendance === 1
-        ).length);
-      }, 0);
-
-      const total = confirmed.reduce(
-        (total, current) =>
-          (total +=
-            current.students.filter((item) => item.attendance === 1).length *
-            current.salary),
-        0
-      );
+        if (salary.teacherSalary.monthly) {
+          totalSalary += salary.teacherSalary.value;
+        } else if (salary.teacherSalary.hourly) {
+          totalSalary += salary.teacherSalary.value * salary.participantCount;
+        }
+      });
 
       return {
-        teacher,
-        confirmed: confirmed.length,
-        cancelled: cancelled.length,
-        participantCount,
+        _id: teacher._id,
+        teacherName: teacher.fullName,
         salary: teacher.salary,
-        total: total,
+        totalSalary: totalSalary,
+        confirmedCount: totalConfirmed,
+        cancelledCount: totalCancelled,
+        participantCount: participantCount,
+        bonus: totalBonus,
       };
     });
 
-    res.status(200).json({ salariesData: response, totalPage });
+    console.log(result);
+    res.status(200).json({ salaries: result, totalPages });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
