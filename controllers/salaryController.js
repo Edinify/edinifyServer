@@ -1,25 +1,23 @@
 import { Lesson } from "../models/lessonModel.js";
-import { Salary } from "../models/salarySchema.js";
+import { Salary } from "../models/salaryModel.js";
 import { Teacher } from "../models/teacherModel.js";
 
-// MONTHLY
-// Create monthly salaries at the beginning of each month
-export const createMonthlySalariesAtEachMonth = async () => {
+// CREATE SALARY
+// Create salaries at the beginning of each month
+export const createSalariesAtEachMonth = async () => {
   try {
     const teachers = await Teacher.find({
       deleted: false,
       status: true,
-      "salary.monthly": true,
     });
 
     const salaries = teachers.map((teacher) => {
       return {
         teacherId: teacher._id,
+        teacherSalary: teacher.salary,
         confirmedCount: 0,
-        canceledCount: 0,
+        cancelledCount: 0,
         participantCount: 0,
-        salary: teacher.salary.value,
-        type: "monthly",
       };
     });
 
@@ -29,19 +27,15 @@ export const createMonthlySalariesAtEachMonth = async () => {
   }
 };
 
-// Create a monthly salary at create teacher
-export const createMonthlySalaryAtCreateTeacher = async (
-  teacherId,
-  teacherSalary
-) => {
+// Create a salary at create teacher
+export const createSalaryWhenCreateTeacher = async (teacher) => {
   try {
     await Salary.create({
-      teacherId: teacherId,
+      teacherId: teacher._id,
+      teacherSalary: teacher.salary,
       confirmedCount: 0,
-      canceledCount: 0,
+      cancelledCount: 0,
       participantCount: 0,
-      salary: teacherSalary,
-      type: "monthly",
     });
     console.log("success");
   } catch (err) {
@@ -49,14 +43,44 @@ export const createMonthlySalaryAtCreateTeacher = async (
   }
 };
 
-// HOURLY
-export const createOrUpdateHourlySalaryAtConfirmedLesson = async (
-  date,
-  teacherId
-) => {
+// UPDATE SALARY
+// Update salary when update teacher
+export const updateSalaryWhenUpdateTeacher = async (teacher) => {
+  const currentDate = new Date();
+  const targetYear = currentDate.getFullYear();
+  const targetMonth = currentDate.getMonth() + 1;
+
   try {
-    const salary = await Salary.findOne({
-      teacherId,
+    await Salary.findOneAndUpdate(
+      {
+        teacherId: teacher._id,
+        $expr: {
+          $and: [
+            { $eq: [{ $year: "$date" }, targetYear] },
+            { $eq: [{ $month: "$date" }, targetMonth] },
+          ],
+        },
+      },
+      { teacherSalary: teacher.salary }
+    );
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+// Update salary when update lesson
+export const updateSalaryWhenUpdateSalary = async (lesson) => {
+  const targetDate = new Date(lesson.date);
+  const targetYear = targetDate.getFullYear();
+  const targetMonth = targetDate.getMonth() + 1;
+  try {
+    let confirmedCount = 0;
+    let cancelledCount = 0;
+    let participantCount = 0;
+
+    const lessons = await Lesson.find({
+      teacher: lesson.teacher._id,
+      role: "current",
       $expr: {
         $and: [
           { $eq: [{ $year: "$date" }, targetYear] },
@@ -65,15 +89,35 @@ export const createOrUpdateHourlySalaryAtConfirmedLesson = async (
       },
     });
 
-    await Salary.create({
-      teacherId: teacherId,
-      confirmedCount: 0,
-      canceledCount: 0,
-      participantCount: 0,
-      salary: teacherSalary,
-      type: "monthly",
+    lessons.forEach((lesson) => {
+      if (lesson.status === "confirmed") {
+        confirmedCount++;
+        participantCount += lesson.students.filter(
+          (student) => student.attendance === 1
+        ).length;
+      }
+
+      if (lesson.status === "cancelled") {
+        cancelledCount++;
+      }
     });
-    console.log("success");
+
+    await Salary.findOneAndUpdate(
+      {
+        teacherId: lesson.teacher._id,
+        $expr: {
+          $and: [
+            { $eq: [{ $year: "$date" }, targetYear] },
+            { $eq: [{ $month: "$date" }, targetMonth] },
+          ],
+        },
+      },
+      {
+        confirmedCount,
+        cancelledCount,
+        participantCount,
+      }
+    );
   } catch (err) {
     console.log(err);
   }
