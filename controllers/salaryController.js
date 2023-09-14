@@ -243,7 +243,7 @@ export const getSalariesForAdmins = async (req, res) => {
 
 export const getSalariesForTeacher = async (req, res) => {
   const { startDate, endDate } = req.query;
-  const { id } = user.id;
+  const { id } = req.user
 
   try {
     const teacher = await Teacher.findById(id);
