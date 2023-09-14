@@ -3,6 +3,7 @@ import { Salary } from "../models/salaryModel.js";
 import { Teacher } from "../models/teacherModel.js";
 
 // Create
+
 export const createBonus = async (req, res) => {
   const { teacher } = req.body;
   const targetDate = new Date();
