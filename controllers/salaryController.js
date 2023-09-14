@@ -126,14 +126,10 @@ export const updateSalaryWhenUpdateLesson = async (lesson) => {
 };
 
 // Get salaries
-export const getSalaries = async (req, res) => {
+export const getSalariesForAdmins = async (req, res) => {
   const { startDate, endDate, searchQuery } = req.query;
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
-  console.log(1);
-  console.log(startDate);
-  console.log(endDate);
-  console.log(searchQuery);
 
   try {
     let teachers;
@@ -145,14 +141,10 @@ export const getSalaries = async (req, res) => {
     if (searchQuery && searchQuery.trim() !== "") {
       const regexSearchQuery = new RegExp(searchQuery, "i");
 
-      console.log(2);
-
       const teachersCount = await Teacher.countDocuments({
         fullName: { $regex: regexSearchQuery },
         deleted: false,
       });
-      console.log(3);
-      console.log(teachersCount, "teacher count");
 
       teachers = await Teacher.find({
         fullName: { $regex: regexSearchQuery },
@@ -161,26 +153,18 @@ export const getSalaries = async (req, res) => {
         .skip((page - 1) * limit)
         .limit(limit);
 
-      console.log(4);
-      console.log(teachers, "teachers");
-
       totalPages = Math.ceil(teachersCount / limit);
     } else {
       const teachersCount = await Teacher.countDocuments({ deleted: false });
-      console.log(5);
-      console.log(teachersCount);
+
       totalPages = Math.ceil(teachersCount / limit);
       teachers = await Teacher.find({ deleted: false })
         .skip((page - 1) * limit)
         .limit(limit);
-      console.log(6);
-      console.log(teachers, "teacher");
     }
 
     const teachersIds = teachers.map((teacher) => teacher._id);
 
-    console.log(7);
-    console.log(teachersIds);
     filterObj.teacherId = {
       $in: teachersIds,
     };
@@ -200,9 +184,7 @@ export const getSalaries = async (req, res) => {
         $gte: targetStartDate,
         $lte: targetEndDate,
       };
-      console.log(8);
     } else {
-      console.log(9);
       const targetDate = new Date();
       const targetYear = targetDate.getFullYear();
       const targetMonth = targetDate.getMonth() + 1;
@@ -216,8 +198,6 @@ export const getSalaries = async (req, res) => {
     }
 
     salaries = await Salary.find(filterObj);
-    console.log(10);
-    console.log(salaries);
 
     result = teachers.map((teacher) => {
       const targetSalaries = salaries.filter(
@@ -255,8 +235,77 @@ export const getSalaries = async (req, res) => {
       };
     });
 
-    console.log(result);
     res.status(200).json({ salaries: result, totalPages });
+  } catch (err) {
+    res.status(500).json({ message: { error: err.message } });
+  }
+};
+
+export const getSalariesForTeacher = async (req, res) => {
+  const { startDate, endDate } = req.query;
+  const { id } = user.id;
+
+  try {
+    const teacher = await Teacher.findById(id);
+    let salaries;
+    let filterObj = {
+      teacherId: id,
+    };
+
+    if (startDate && endDate) {
+      const targetStartDate = new Date(startDate);
+      const targetEndDate = new Date(endDate);
+
+      targetStartDate.setDate(1);
+      targetEndDate.setMonth(targetEndDate.getMonth() + 1);
+      targetEndDate.setDate(0);
+
+      targetStartDate.setHours(0, 0, 0, 0);
+      targetEndDate.setHours(23, 59, 59, 999);
+
+      filterObj.date = {
+        $gte: targetStartDate,
+        $lte: targetEndDate,
+      };
+    } else {
+      const targetDate = new Date();
+      const targetYear = targetDate.getFullYear();
+      const targetMonth = targetDate.getMonth() + 1;
+
+      filterObj.$expr = {
+        $and: [
+          { $eq: [{ $year: "$date" }, targetYear] },
+          { $eq: [{ $month: "$date" }, targetMonth] },
+        ],
+      };
+    }
+
+    salaries = await Salary.find(filterObj);
+
+    let totalSalary = 0;
+    let participantCount = 0;
+    let totalBonus = 0;
+
+    salaries.forEach((salary) => {
+      participantCount += salary.participantCount;
+      totalBonus += salary.bonus || 0;
+
+      if (salary.teacherSalary.monthly) {
+        totalSalary += salary.teacherSalary.value;
+      } else if (salary.teacherSalary.hourly) {
+        totalSalary += salary.teacherSalary.value * salary.participantCount;
+      }
+    });
+
+    const result = {
+      _id: id,
+      salary: teacher.salary,
+      totalSalary: totalSalary,
+      participantCount: participantCount,
+      bonus: totalBonus,
+    };
+
+    res.status(200).json({ salary: result });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }

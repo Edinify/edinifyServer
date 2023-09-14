@@ -1,8 +1,9 @@
 import express from "express";
-import { authMiddleware, checkAdminAndSuperAdmin } from "../middleware/auth.js";
+import { authMiddleware, checkAdminAndSuperAdmin, checkTeacher } from "../middleware/auth.js";
 import {
   createBonus,
   deleteBonus,
+  getBonusesForTeacher,
   getBonusesWithPagination,
   updateBonus,
 } from "../controllers/bonusController.js";
@@ -16,6 +17,7 @@ router.get(
   checkAdminAndSuperAdmin,
   getBonusesWithPagination
 );
+router.get("/me", authMiddleware, checkTeacher, getBonusesForTeacher)
 router.patch("/:id", authMiddleware, checkAdminAndSuperAdmin, updateBonus);
 router.delete("/:id", authMiddleware, checkAdminAndSuperAdmin, deleteBonus);
 

@@ -39,7 +39,6 @@ export const createBonus = async (req, res) => {
         bonus: bonus._id,
       }
     );
-    console.log(salary);
 
     const bonusCount = await Bonus.countDocuments();
     const lastPage = Math.ceil(bonusCount / 10);
@@ -105,6 +104,49 @@ export const getBonusesWithPagination = async (req, res) => {
     }
 
     res.status(200).json({ bonuses, totalPages });
+  } catch (err) {
+    res.status(500).json({ message: { error: err.message } });
+  }
+};
+
+export const getBonusesForTeacher = async (req, res) => {
+  const { startDate, endDate } = req.query;
+  const { id } = req.user;
+
+  try {
+    const filterObj = {
+      teacher: id,
+    };
+
+    if (startDate && endDate) {
+      const targetStartDate = new Date(startDate);
+      const targetEndDate = new Date(endDate);
+      targetStartDate.setDate(1);
+      targetEndDate.setMonth(targetEndDate.getMonth() + 1);
+      targetEndDate.setDate(0);
+      targetStartDate.setHours(0, 0, 0, 0);
+      targetEndDate.setHours(23, 59, 59, 999);
+      filterObj.date = {
+        createdAt: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      };
+    } else {
+      const targetDate = new Date();
+      const targetYear = targetDate.getFullYear();
+      const targetMonth = targetDate.getMonth() + 1;
+      filterObj.$expr = {
+        $and: [
+          { $eq: [{ $year: "$date" }, targetYear] },
+          { $eq: [{ $month: "$date" }, targetMonth] },
+        ],
+      };
+    }
+
+    const bonuses = await Bonus.find(filterObj);
+
+    res.status(200).json(bonuses);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
