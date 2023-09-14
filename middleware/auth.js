@@ -55,3 +55,13 @@ export const checkAdminAndSuperAdmin = async (req, res, next) => {
   }
   next();
 };
+
+// Check teacher
+export const checkTeacher = async (req, res, next) => {
+  if (req.user.role !== "teacher") {
+    return res
+      .status(403)
+      .json({ message: "You don't have permission to access this resource" });
+  }
+  next();
+};

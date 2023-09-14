@@ -16,14 +16,14 @@ import dashboardRoutes from "./routes/dashboard.js";
 import demoSmtpRoutes from "./routes/demoSmtpRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
 import incomeRoutes from "./routes/incomeRoutes.js";
+import bonusRoutes from "./routes/bonusRoutes.js";
 // import updateButtonRoutes from "./routes/updateButtonRoutes.js";
 import {
   createNotificationForBirthdayWithCron,
   deleteNotificationsForBirthday,
 } from "./controllers/notificationController.js";
 
-import cron from "node-cron";
-import { createMonthlySalary } from "./controllers/salaryController.js";
+// import cron from "node-cron";
 
 dotenv.config();
 
@@ -51,6 +51,7 @@ app.use("/api/course", courseRoutes);
 app.use("/api/lesson", lessonRoutes);
 app.use("/api/notification", notificationRoutes);
 app.use("/api/salary", salaryRoutes);
+app.use("/api/bonus", bonusRoutes);
 app.use("/api/user/profile", profileRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/demo", demoSmtpRoutes);
@@ -69,7 +70,7 @@ mongoose
       console.log(`listen server at ${port}`);
       // cron.schedule("* * * * *", () => {
       //   console.log('salam')
-        // createMonthlySalary()
+      // createMonthlySalary()
       //   createNotificationForBirthdayWithCron();
       //   deleteNotificationsForBirthday();
       // });

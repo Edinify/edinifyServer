@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import { createNotificationForBirthdayAtCreateAndUpdateStudent } from "./notificationController.js";
+import { createSalaryWhenCreateTeacher } from "./salaryController.js";
 
 dotenv.config();
 
@@ -121,8 +122,6 @@ export const registerStudent = async (req, res) => {
 export const registerTeacher = async (req, res) => {
   const { email } = req.body;
 
-  console.log(req.body);
-
   try {
     const existingAdmin = await Admin.findOne({ email });
     const existingStudent = await Student.findOne({ email });
@@ -145,10 +144,12 @@ export const registerTeacher = async (req, res) => {
       { $addToSet: { teachers: teacher._id } }
     );
 
+    createSalaryWhenCreateTeacher(teacher);
+
     const teachersCount = await Teacher.countDocuments({ deleted: false });
     const lastPage = Math.ceil(teachersCount / 10);
 
-    res.status(201).json({ teacher, lastPage });
+    res.status(201).json({ teacher: { ...teacher, password: "" }, lastPage });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });

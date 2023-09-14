@@ -8,11 +8,16 @@ const salarySchema = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
+    teacherSalary: {
+      monthly: { type: Boolean, required: true },
+      hourly: { type: Boolean, required: true },
+      value: { type: Number, required: true },
+    },
     confirmedCount: {
       type: Number,
       require: true,
     },
-    canceledCount: {
+    cancelledCount: {
       type: Number,
       required: true,
     },
@@ -20,9 +25,13 @@ const salarySchema = new Schema(
       type: Number,
       required: true,
     },
-    salary: {
-      type: Number,
-      required: true,
+    bonus: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Bonus"
+    },
+    date: {
+      type: Date,
+      default: Date.now,
     },
   },
   { timestamps: true }
