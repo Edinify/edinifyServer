@@ -23,7 +23,7 @@ import {
   deleteNotificationsForBirthday,
 } from "./controllers/notificationController.js";
 
-import cron from "node-cron";
+// import cron from "node-cron";
 
 dotenv.config();
 
