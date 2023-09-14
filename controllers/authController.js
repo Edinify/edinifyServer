@@ -188,7 +188,6 @@ export const login = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
     });
 
-
     res.status(200).json({
       AccessToken: AccessToken,
       RefreshToken: RefreshToken,
@@ -337,16 +336,16 @@ const createAccessToken = (user) => {
   const AccessToken = jwt.sign(
     { email: user.email, role: user.role, id: user._id },
     process.env.SECRET_KEY,
-    { expiresIn: "20s" }
+    { expiresIn: "24h" }
   );
-  
+
   return AccessToken;
 };
 
 // create refreshtoken
 const createRefreshToken = (user) => {
   const RefreshToken = jwt.sign(
-    {mail: user.email, role: user.role, id: user._id },
+    { mail: user.email, role: user.role, id: user._id },
     process.env.REFRESH_TOKEN_SECRET,
     { expiresIn: "2m" }
   );
@@ -364,18 +363,17 @@ export const refreshToken = async (req, res) => {
     if (token) {
       jwt.verify(rf_token, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
         if (err) {
-          res.clearCookie('refreshtoken', 
-          {
-            httpOnly:true, 
+          res.clearCookie("refreshtoken", {
+            httpOnly: true,
             path: "/api/user/auth/refresh_token",
-            sameSite:'None',
-            secure:true
-          })
+            sameSite: "None",
+            secure: true,
+          });
           console.log(err.message);
           revokeTokenFromDatabase(rf_token);
           return res.status(401).json({ message: { error: err.message } });
         } else {
-          console.log(user,'new acces ');
+          console.log(user, "new acces ");
           const accesstoken = createAccessToken({
             email: user.mail,
             _id: user.id,
