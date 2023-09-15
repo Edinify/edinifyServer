@@ -32,6 +32,10 @@ const incomeSchema = new Schema(
     imx: {
       type: Number,
     },
+    paymentMethod: {
+      type: String,
+      required: true,
+    },
   },
   { timestamps: true }
 );
