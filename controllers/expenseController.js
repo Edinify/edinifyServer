@@ -20,7 +20,7 @@ export const getExpensesForPagination = async (req, res) => {
       },
     };
 
-    if (category !== "all") {
+    if (category) {
       filterObj.category = category;
     }
 

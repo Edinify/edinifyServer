@@ -175,12 +175,5 @@ export const getAdvertisingStatistics = async (req, res) => {
   }
 };
 
-// export const getStudentsCount = async (req, res) => {
-//   const { monthCount, startDate, endDate } = req.query;
 
-//   try {
-    
-//   } catch (err) {
-//     res.status(500).json({ message: { error: err.message } });
-//   }
-// };
+
