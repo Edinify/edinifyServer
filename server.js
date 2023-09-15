@@ -12,7 +12,7 @@ import lessonRoutes from "./routes/lessonRotes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import salaryRoutes from "./routes/salaryRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
-import dashboardRoutes from "./routes/dashboard.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
 import demoSmtpRoutes from "./routes/demoSmtpRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
 import incomeRoutes from "./routes/incomeRoutes.js";
@@ -24,6 +24,7 @@ import {
   createNotificationForBirthdayWithCron,
   deleteNotificationsForBirthday,
 } from "./controllers/notificationController.js";
+import { calcDate } from "./calculate/calculateDate.js";
 
 // import cron from "node-cron";
 

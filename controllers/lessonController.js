@@ -2,6 +2,7 @@ import { Feedback } from "../models/feedbackModel.js";
 import { Lesson } from "../models/lessonModel.js";
 import { Student } from "../models/studentModel.js";
 import { Teacher } from "../models/teacherModel.js";
+import { createEarnings } from "./earningController.js";
 import {
   createFeedbackByStudent,
   deleteFeedbackByStudent,
@@ -330,6 +331,8 @@ export const updateLessonInMainPanel = async (req, res) => {
     }
 
     updateSalaryWhenUpdateLesson(updatedLesson);
+
+    createEarnings(lesson.date);
 
     res.status(200).json(updatedLesson);
   } catch (err) {

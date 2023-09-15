@@ -14,9 +14,24 @@ const incomeSchema = new Schema(
     },
     amount: {
       type: Number,
-      required: true
-
-    }
+      required: true,
+    },
+    recipient: {
+      type: String,
+      required: true,
+    },
+    unitMeasurement: {
+      type: String,
+    },
+    quantity: {
+      type: Number,
+    },
+    unitPrice: {
+      type: Number,
+    },
+    imx: {
+      type: Number,
+    },
   },
   { timestamps: true }
 );
