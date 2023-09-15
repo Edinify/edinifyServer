@@ -1,64 +1,30 @@
-import { Bonus } from "../models/bonusModel.js";
-import { Salary } from "../models/salaryModel.js";
+import { Fine } from "../models/fineModel.js";
 import { Teacher } from "../models/teacherModel.js";
 
 // Create
 
-export const createBonus = async (req, res) => {
-  const { teacher } = req.body;
-  const targetDate = new Date();
-  const targetYear = targetDate.getFullYear();
-  const targetMonth = targetDate.getMonth() + 1;
+export const createFine = async (req, res) => {
   try {
-    const existingBonus = await Bonus.findOne({
-      teacher,
-      $expr: {
-        $and: [
-          { $eq: [{ $year: "$createdAt" }, targetYear] },
-          { $eq: [{ $month: "$createdAt" }, targetMonth] },
-        ],
-      },
-    });
+    const fine = await Fine.create(req.body);
 
-    if (existingBonus) {
-      return res.status(409).json({ key: "bonus-already-exist" });
-    }
+    const fineCount = await Fine.countDocuments();
+    const lastPage = Math.ceil(fineCount / 10);
 
-    const bonus = await Bonus.create(req.body);
-
-    const salary = await Salary.findOneAndUpdate(
-      {
-        teacherId: teacher,
-        $expr: {
-          $and: [
-            { $eq: [{ $year: "$date" }, targetYear] },
-            { $eq: [{ $month: "$date" }, targetMonth] },
-          ],
-        },
-      },
-      {
-        bonus: bonus._id,
-      }
-    );
-
-    const bonusCount = await Bonus.countDocuments();
-    const lastPage = Math.ceil(bonusCount / 10);
-
-    res.status(201).json({ bonus, lastPage });
+    res.status(201).json({ fine, lastPage });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
 // Get
-export const getBonusesWithPagination = async (req, res) => {
-  const { searchQuery, startDate, endDate } = req.query;
+export const getFinesWithPagination = async (req, res) => {
+  const { searchQuery, startDate, endDate, fineType } = req.query;
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
 
   try {
     let totalPages;
-    let bonuses;
+    let fines;
     const filterObj = {};
 
     if (startDate && endDate) {
@@ -74,6 +40,10 @@ export const getBonusesWithPagination = async (req, res) => {
       };
     }
 
+    if (fineType) {
+      filterObj.fineType = fineType;
+    }
+
     if (searchQuery && searchQuery.trim() !== "") {
       const regexSearchQuery = new RegExp(searchQuery, "i");
 
@@ -83,34 +53,34 @@ export const getBonusesWithPagination = async (req, res) => {
       }).select("_id");
 
       const teachersIds = teachers.map((teacher) => teacher._id);
-      const bonusesCount = await Bonus.countDocuments({
+      const finesCount = await Fine.countDocuments({
         teacherId: { $in: teachersIds },
         ...filterObj,
       });
 
-      bonuses = await Bonus.find({
+      fines = await Fine.find({
         teacherId: { $in: teachersIds },
         ...filterObj,
       })
         .skip((page - 1) * limit)
         .limit(limit);
 
-      totalPages = Math.ceil(bonusesCount / limit);
+      totalPages = Math.ceil(finesCount / limit);
     } else {
-      const bonusesCount = await Bonus.countDocuments(filterObj);
-      totalPages = Math.ceil(bonusesCount / limit);
-      bonuses = await Bonus.find(filterObj)
+      const finesCount = await Fine.countDocuments(filterObj);
+      totalPages = Math.ceil(finesCount / limit);
+      fines = await Fine.find(filterObj)
         .skip((page - 1) * limit)
         .limit(limit);
     }
 
-    res.status(200).json({ bonuses, totalPages });
+    res.status(200).json({ fines, totalPages });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
 };
 
-export const getBonusesForTeacher = async (req, res) => {
+export const getFinesForTeacher = async (req, res) => {
   const { startDate, endDate } = req.query;
   const { id } = req.user;
 
@@ -145,44 +115,44 @@ export const getBonusesForTeacher = async (req, res) => {
       };
     }
 
-    const bonuses = await Bonus.find(filterObj);
+    const fines = await Fine.find(filterObj);
 
-    res.status(200).json(bonuses);
+    res.status(200).json(fines);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
 };
 
 // UPDATE
-export const updateBonus = async (req, res) => {
+export const updateFine = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const updatedBonus = await Bonus.findByIdAndUpdate(id, req.body, {
+    const updatedFine = await Fine.findByIdAndUpdate(id, req.body, {
       new: true,
     });
 
-    if (!updatedBonus) {
-      return res.status(404).json({ key: "bonus-not-found" });
+    if (!updatedFine) {
+      return res.status(404).json({ key: "fine-not-found" });
     }
 
-    res.status(200).json(updatedBonus);
+    res.status(200).json(updatedFine);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
 };
 
 // Delete
-export const deleteBonus = async (req, res) => {
+export const deleteFine = async (req, res) => {
   const { id } = req.params;
   try {
-    const deletedBonus = await Bonus.findByIdAndDelete(id);
+    const deletedFine = await Fine.findByIdAndDelete(id);
 
-    if (!deletedBonus) {
-      return res.status(404).json({ key: "bonus-not-found" });
+    if (!deletedFine) {
+      return res.status(404).json({ key: "fine-not-found" });
     }
 
-    res.status(200).json({ message: "Bonus successfully deleted" });
+    res.status(200).json({ message: "Fine successfully deleted" });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }

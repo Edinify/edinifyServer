@@ -1,6 +1,12 @@
+import { Feedback } from "../models/feedbackModel.js";
 import { Lesson } from "../models/lessonModel.js";
 import { Student } from "../models/studentModel.js";
 import { Teacher } from "../models/teacherModel.js";
+import {
+  createFeedbackByStudent,
+  deleteFeedbackByStudent,
+  updateFeedbackByStudent,
+} from "./feedbackController.js";
 import {
   createNotificationForLessonsCount,
   createNotificationForUpdate,
@@ -211,9 +217,46 @@ export const updateLessonInTable = async (req, res) => {
 export const updateLessonInMainPanel = async (req, res) => {
   const { id } = req.params;
   const { role } = req.user;
+  const { feedback } = req.body;
 
   try {
+    const lesson = await Lesson.findById(id);
+    let newLesson = req.body;
+
     if (role === "student") {
+      const checkFeedback = await Feedback.findOne({ lessonId: id });
+
+      if (feedback) {
+        if (!checkFeedback) {
+          createFeedbackByStudent({
+            teacher: lesson.teacher,
+            student: req.user.id,
+            lessonId: lesson._id,
+            feedback,
+            from: "student",
+          });
+        } else if (checkFeedback.feedback !== feedback) {
+          updateFeedbackByStudent({ ...checkFeedback, feedback });
+        }
+      } else {
+        if (checkFeedback) {
+          deleteFeedbackByStudent(checkFeedback._id);
+        }
+      }
+
+      if (!checkFeedback && feedback) {
+        createFeedbackByStudent({
+          teacher: lesson.teacher,
+          student: req.user.id,
+          lessonId: lesson._id,
+          feedback,
+          from: "student",
+        });
+      } else if (feedback && feedback !== lesson.feedback) {
+        updateFeedbackByStudent(id, feedback);
+      } else {
+      }
+
       const newStudentInfo = req.body?.students[0];
       const updatedLesson = await Lesson.findOneAndUpdate(
         { _id: id, "students.student": req.user.id },
@@ -223,6 +266,7 @@ export const updateLessonInMainPanel = async (req, res) => {
             "students.$.ratingByStudent": newStudentInfo.ratingByStudent,
             "students.$.noteByStudent": newStudentInfo.noteByStudent,
           },
+          feedback,
         },
         { new: true }
       ).populate("teacher course students.student");
@@ -238,9 +282,6 @@ export const updateLessonInMainPanel = async (req, res) => {
 
       return res.status(200).json(lessonWithOneStudent);
     }
-
-    const lesson = await Lesson.findById(id);
-    let newLesson = req.body;
 
     if (newLesson.teacher && newLesson.teacher != lesson.teacher) {
       const teacher = await Teacher.findById(newLesson.teacher);

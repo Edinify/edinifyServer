@@ -61,14 +61,17 @@ const lessonSchema = new Schema(
       enum: ["unviewed", "confirmed", "cancelled"],
       default: "unviewed",
     },
+    feedback: {
+      type: String,
+      default: "",
+    },
     note: {
       type: String,
+      default: "",
     },
     task: {
       type: String,
-    },
-    feedback: {
-      type: String,
+      default: "",
     },
     salary: {
       monthly: { type: Boolean, required: true },

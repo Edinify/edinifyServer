@@ -1,11 +1,10 @@
 import { Expense } from "../models/expenseModel.js";
 
-
 // Get expenses for pagination
 export const getExpensesForPagination = async (req, res) => {
+  const { startDate, endDate, category } = req.query;
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
-  const { startDate, endDate } = req.query;
 
   try {
     let totalPages;
@@ -13,13 +12,20 @@ export const getExpensesForPagination = async (req, res) => {
 
     const filterObj = {};
 
+    if (category !== "all") {
+      filterObj.category = category;
+    }
+
     if (startDate && endDate) {
-      const startNewDate = new Date(req.query.startDate);
-      const endNewDate = new Date(req.query.endDate);
+      const targetStartDate = new Date(startDate);
+      const targetEndDate = new Date(endDate);
+
+      targetStartDate.setHours(0, 0, 0, 0);
+      targetEndDate.setHours(23, 59, 59, 999);
 
       filterObj.date = {
-        $gte: new Date(startNewDate.toISOString()),
-        $lte: new Date(endNewDate.toISOString()),
+        $gte: new Date(targetStartDate.toISOString()),
+        $lte: new Date(targetEndDate.toISOString()),
       };
     }
 
