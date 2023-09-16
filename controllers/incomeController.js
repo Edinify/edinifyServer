@@ -8,7 +8,7 @@ export const getIncomesForPagination = async (req, res) => {
   const limit = 10;
 
   const targetDate = calcDate(monthCount, startDate, endDate);
-
+  console.log(req.query, "incomes");
   try {
     let totalPages;
     let incomes;

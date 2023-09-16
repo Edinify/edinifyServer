@@ -1,3 +1,4 @@
+import { calcDate } from "../calculate/calculateDate.js";
 import { Fine } from "../models/fineModel.js";
 import { Teacher } from "../models/teacherModel.js";
 
@@ -28,15 +29,11 @@ export const getFinesWithPagination = async (req, res) => {
     const filterObj = {};
 
     if (startDate && endDate) {
-      const targetStartDate = new Date(startDate);
-      const targetEndDate = new Date(endDate);
-      targetStartDate.setHours(0, 0, 0, 0);
-      targetEndDate.setHours(23, 59, 59, 999);
-      filterObj.date = {
-        createdAt: {
-          $gte: startDate,
-          $lte: endDate,
-        },
+      const targetDate = calcDate(null, startDate, endDate);
+
+      filterObj.createdAt = {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
       };
     }
 
@@ -59,11 +56,12 @@ export const getFinesWithPagination = async (req, res) => {
       });
 
       fines = await Fine.find({
-        teacherId: { $in: teachersIds },
+        teacher: { $in: teachersIds },
         ...filterObj,
       })
         .skip((page - 1) * limit)
-        .limit(limit);
+        .limit(limit)
+        .populate("teacher");
 
       totalPages = Math.ceil(finesCount / limit);
     } else {
@@ -71,7 +69,8 @@ export const getFinesWithPagination = async (req, res) => {
       totalPages = Math.ceil(finesCount / limit);
       fines = await Fine.find(filterObj)
         .skip((page - 1) * limit)
-        .limit(limit);
+        .limit(limit)
+        .populate("teacher");
     }
 
     res.status(200).json({ fines, totalPages });
