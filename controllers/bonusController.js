@@ -2,6 +2,7 @@ import { Bonus } from "../models/bonusModel.js";
 import { Salary } from "../models/salaryModel.js";
 import { Teacher } from "../models/teacherModel.js";
 import { calcDate } from "../calculate/calculateDate.js";
+import { checkAdmin } from "../middleware/auth.js";
 
 // Create
 
@@ -59,7 +60,6 @@ export const getBonusesWithPagination = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
 
-  console.log(req.query);
   try {
     let totalPages;
     let bonuses;
@@ -67,12 +67,9 @@ export const getBonusesWithPagination = async (req, res) => {
 
     if (startDate && endDate) {
       const targetDate = calcDate(null, startDate, endDate);
-
-      filterObj.date = {
-        createdAt: {
-          $gte: targetDate.startDate,
-          $lte: targetDate.endDate,
-        },
+      filterObj.createdAt = {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
       };
     }
 
@@ -84,19 +81,32 @@ export const getBonusesWithPagination = async (req, res) => {
         deleted: false,
       }).select("_id");
 
+      console.log(1);
+      console.log("--------", teachers);
+
       const teachersIds = teachers.map((teacher) => teacher._id);
+
+      console.log(2);
+      console.log("--------", teachersIds);
+
       const bonusesCount = await Bonus.countDocuments({
         teacherId: { $in: teachersIds },
         ...filterObj,
       });
 
+      console.log(3);
+      console.log(bonusesCount);
+
       bonuses = await Bonus.find({
-        teacherId: { $in: teachersIds },
+        teacher: { $in: teachersIds },
         ...filterObj,
       })
         .skip((page - 1) * limit)
         .limit(limit)
         .populate("teacher");
+
+      console.log(4);
+      console.log(bonuses);
 
       totalPages = Math.ceil(bonusesCount / limit);
     } else {

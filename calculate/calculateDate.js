@@ -14,8 +14,14 @@ export const calcDate = (monthCount, start, end) => {
 
     return { startDate, endDate };
   } else if (start && end) {
+    console.log(start);
+    console.log(end, "end");
     const startDate = new Date(start);
     const endDate = new Date(end);
+
+    console.log(startDate);
+    console.log(endDate);
+
     startDate.setHours(0, 0, 0, 0);
     endDate.setHours(23, 59, 59, 999);
 
