@@ -1,6 +1,7 @@
 import { Bonus } from "../models/bonusModel.js";
 import { Salary } from "../models/salaryModel.js";
 import { Teacher } from "../models/teacherModel.js";
+import { calcDate } from "../calculate/calculateDate.js";
 
 // Create
 
@@ -9,6 +10,8 @@ export const createBonus = async (req, res) => {
   const targetDate = new Date();
   const targetYear = targetDate.getFullYear();
   const targetMonth = targetDate.getMonth() + 1;
+
+  console.log(req.body, "new bouns");
   try {
     const existingBonus = await Bonus.findOne({
       teacher,
@@ -56,20 +59,19 @@ export const getBonusesWithPagination = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
 
+  console.log(req.query);
   try {
     let totalPages;
     let bonuses;
     const filterObj = {};
 
     if (startDate && endDate) {
-      const targetStartDate = new Date(startDate);
-      const targetEndDate = new Date(endDate);
-      targetStartDate.setHours(0, 0, 0, 0);
-      targetEndDate.setHours(23, 59, 59, 999);
+      const targetDate = calcDate(null, startDate, endDate);
+
       filterObj.date = {
         createdAt: {
-          $gte: startDate,
-          $lte: endDate,
+          $gte: targetDate.startDate,
+          $lte: targetDate.endDate,
         },
       };
     }
@@ -93,7 +95,8 @@ export const getBonusesWithPagination = async (req, res) => {
         ...filterObj,
       })
         .skip((page - 1) * limit)
-        .limit(limit);
+        .limit(limit)
+        .populate("teacher");
 
       totalPages = Math.ceil(bonusesCount / limit);
     } else {
@@ -101,8 +104,11 @@ export const getBonusesWithPagination = async (req, res) => {
       totalPages = Math.ceil(bonusesCount / limit);
       bonuses = await Bonus.find(filterObj)
         .skip((page - 1) * limit)
-        .limit(limit);
+        .limit(limit)
+        .populate("teacher");
     }
+
+    console.log(bonuses);
 
     res.status(200).json({ bonuses, totalPages });
   } catch (err) {
@@ -157,10 +163,12 @@ export const getBonusesForTeacher = async (req, res) => {
 export const updateBonus = async (req, res) => {
   const { id } = req.params;
 
+  console.log(req.body);
+
   try {
     const updatedBonus = await Bonus.findByIdAndUpdate(id, req.body, {
       new: true,
-    });
+    }).populate("teacher");
 
     if (!updatedBonus) {
       return res.status(404).json({ key: "bonus-not-found" });
