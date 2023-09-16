@@ -19,6 +19,7 @@ import incomeRoutes from "./routes/incomeRoutes.js";
 import bonusRoutes from "./routes/bonusRoutes.js";
 import financeRoutes from "./routes/financeRoutes.js";
 import fineRoutes from "./routes/fineRoutes.js";
+import feedbackRoutes from "./routes/feedbackRoutes.js";
 // import updateButtonRoutes from "./routes/updateButtonRoutes.js";
 import {
   createNotificationForBirthdayWithCron,
@@ -61,6 +62,7 @@ app.use("/api/demo", demoSmtpRoutes);
 app.use("/api/expense", expenseRoutes);
 app.use("/api/income", incomeRoutes);
 app.use("/api/finance", financeRoutes);
+app.use("/api/feedback", feedbackRoutes);
 
 app.get("/", (req, res) => {
   res.send("hello");

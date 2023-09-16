@@ -5,6 +5,7 @@ import { Expense } from "../models/expenseModel";
 import { Income } from "../models/incomeModel";
 import { Lesson } from "../models/lessonModel";
 import { Student } from "../models/studentModel";
+import { Teacher } from "../models/teacherModel";
 
 export const getConfirmedLessonsCount = async (req, res) => {
   const { startDate, endDate, monthCount } = req.query;
@@ -175,5 +176,40 @@ export const getAdvertisingStatistics = async (req, res) => {
   }
 };
 
+const getTopTeachers = async (req, res) => {
+  const { monthCount, startDate, endDate } = req.query;
+  const targetDate = calcDate(monthCount, startDate, endDate);
+  try {
+    const lessons = await Lesson.find({
+      date: {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
+      },
+      status: "confirmed",
+      role: "current",
+    }).populate("students.student");
 
+    const teachers = await Teacher.find({
+      deleted: false,
+      status: true,
+    });
 
+    const topTeachers = [];
+
+    const result = teachers.map((teacher) => {
+      const filteredLessons = lessons.filter(
+        (lesson) => lesson.teacher.toString() === teacher._id.toString()
+      );
+
+      const studentCount = filteredLessons.reduce(
+        (total, lesson) =>
+          (total += lesson.students.filter(
+            (student) => student.attendance === 1
+          )).length,
+        0
+      );
+    });
+  } catch (err) {
+    res.status(500).json({ message: { error: err.message } });
+  }
+};

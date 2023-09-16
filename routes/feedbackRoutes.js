@@ -5,12 +5,12 @@ import {
   getFeedbacksForTeacher,
   getFeedbacksWithPagination,
   updateFeedbackByTeacher,
-} from "../controllers/feedbackController";
+} from "../controllers/feedbackController.js";
 import {
   authMiddleware,
   checkAdminAndSuperAdmin,
   checkTeacher,
-} from "../middleware/auth";
+} from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -24,3 +24,5 @@ router.get(
 router.get("/", authMiddleware, checkTeacher, getFeedbacksForTeacher);
 router.patch("/:id", authMiddleware, checkTeacher, updateFeedbackByTeacher);
 router.delete("/:id", authMiddleware, checkTeacher, deleteFeedback);
+
+export default router;
