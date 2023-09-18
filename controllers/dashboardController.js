@@ -144,6 +144,7 @@ export const courseStatistics = async (req, res) => {
 
 export const getAdvertisingStatistics = async (req, res) => {
   const { monthCount, startDate, endDate } = req.query;
+  console.log(req.query);
   const targetDate = calcDate(monthCount, startDate, endDate);
   try {
     const students = await Student.find({
@@ -169,9 +170,10 @@ export const getAdvertisingStatistics = async (req, res) => {
 
       return { name: advertising, value: advertisingStatistics.length };
     });
-
+    console.log(result);
     res.status(200).json(result);
   } catch (err) {
+    console.log(err);
     res.status(500).json({ message: { error: err.message } });
   }
 };
