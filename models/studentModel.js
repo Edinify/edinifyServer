@@ -53,10 +53,6 @@ const studentSchema = new Schema(
       type: String,
       default: "student",
     },
-    lessonAmount: {
-      type: Number,
-      required: true,
-    },
     payment: {
       type: Number,
       required: true,
@@ -72,8 +68,14 @@ const studentSchema = new Schema(
     },
     courses: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Course",
+        course: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Course",
+        },
+        lessonAmount: {
+          type: Number,
+          required: true,
+        },
       },
     ],
     whereComing: {
