@@ -74,8 +74,9 @@ export const registerAdmin = async (req, res) => {
 
 // Register student
 export const registerStudent = async (req, res) => {
-  const { email } = req.body;
+  const { email, courses } = req.body;
 
+  console.log("new student", req.body);
   try {
     const existingAdmin = await Admin.findOne({ email });
     const existingStudent = await Student.findOne({ email });
@@ -85,34 +86,28 @@ export const registerStudent = async (req, res) => {
       return res.status(409).json({ key: "email-already-exist" });
     }
 
-    const coursesId = req.body.courses;
+    const coursesIds = courses.map((item) => item.course);
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(req.body.password, salt);
 
     const student = new Student({
       ...req.body,
-      courses: coursesId,
       password: hashedPassword,
     });
+    await student.populate("courses.course");
     await student.save();
 
     await Course.updateMany(
-      { _id: { $in: coursesId } },
+      { _id: { $in: coursesIds } },
       { $addToSet: { students: student._id } }
     );
 
-    console.log(5);
-
-    const studentWithCourses = await Student.findById(student._id).populate(
-      "courses"
-    );
-
-    createNotificationForBirthdayAtCreateAndUpdateStudent(student);
+    // createNotificationForBirthdayAtCreateAndUpdateStudent(student);
 
     const studentsCount = await Student.countDocuments({ deleted: false });
     const lastPage = Math.ceil(studentsCount / 10);
 
-    res.status(201).json({ student: studentWithCourses, lastPage });
+    res.status(201).json({ student, lastPage });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

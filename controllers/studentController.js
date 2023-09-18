@@ -8,7 +8,7 @@ export const getStudents = async (req, res) => {
   try {
     const students = await Student.find()
       .select("-password")
-      .populate("courses");
+      .populate("courses.course");
     res.status(200).json(students);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
@@ -39,7 +39,7 @@ export const getStudentsForPagination = async (req, res) => {
       })
         .skip((page - 1) * limit)
         .limit(limit)
-        .populate("courses");
+        .populate("courses.course");
 
       totalPages = Math.ceil(studentsCount / limit);
     } else {
@@ -48,7 +48,7 @@ export const getStudentsForPagination = async (req, res) => {
       students = await Student.find({ deleted: false })
         .skip((page - 1) * limit)
         .limit(limit)
-        .populate("courses");
+        .populate("courses.course");
     }
 
     const studentList = students.map((student) => ({
@@ -68,8 +68,12 @@ export const getStudentsByCourseId = async (req, res) => {
 
   try {
     const students = await Student.find({
-      courses: courseId,
-      lessonAmount: { $gt: 0 },
+      courses: {
+        $elemMatch: {
+          course: courseId,
+          lessonAmount: { $gt: 0 },
+        },
+      },
       status: true,
       deleted: false,
     });
@@ -136,15 +140,15 @@ export const updateStudent = async (req, res) => {
     const updatedStudent = await Student.findByIdAndUpdate(id, updatedData, {
       new: true,
       runValidators: true,
-    }).populate("courses");
+    }).populate("courses.course");
 
     if (!updatedStudent) {
       return res.status(404).json({ key: "student-not-found" });
     }
 
-    if (student.lessonAmount !== 0 && updatedStudent.lessonAmount === 0) {
-      createNotificationForLessonsCount([updatedStudent]);
-    }
+    // if (student.lessonAmount !== 0 && updatedStudent.lessonAmount === 0) {
+    //   createNotificationForLessonsCount([updatedStudent]);
+    // }
 
     if (student.status && !updatedStudent.status) {
       await Lesson.updateMany(
