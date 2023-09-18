@@ -4,11 +4,15 @@ const Schema = mongoose.Schema;
 
 const expenseSchema = new Schema(
   {
-    name: {
+    category: {
       type: String,
       required: true,
     },
-    value: {
+    appointment: {
+      type: String,
+      required: true,
+    },
+    amount: {
       type: Number,
       required: true,
     },

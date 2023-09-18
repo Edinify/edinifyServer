@@ -1,29 +1,32 @@
+import { calcDate } from "../calculate/calculateDate.js";
 import { Income } from "../models/incomeModel.js";
 
 // Get incomes for pagination
 export const getIncomesForPagination = async (req, res) => {
+  const { monthCount, startDate, endDate, category } = req.query;
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
-  const { startDate, endDate } = req.query;
 
+  const targetDate = calcDate(monthCount, startDate, endDate);
+  console.log(req.query, "incomes");
   try {
     let totalPages;
     let incomes;
 
     const filterObj = {};
 
-    if (startDate && endDate) {
-      const startNewDate = new Date(req.query.startDate);
-      const endNewDate = new Date(req.query.endDate);
-
-      filterObj.date = {
-        $gte: new Date(startNewDate.toISOString()),
-        $lte: new Date(endNewDate.toISOString()),
-      };
+    if (category) {
+      filterObj.category = category;
     }
+
+    filterObj.date = {
+      $gte: targetDate.startDate,
+      $lte: targetDate.endDate,
+    };
 
     const incomesCount = await Income.countDocuments(filterObj);
 
+    console.log(incomesCount);
     totalPages = Math.ceil(incomesCount / limit);
 
     incomes = await Income.find(filterObj)
@@ -38,7 +41,6 @@ export const getIncomesForPagination = async (req, res) => {
 
 // Create income
 export const createIncome = async (req, res) => {
-  console.log(req.body);
   try {
     const newIncome = new Income(req.body);
     await newIncome.save();
@@ -48,6 +50,7 @@ export const createIncome = async (req, res) => {
 
     res.status(201).json({ income: newIncome, lastPage });
   } catch (err) {
+    console.log(err);
     res.status(500).json({ error: err.message });
   }
 };

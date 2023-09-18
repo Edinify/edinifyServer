@@ -1,26 +1,27 @@
+import { calcDate } from "../calculate/calculateDate.js";
 import { Expense } from "../models/expenseModel.js";
-
 
 // Get expenses for pagination
 export const getExpensesForPagination = async (req, res) => {
+  const { monthCount, startDate, endDate, category } = req.query;
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
-  const { startDate, endDate } = req.query;
+
+  const targetDate = calcDate(monthCount, startDate, endDate);
 
   try {
     let totalPages;
     let expenses;
 
-    const filterObj = {};
+    const filterObj = {
+      date: {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
+      },
+    };
 
-    if (startDate && endDate) {
-      const startNewDate = new Date(req.query.startDate);
-      const endNewDate = new Date(req.query.endDate);
-
-      filterObj.date = {
-        $gte: new Date(startNewDate.toISOString()),
-        $lte: new Date(endNewDate.toISOString()),
-      };
+    if (category) {
+      filterObj.category = category;
     }
 
     const expensesCount = await Expense.countDocuments(filterObj);

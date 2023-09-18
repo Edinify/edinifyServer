@@ -4,27 +4,11 @@ const Schema = mongoose.Schema;
 
 const incomeSchema = new Schema(
   {
-    payer: {
+    category: {
       type: String,
       required: true,
     },
-    serviceName: {
-      type: String,
-      required: true,
-    },
-    unitMeasurement: {
-      type: String,
-      required: true,
-    },
-    quantity: {
-      type: Number,
-      required: true,
-    },
-    unitPrice: {
-      type: Number,
-      required: true,
-    },
-    recipient: {
+    appointment: {
       type: String,
       required: true,
     },
@@ -32,16 +16,28 @@ const incomeSchema = new Schema(
       type: Number,
       required: true,
     },
-    date: {
-      type: Date,
+    recipient: {
+      type: String,
       required: true,
+    },
+    unitMeasurement: {
+      type: String,
+    },
+    quantity: {
+      type: Number,
+    },
+    unitPrice: {
+      type: Number,
+    },
+    imx: {
+      type: Number,
     },
     paymentMethod: {
       type: String,
       required: true,
     },
-    IMX: {
-      type: Number,
+    date: {
+      type: Date,
       required: true,
     },
   },

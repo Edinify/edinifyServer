@@ -197,12 +197,15 @@ export const getSalariesForAdmins = async (req, res) => {
       };
     }
 
-    salaries = await Salary.find(filterObj);
+    salaries = await Salary.find(filterObj).populate("bonus");
+
+    // console.log(salaries);
 
     result = teachers.map((teacher) => {
       const targetSalaries = salaries.filter(
         (salary) => salary.teacherId.toString() === teacher._id.toString()
       );
+      // console.log(targetSalaries);
 
       let totalConfirmed = 0;
       let totalCancelled = 0;
@@ -211,10 +214,11 @@ export const getSalariesForAdmins = async (req, res) => {
       let totalBonus = 0;
 
       targetSalaries.forEach((salary) => {
+        // console.log(salary);
         totalConfirmed += salary.confirmedCount;
         totalCancelled += salary.cancelledCount;
         participantCount += salary.participantCount;
-        totalBonus += salary.bonus || 0;
+        totalBonus += salary.bonus.amount || 0;
 
         if (salary.teacherSalary.monthly) {
           totalSalary += salary.teacherSalary.value;
@@ -243,7 +247,7 @@ export const getSalariesForAdmins = async (req, res) => {
 
 export const getSalariesForTeacher = async (req, res) => {
   const { startDate, endDate } = req.query;
-  const { id } = user.id;
+  const { id } = req.user;
 
   try {
     const teacher = await Teacher.findById(id);

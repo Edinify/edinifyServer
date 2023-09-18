@@ -48,6 +48,7 @@ export const checkAdmin = async (req, res, next) => {
 
 // Check admin and super admin
 export const checkAdminAndSuperAdmin = async (req, res, next) => {
+  console.log("checkAdminAndSuperAdmin");
   if (req.user.role !== "admin" && req.user.role !== "super-admin") {
     return res
       .status(403)
@@ -58,6 +59,7 @@ export const checkAdminAndSuperAdmin = async (req, res, next) => {
 
 // Check teacher
 export const checkTeacher = async (req, res, next) => {
+  console.log("checkTeacher");
   if (req.user.role !== "teacher") {
     return res
       .status(403)
