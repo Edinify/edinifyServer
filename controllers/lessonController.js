@@ -1,11 +1,19 @@
+import { Feedback } from "../models/feedbackModel.js";
 import { Lesson } from "../models/lessonModel.js";
 import { Student } from "../models/studentModel.js";
 import { Teacher } from "../models/teacherModel.js";
+import { createEarnings } from "./earningController.js";
+import {
+  createFeedbackByStudent,
+  deleteFeedbackByStudent,
+  updateFeedbackByStudent,
+} from "./feedbackController.js";
 import {
   createNotificationForLessonsCount,
   createNotificationForUpdate,
   deleteNotificationForLessonCount,
 } from "./notificationController.js";
+import { updateSalaryWhenUpdateLesson } from "./salaryController.js";
 
 // Create lesson
 export const createLesson = async (req, res) => {
@@ -55,7 +63,6 @@ export const getWeeklyLessonsForMainTable = async (req, res) => {
 export const getWeeklyLessonsForCurrentTable = async (req, res) => {
   const { teacherId } = req.query;
 
-  console.log("salam");
   const currentDate = new Date();
   const startWeek = new Date(
     currentDate.setDate(
@@ -209,16 +216,47 @@ export const updateLessonInTable = async (req, res) => {
 
 // Update lesson in main panel
 export const updateLessonInMainPanel = async (req, res) => {
-  console.log("salam mlm");
   const { id } = req.params;
   const { role } = req.user;
+  const { feedback } = req.body;
 
-  console.log(role);
-  console.log(req.body);
-  console.log(1);
   try {
+    const lesson = await Lesson.findById(id);
+    let newLesson = req.body;
+
     if (role === "student") {
-      console.log(2);
+      const checkFeedback = await Feedback.findOne({ lessonId: id });
+
+      if (feedback) {
+        if (!checkFeedback) {
+          createFeedbackByStudent({
+            teacher: lesson.teacher,
+            student: req.user.id,
+            lessonId: lesson._id,
+            feedback,
+            from: "student",
+          });
+        } else if (checkFeedback.feedback !== feedback) {
+          updateFeedbackByStudent({ ...checkFeedback, feedback });
+        }
+      } else {
+        if (checkFeedback) {
+          deleteFeedbackByStudent(checkFeedback._id);
+        }
+      }
+
+      if (!checkFeedback && feedback) {
+        createFeedbackByStudent({
+          teacher: lesson.teacher,
+          student: req.user.id,
+          lessonId: lesson._id,
+          feedback,
+          from: "student",
+        });
+      } else if (feedback && feedback !== lesson.feedback) {
+        updateFeedbackByStudent(id, feedback);
+      } else {
+      }
 
       const newStudentInfo = req.body?.students[0];
       const updatedLesson = await Lesson.findOneAndUpdate(
@@ -229,6 +267,7 @@ export const updateLessonInMainPanel = async (req, res) => {
             "students.$.ratingByStudent": newStudentInfo.ratingByStudent,
             "students.$.noteByStudent": newStudentInfo.noteByStudent,
           },
+          feedback,
         },
         { new: true }
       ).populate("teacher course students.student");
@@ -241,33 +280,22 @@ export const updateLessonInMainPanel = async (req, res) => {
           (item) => item.student._id == req.user.id
         ),
       };
-      console.log(lessonWithOneStudent);
 
       return res.status(200).json(lessonWithOneStudent);
     }
-
-    const lesson = await Lesson.findById(id);
-    let newLesson = req.body;
-
-    console.log(3);
 
     if (newLesson.teacher && newLesson.teacher != lesson.teacher) {
       const teacher = await Teacher.findById(newLesson.teacher);
       newLesson.salary = teacher.salary;
     }
 
-    console.log(4);
-
     const updatedLesson = await Lesson.findByIdAndUpdate(id, newLesson, {
       new: true,
     }).populate("teacher course students.student");
 
-    console.log(5);
-
     if (!updatedLesson) {
       return res.status(404).json({ message: "Lesson not found" });
     }
-    console.log(6);
 
     const earnings = updatedLesson.students.reduce((total, curr) => {
       if (curr.attendance === 1) {
@@ -277,16 +305,10 @@ export const updateLessonInMainPanel = async (req, res) => {
       }
     }, 0);
 
-    console.log(7);
-
     updatedLesson.earnings = earnings;
     await updatedLesson.save();
 
-    console.log(8);
-
     if (req.body.status !== lesson.status) {
-      console.log(9);
-
       const students = updatedLesson.students.map((item) => item.student._id);
 
       if (req.body.status === "confirmed") {
@@ -307,8 +329,10 @@ export const updateLessonInMainPanel = async (req, res) => {
         deleteNotificationForLessonCount(students);
       }
     }
-    console.log(10);
-    console.log(updatedLesson);
+
+    updateSalaryWhenUpdateLesson(updatedLesson);
+
+    createEarnings(lesson.date);
 
     res.status(200).json(updatedLesson);
   } catch (err) {

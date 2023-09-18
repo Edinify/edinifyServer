@@ -176,7 +176,6 @@ export const getNotificationsForStudent = async (req, res) => {
 
 // Delete notification for lesson count
 export const deleteNotificationForLessonCount = async (students) => {
-  console.log(students);
   try {
     await Notification.deleteMany({
       student: { $in: students },

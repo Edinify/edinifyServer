@@ -1,6 +1,7 @@
 import { Lesson } from "../models/lessonModel.js";
 import { Teacher } from "../models/teacherModel.js";
 import bcrypt from "bcrypt";
+import { updateSalaryWhenUpdateTeacher } from "./salaryController.js";
 
 // Get teachers
 export const getTeachers = async (req, res) => {
@@ -112,6 +113,8 @@ export const updateTeacher = async (req, res) => {
         teacher: teacher._id,
       });
     }
+
+    updateSalaryWhenUpdateTeacher(updatedTeacher);
 
     const updatedTeacherObj = updatedTeacher.toObject();
     updatedTeacherObj.password = "";

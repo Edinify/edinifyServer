@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import { createNotificationForBirthdayAtCreateAndUpdateStudent } from "./notificationController.js";
+import { createSalaryWhenCreateTeacher } from "./salaryController.js";
 
 dotenv.config();
 
@@ -121,8 +122,6 @@ export const registerStudent = async (req, res) => {
 export const registerTeacher = async (req, res) => {
   const { email } = req.body;
 
-  console.log(req.body);
-
   try {
     const existingAdmin = await Admin.findOne({ email });
     const existingStudent = await Student.findOne({ email });
@@ -145,10 +144,12 @@ export const registerTeacher = async (req, res) => {
       { $addToSet: { teachers: teacher._id } }
     );
 
+    createSalaryWhenCreateTeacher(teacher);
+
     const teachersCount = await Teacher.countDocuments({ deleted: false });
     const lastPage = Math.ceil(teachersCount / 10);
 
-    res.status(201).json({ teacher, lastPage });
+    res.status(201).json({ teacher: { ...teacher, password: "" }, lastPage });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });
@@ -186,7 +187,6 @@ export const login = async (req, res) => {
       path: "/api/user/auth/refresh_token",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
     });
-
 
     res.status(200).json({
       AccessToken: AccessToken,
@@ -332,20 +332,22 @@ export const changeForgottenPassword = async (req, res) => {
 };
 
 // create accesstoken
+
+
 const createAccessToken = (user) => {
   const AccessToken = jwt.sign(
     { email: user.email, role: user.role, id: user._id },
     process.env.SECRET_KEY,
     { expiresIn: "6h" }
   );
-  
+
   return AccessToken;
 };
 
 // create refreshtoken
 const createRefreshToken = (user) => {
   const RefreshToken = jwt.sign(
-    {mail: user.email, role: user.role, id: user._id },
+    { mail: user.email, role: user.role, id: user._id },
     process.env.REFRESH_TOKEN_SECRET,
     { expiresIn: "7d" }
   );
@@ -363,18 +365,17 @@ export const refreshToken = async (req, res) => {
     if (token) {
       jwt.verify(rf_token, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
         if (err) {
-          res.clearCookie('refreshtoken', 
-          {
-            httpOnly:true, 
+          res.clearCookie("refreshtoken", {
+            httpOnly: true,
             path: "/api/user/auth/refresh_token",
-            sameSite:'None',
-            secure:true
-          })
+            sameSite: "None",
+            secure: true,
+          });
           console.log(err.message);
           revokeTokenFromDatabase(rf_token);
           return res.status(401).json({ message: { error: err.message } });
         } else {
-          console.log(user,'new acces ');
+          console.log(user, "new acces ");
           const accesstoken = createAccessToken({
             email: user.mail,
             _id: user.id,
