@@ -43,7 +43,7 @@ const lessonSchema = new Schema(
             type: Number,
             default: 0,
           },
-          noteByStudent: {
+          feedback: {
             type: String,
             default: "",
           },
