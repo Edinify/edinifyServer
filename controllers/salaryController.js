@@ -218,7 +218,8 @@ export const getSalariesForAdmins = async (req, res) => {
         totalConfirmed += salary.confirmedCount;
         totalCancelled += salary.cancelledCount;
         participantCount += salary.participantCount;
-        totalBonus += salary.bonus.amount || 0;
+        //bonusu olamayan muellimlerde bonus null  gelirdi 
+        totalBonus += salary.bonus !== null && salary.bonus.amount || 0;
 
         if (salary.teacherSalary.monthly) {
           totalSalary += salary.teacherSalary.value;
