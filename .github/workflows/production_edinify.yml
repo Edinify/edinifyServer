@@ -6,7 +6,7 @@ name: Build and deploy Node.js app to Azure Web App - edinify
 on:
   push:
     branches:
-      - production
+      - main
   workflow_dispatch:
 
 jobs:
@@ -51,6 +51,6 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'edinify'
-          slot-name: 'Production'
+          slot-name: 'main'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B8B9F13656A241E18FA702707196F1A2 }}
           package: .
