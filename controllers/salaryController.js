@@ -249,7 +249,7 @@ export const getSalariesForAdmins = async (req, res) => {
 export const getSalariesForTeacher = async (req, res) => {
   const { startDate, endDate } = req.query;
   const { id } = req.user;
-
+  console.log(req.user);
   try {
     const teacher = await Teacher.findById(id);
     let salaries;
@@ -284,8 +284,8 @@ export const getSalariesForTeacher = async (req, res) => {
         ],
       };
     }
-
-    salaries = await Salary.find(filterObj);
+    // bonus da id gelirdi .populate("bonus"); <= yox idi elave etdim 
+    salaries = await Salary.find(filterObj).populate("bonus");
 
     let totalSalary = 0;
     let participantCount = 0;
@@ -293,8 +293,9 @@ export const getSalariesForTeacher = async (req, res) => {
 
     salaries.forEach((salary) => {
       participantCount += salary.participantCount;
-      totalBonus += salary.bonus || 0;
-
+      // bonus da id gelirdi
+      totalBonus += salary.bonus !== null && salary.bonus.amount || 0;
+      console.log(salary);
       if (salary.teacherSalary.monthly) {
         totalSalary += salary.teacherSalary.value;
       } else if (salary.teacherSalary.hourly) {
