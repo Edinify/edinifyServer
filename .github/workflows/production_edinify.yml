@@ -5,7 +5,7 @@ name: Build and deploy Node.js app to Azure Web App - edinify
 on:
   push:
     branches:
-      - main
+      - production
   workflow_dispatch:
 
 jobs:

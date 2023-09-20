@@ -28,7 +28,6 @@ import {
 } from "./controllers/notificationController.js";
 import { calcDate } from "./calculate/calculateDate.js";
 
-// import cron from "node-cron";
 
 dotenv.config();
 const app = express();
