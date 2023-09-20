@@ -55,25 +55,6 @@ export const getFeedbacksWithPagination = async (req, res) => {
       const regexSearchQuery = new RegExp(searchQuery, "i");
 
       if (from === "teacher") {
-        const teachers = await Teacher.find({
-          fullName: { $regex: regexSearchQuery },
-        }).select("_id");
-
-        const teachersIds = teachers.map((teacher) => teacher._id);
-        const feedbackCount = await Feedback.countDocuments({
-          teacher: { $in: teachersIds },
-          ...filterObj,
-        });
-
-        feedbacks = await Feedback.find({
-          teacher: { $in: teachersIds },
-          ...filterObj,
-        })
-          .skip((page - 1) * limit)
-          .limit(limit);
-
-        totalPages = Math.ceil(feedbackCount / limit);
-      } else if (from === "student") {
         const students = await Student.find({
           fullName: { $regex: regexSearchQuery },
         }).select("_id");
@@ -89,7 +70,28 @@ export const getFeedbacksWithPagination = async (req, res) => {
           ...filterObj,
         })
           .skip((page - 1) * limit)
-          .limit(limit);
+          .limit(limit)
+          .populate("teacher student");
+
+        totalPages = Math.ceil(feedbackCount / limit);
+      } else if (from === "student") {
+        const teachers = await Teacher.find({
+          fullName: { $regex: regexSearchQuery },
+        }).select("_id");
+
+        const teachersIds = teachers.map((teacher) => teacher._id);
+        const feedbackCount = await Feedback.countDocuments({
+          teacher: { $in: teachersIds },
+          ...filterObj,
+        });
+
+        feedbacks = await Feedback.find({
+          teacher: { $in: teachersIds },
+          ...filterObj,
+        })
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .populate("teacher student");
 
         totalPages = Math.ceil(feedbackCount / limit);
       }
@@ -98,7 +100,8 @@ export const getFeedbacksWithPagination = async (req, res) => {
       totalPages = Math.ceil(feedbackCount / limit);
       feedbacks = await Feedback.find(filterObj)
         .skip((page - 1) * limit)
-        .limit(limit);
+        .limit(limit)
+        .populate("teacher student");
     }
 
     res.status(200).json({ feedbacks, totalPages });
