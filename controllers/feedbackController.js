@@ -147,7 +147,9 @@ export const getFeedbacksForTeacher = async (req, res) => {
 export const updateFeedbackByTeacher = async (req, res) => {
   const { id } = req.params;
   try {
-    const updatedFeedback = await Feedback.findByIdAndUpdate(id, req.body);
+    const updatedFeedback = await Feedback.findByIdAndUpdate(id, req.body, {
+      new: true,
+    });
 
     if (!updatedFeedback) {
       return res.status(404).json({ key: "feedback-not-found" });
