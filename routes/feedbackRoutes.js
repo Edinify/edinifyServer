@@ -16,7 +16,7 @@ const router = express.Router();
 
 router.post("/", authMiddleware, checkTeacher, createFeedbackByTeacher);
 router.get("/", authMiddleware, getFeedbacksWithPagination);
-router.get("/", authMiddleware, checkTeacher, getFeedbacksForTeacher);
+router.get("/teacher", authMiddleware, checkTeacher, getFeedbacksForTeacher);
 router.patch("/:id", authMiddleware, checkTeacher, updateFeedbackByTeacher);
 router.delete("/:id", authMiddleware, checkTeacher, deleteFeedback);
 

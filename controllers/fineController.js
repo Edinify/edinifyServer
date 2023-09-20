@@ -1,4 +1,4 @@
-import { calcDate } from "../calculate/calculateDate.js";
+import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import { Fine } from "../models/fineModel.js";
 import { Teacher } from "../models/teacherModel.js";
 
@@ -23,19 +23,23 @@ export const getFinesWithPagination = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
 
+  console.log(req.query);
   try {
+    let targetDate;
     let totalPages;
     let fines;
     const filterObj = {};
 
     if (startDate && endDate) {
-      const targetDate = calcDate(null, startDate, endDate);
-
-      filterObj.createdAt = {
-        $gte: targetDate.startDate,
-        $lte: targetDate.endDate,
-      };
+      targetDate = calcDate(null, startDate, endDate);
+    } else {
+      targetDate = calcDateWithMonthly(new Date(), new Date());
     }
+
+    filterObj.createdAt = {
+      $gte: targetDate.startDate,
+      $lte: targetDate.endDate,
+    };
 
     if (fineType) {
       filterObj.fineType = fineType;
@@ -46,12 +50,11 @@ export const getFinesWithPagination = async (req, res) => {
 
       const teachers = await Teacher.find({
         fullName: { $regex: regexSearchQuery },
-        deleted: false,
       }).select("_id");
 
       const teachersIds = teachers.map((teacher) => teacher._id);
       const finesCount = await Fine.countDocuments({
-        teacherId: { $in: teachersIds },
+        teacher: { $in: teachersIds },
         ...filterObj,
       });
 
@@ -80,39 +83,19 @@ export const getFinesWithPagination = async (req, res) => {
 };
 
 export const getFinesForTeacher = async (req, res) => {
-  const { startDate, endDate } = req.query;
+  const { monthCount, startDate, endDate } = req.query;
   const { id } = req.user;
 
   try {
+    let targetDate = calcDate(monthCount, startDate, endDate);
+
     const filterObj = {
       teacher: id,
+      createdAt: {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
+      },
     };
-
-    if (startDate && endDate) {
-      const targetStartDate = new Date(startDate);
-      const targetEndDate = new Date(endDate);
-      targetStartDate.setDate(1);
-      targetEndDate.setMonth(targetEndDate.getMonth() + 1);
-      targetEndDate.setDate(0);
-      targetStartDate.setHours(0, 0, 0, 0);
-      targetEndDate.setHours(23, 59, 59, 999);
-      filterObj.date = {
-        createdAt: {
-          $gte: startDate,
-          $lte: endDate,
-        },
-      };
-    } else {
-      const targetDate = new Date();
-      const targetYear = targetDate.getFullYear();
-      const targetMonth = targetDate.getMonth() + 1;
-      filterObj.$expr = {
-        $and: [
-          { $eq: [{ $year: "$createdAt" }, targetYear] },
-          { $eq: [{ $month: "$createdAt" }, targetMonth] },
-        ],
-      };
-    }
 
     const fines = await Fine.find(filterObj);
 
@@ -126,6 +109,8 @@ export const getFinesForTeacher = async (req, res) => {
 export const updateFine = async (req, res) => {
   const { id } = req.params;
 
+  console.log(id);
+  console.log(req.body);
   try {
     const updatedFine = await Fine.findByIdAndUpdate(id, req.body, {
       new: true,

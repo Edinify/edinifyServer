@@ -201,12 +201,12 @@ export const updateLessonInTable = async (req, res) => {
     updatedLesson.earnings = earnings;
     await updatedLesson.save();
 
-    if (updatedLesson.role === "current") {
-      createNotificationForUpdate(
-        updatedLesson.teacher._id,
-        updatedLesson.students
-      );
-    }
+    // if (updatedLesson.role === "current") {
+    //   createNotificationForUpdate(
+    //     updatedLesson.teacher._id,
+    //     updatedLesson.students
+    //   );
+    // }
 
     res.status(200).json(updatedLesson);
   } catch (err) {
@@ -245,19 +245,7 @@ export const updateLessonInMainPanel = async (req, res) => {
         }
       }
 
-      if (!checkFeedback && feedback) {
-        createFeedbackByStudent({
-          teacher: lesson.teacher,
-          student: req.user.id,
-          lessonId: lesson._id,
-          feedback,
-          from: "student",
-        });
-      } else if (feedback && feedback !== lesson.feedback) {
-        updateFeedbackByStudent(id, feedback);
-      } else {
-      }
-
+      const newFeedback = await Feedback.findOne({ lessonId: id });
       const newStudentInfo = req.body?.students[0];
       const updatedLesson = await Lesson.findOneAndUpdate(
         { _id: id, "students.student": req.user.id },
@@ -267,7 +255,7 @@ export const updateLessonInMainPanel = async (req, res) => {
             "students.$.ratingByStudent": newStudentInfo.ratingByStudent,
             "students.$.noteByStudent": newStudentInfo.noteByStudent,
           },
-          feedback,
+          feedback: newFeedback || "",
         },
         { new: true }
       ).populate("teacher course students.student");
@@ -282,11 +270,6 @@ export const updateLessonInMainPanel = async (req, res) => {
       };
 
       return res.status(200).json(lessonWithOneStudent);
-    }
-
-    if (newLesson.teacher && newLesson.teacher != lesson.teacher) {
-      const teacher = await Teacher.findById(newLesson.teacher);
-      newLesson.salary = teacher.salary;
     }
 
     const updatedLesson = await Lesson.findByIdAndUpdate(id, newLesson, {
@@ -308,13 +291,18 @@ export const updateLessonInMainPanel = async (req, res) => {
     updatedLesson.earnings = earnings;
     await updatedLesson.save();
 
-    if (req.body.status !== lesson.status) {
-      const students = updatedLesson.students.map((item) => item.student._id);
+    if (updatedLesson.status !== lesson.status) {
+      const students = updatedLesson.students
+        .filter((item) => item.attendance === 1 || item.attendance === -1)
+        .map((item) => item.student._id);
 
-      if (req.body.status === "confirmed") {
+      if (updatedLesson.status === "confirmed") {
         await Student.updateMany(
-          { _id: { $in: students } },
-          { $inc: { lessonAmount: -1 } }
+          {
+            _id: { $in: students },
+            "courses.course": updatedLesson.course._id,
+          },
+          { $inc: { "courses.$.lessonAmount": -1 } }
         );
 
         const updatedStudents = await Student.find({ _id: { $in: students } });
@@ -322,8 +310,11 @@ export const updateLessonInMainPanel = async (req, res) => {
         createNotificationForLessonsCount(updatedStudents);
       } else if (lesson.status === "confirmed") {
         await Student.updateMany(
-          { _id: { $in: students } },
-          { $inc: { lessonAmount: 1 } }
+          {
+            _id: { $in: students },
+            "courses.course": updatedLesson.course._id,
+          },
+          { $inc: { "courses.$.lessonAmount": 1 } }
         );
 
         deleteNotificationForLessonCount(students);
