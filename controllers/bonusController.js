@@ -129,7 +129,7 @@ export const getBonusesWithPagination = async (req, res) => {
 export const getBonusesForTeacher = async (req, res) => {
   const { startDate, endDate } = req.query;
   const { id } = req.user;
-
+  console.log(req.query);
   try {
     const filterObj = {
       teacher: id,
