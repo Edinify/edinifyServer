@@ -218,7 +218,7 @@ export const updateLessonInTable = async (req, res) => {
 export const updateLessonInMainPanel = async (req, res) => {
   const { id } = req.params;
   const { role } = req.user;
-  const { feedback } = req.body;
+  const feedback = req.body.students[0].feedback;
 
   try {
     const lesson = await Lesson.findById(id);
