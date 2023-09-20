@@ -57,7 +57,6 @@ export const getFeedbacksWithPagination = async (req, res) => {
       if (from === "teacher") {
         const teachers = await Teacher.find({
           fullName: { $regex: regexSearchQuery },
-          deleted: false,
         }).select("_id");
 
         const teachersIds = teachers.map((teacher) => teacher._id);
@@ -77,7 +76,6 @@ export const getFeedbacksWithPagination = async (req, res) => {
       } else if (from === "student") {
         const students = await Student.find({
           fullName: { $regex: regexSearchQuery },
-          deleted: false,
         }).select("_id");
 
         const studentsIds = students.map((student) => student._id);
@@ -127,7 +125,6 @@ export const getFeedbacksForTeacher = async (req, res) => {
 
       const studens = await Student.find({
         fullName: { $regex: regexSearchQuery },
-        deleted: false,
       }).select("_id");
 
       const studentsIds = studens.map((student) => student._id);
