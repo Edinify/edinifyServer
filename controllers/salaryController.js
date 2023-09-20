@@ -139,26 +139,26 @@ export const getSalariesForAdmins = async (req, res) => {
     let filterObj = {};
 
     if (searchQuery && searchQuery.trim() !== "") {
+      console.log("check search");
       const regexSearchQuery = new RegExp(searchQuery, "i");
 
       const teachersCount = await Teacher.countDocuments({
         fullName: { $regex: regexSearchQuery },
-        deleted: false,
       });
 
       teachers = await Teacher.find({
         fullName: { $regex: regexSearchQuery },
-        deleted: false,
       })
         .skip((page - 1) * limit)
         .limit(limit);
 
       totalPages = Math.ceil(teachersCount / limit);
     } else {
-      const teachersCount = await Teacher.countDocuments({ deleted: false });
+      const teachersCount = await Teacher.countDocuments();
 
       totalPages = Math.ceil(teachersCount / limit);
-      teachers = await Teacher.find({ deleted: false })
+
+      teachers = await Teacher.find()
         .skip((page - 1) * limit)
         .limit(limit);
     }
@@ -199,13 +199,10 @@ export const getSalariesForAdmins = async (req, res) => {
 
     salaries = await Salary.find(filterObj).populate("bonus");
 
-    // console.log(salaries);
-
     result = teachers.map((teacher) => {
       const targetSalaries = salaries.filter(
         (salary) => salary.teacherId.toString() === teacher._id.toString()
       );
-      // console.log(targetSalaries);
 
       let totalConfirmed = 0;
       let totalCancelled = 0;
@@ -214,12 +211,10 @@ export const getSalariesForAdmins = async (req, res) => {
       let totalBonus = 0;
 
       targetSalaries.forEach((salary) => {
-        // console.log(salary);
         totalConfirmed += salary.confirmedCount;
         totalCancelled += salary.cancelledCount;
         participantCount += salary.participantCount;
-        //bonusu olamayan muellimlerde bonus null  gelirdi 
-        totalBonus += salary.bonus !== null && salary.bonus.amount || 0;
+        totalBonus += salary.bonus?.amount || 0;
 
         if (salary.teacherSalary.monthly) {
           totalSalary += salary.teacherSalary.value;
@@ -284,7 +279,7 @@ export const getSalariesForTeacher = async (req, res) => {
         ],
       };
     }
-    // bonus da id gelirdi .populate("bonus"); <= yox idi elave etdim 
+    // bonus da id gelirdi .populate("bonus"); <= yox idi elave etdim
     salaries = await Salary.find(filterObj).populate("bonus");
 
     let totalSalary = 0;
@@ -294,7 +289,7 @@ export const getSalariesForTeacher = async (req, res) => {
     salaries.forEach((salary) => {
       participantCount += salary.participantCount;
       // bonus da id gelirdi
-      totalBonus += salary.bonus !== null && salary.bonus.amount || 0;
+      totalBonus += (salary.bonus !== null && salary.bonus.amount) || 0;
       console.log(salary);
       if (salary.teacherSalary.monthly) {
         totalSalary += salary.teacherSalary.value;

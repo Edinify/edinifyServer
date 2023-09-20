@@ -1,3 +1,4 @@
+import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import { Feedback } from "../models/feedbackModel.js";
 import { Student } from "../models/studentModel.js";
 import { Teacher } from "../models/teacherModel.js";
@@ -20,7 +21,7 @@ export const createFeedbackByStudent = async (feedback) => {
 
     console.log({ message: "feedback created succuessfully" });
   } catch (err) {
-    console.log({ message: err.message});
+    console.log({ message: err.message });
   }
 };
 
@@ -32,6 +33,7 @@ export const getFeedbacksWithPagination = async (req, res) => {
   const limit = 10;
 
   try {
+    let targetDate;
     let totalPages;
     let feedbacks;
     const filterObj = {
@@ -39,17 +41,15 @@ export const getFeedbacksWithPagination = async (req, res) => {
     };
 
     if (startDate && endDate) {
-      const targetStartDate = new Date(startDate);
-      const targetEndDate = new Date(endDate);
-      targetStartDate.setHours(0, 0, 0, 0);
-      targetEndDate.setHours(23, 59, 59, 999);
-      filterObj.date = {
-        createdAt: {
-          $gte: startDate,
-          $lte: endDate,
-        },
-      };
+      targetDate = calcDate(null, startDate, endDate);
+    } else {
+      targetDate = calcDateWithMonthly();
     }
+
+    filterObj.createdAt = {
+      $gte: targetDate.startDate,
+      $lte: targetDate.endDate,
+    };
 
     if (searchQuery && searchQuery.trim() !== "") {
       const regexSearchQuery = new RegExp(searchQuery, "i");
@@ -110,11 +110,16 @@ export const getFeedbacksWithPagination = async (req, res) => {
 };
 
 export const getFeedbacksForTeacher = async (req, res) => {
-  const { startDate, endDate, searchQuery } = req.query;
+  const { monthCount, startDate, endDate, searchQuery } = req.query;
 
   try {
+    const targetDate = calcDate(monthCount, startDate, endDate);
     const filterObj = {
       from: "teacher",
+      createdAt: {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
+      },
     };
 
     if (searchQuery && searchQuery.trim() !== "") {
@@ -127,35 +132,8 @@ export const getFeedbacksForTeacher = async (req, res) => {
 
       const studentsIds = studens.map((student) => student._id);
 
-      feedbacks = await Feedback.find({
-        student: { $in: studentsIds },
-        ...filterObj,
-      });
-    }
-
-    if (startDate && endDate) {
-      const targetStartDate = new Date(startDate);
-      const targetEndDate = new Date(endDate);
-      targetStartDate.setDate(1);
-      targetEndDate.setMonth(targetEndDate.getMonth() + 1);
-      targetEndDate.setDate(0);
-      targetStartDate.setHours(0, 0, 0, 0);
-      targetEndDate.setHours(23, 59, 59, 999);
-      filterObj.date = {
-        createdAt: {
-          $gte: startDate,
-          $lte: endDate,
-        },
-      };
-    } else {
-      const targetDate = new Date();
-      const targetYear = targetDate.getFullYear();
-      const targetMonth = targetDate.getMonth() + 1;
-      filterObj.$expr = {
-        $and: [
-          { $eq: [{ $year: "$createdAt" }, targetYear] },
-          { $eq: [{ $month: "$createdAt" }, targetMonth] },
-        ],
+      filterObj.student = {
+        $in: studentsIds,
       };
     }
 
@@ -186,13 +164,16 @@ export const updateFeedbackByTeacher = async (req, res) => {
 
 export const updateFeedbackByStudent = async (feedback) => {
   try {
-    const updatedFeedback = await Feedback.findByIdAndUpdate(feedback._id, feedback);
+    const updatedFeedback = await Feedback.findByIdAndUpdate(
+      feedback._id,
+      feedback
+    );
 
     if (!updatedFeedback) {
-     throw new Error("feedback not found")
+      throw new Error("feedback not found");
     }
   } catch (err) {
-   console.log({ message: err.message});
+    console.log({ message: err.message });
   }
 };
 
@@ -213,18 +194,14 @@ export const deleteFeedback = async (req, res) => {
   }
 };
 
-
-export const deleteFeedbackByStudent = async (id)=>{
+export const deleteFeedbackByStudent = async (id) => {
   try {
-    const deletedFeedback=  await Feedback.findByIdAndDelete(id)
+    const deletedFeedback = await Feedback.findByIdAndDelete(id);
 
-    if(!deleteFeedback){
-      throw new Error("feedback not found")
+    if (!deleteFeedback) {
+      throw new Error("feedback not found");
     }
-    
   } catch (err) {
-
-    console.log({message: err.message})
-    
+    console.log({ message: err.message });
   }
-}
+};
