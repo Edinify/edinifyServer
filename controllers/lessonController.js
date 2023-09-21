@@ -227,7 +227,6 @@ export const updateLessonInMainPanel = async (req, res) => {
     if (role === "student") {
       const checkFeedback = await Feedback.findOne({ lessonId: id });
 
-      console.log(feedback, "front feedback");
 
       if (feedback) {
         if (!checkFeedback) {

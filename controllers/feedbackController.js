@@ -201,7 +201,7 @@ export const deleteFeedbackByStudent = async (id) => {
   try {
     const deletedFeedback = await Feedback.findByIdAndDelete(id);
 
-    if (!deleteFeedback) {
+    if (!deletedFeedback) {
       throw new Error("feedback not found");
     }
   } catch (err) {
