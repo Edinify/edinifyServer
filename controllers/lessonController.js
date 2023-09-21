@@ -227,6 +227,8 @@ export const updateLessonInMainPanel = async (req, res) => {
     if (role === "student") {
       const checkFeedback = await Feedback.findOne({ lessonId: id });
 
+      console.log(feedback, "front feedback");
+
       if (feedback) {
         if (!checkFeedback) {
           createFeedbackByStudent({
@@ -237,7 +239,7 @@ export const updateLessonInMainPanel = async (req, res) => {
             from: "student",
           });
         } else if (checkFeedback.feedback !== feedback) {
-          updateFeedbackByStudent({ ...checkFeedback, feedback });
+          updateFeedbackByStudent({ ...checkFeedback.toObject(), feedback });
         }
       } else {
         if (checkFeedback) {
@@ -247,14 +249,14 @@ export const updateLessonInMainPanel = async (req, res) => {
 
       const newFeedback = await Feedback.findOne({ lessonId: id });
       const newStudentInfo = req.body?.students[0];
+
       const updatedLesson = await Lesson.findOneAndUpdate(
         { _id: id, "students.student": req.user.id },
         {
           $set: {
             "students.$.attendance": newStudentInfo.attendance,
             "students.$.ratingByStudent": newStudentInfo.ratingByStudent,
-            "students.$.noteByStudent": newStudentInfo.noteByStudent,
-            "students.$feedback": newFeedback || "",
+            "students.$.feedback": newFeedback.feedback || "",
           },
         },
         { new: true }

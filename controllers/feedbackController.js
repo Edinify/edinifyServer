@@ -168,7 +168,8 @@ export const updateFeedbackByStudent = async (feedback) => {
   try {
     const updatedFeedback = await Feedback.findByIdAndUpdate(
       feedback._id,
-      feedback
+      feedback,
+      { new: true }
     );
 
     if (!updatedFeedback) {
