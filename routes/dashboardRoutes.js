@@ -1,6 +1,7 @@
 import express from "express";
 import { authMiddleware, checkSuperAdmin } from "../middleware/auth.js";
 import {
+  getAdvertisingStatistics,
   getCancelledLessonsCount,
   getConfirmedLessonsCount,
   getCoursesStatistics,
@@ -29,6 +30,12 @@ router.get(
   authMiddleware,
   checkSuperAdmin,
   getCoursesStatistics
+);
+router.get(
+  "/advertising",
+  authMiddleware,
+  checkSuperAdmin,
+  getAdvertisingStatistics
 );
 
 export default router;

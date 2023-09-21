@@ -183,7 +183,10 @@ export const getAdvertisingStatistics = async (req, res) => {
         (student) => student.whereComing === advertising
       );
 
-      return { name: advertising, value: advertisingStatistics.length };
+      return {
+        name: advertising,
+        value: (advertisingStatistics.length * 100) / students.length,
+      };
     });
 
     res.status(200).json(result);
