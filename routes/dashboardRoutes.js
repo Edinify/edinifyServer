@@ -3,6 +3,7 @@ import { authMiddleware, checkSuperAdmin } from "../middleware/auth.js";
 import {
   getCancelledLessonsCount,
   getConfirmedLessonsCount,
+  getFinance,
   getUnviewedLessons,
 } from "../controllers/dashboardController.js";
 
@@ -21,5 +22,6 @@ router.get(
   getCancelledLessonsCount
 );
 router.get("/unviewed", authMiddleware, checkSuperAdmin, getUnviewedLessons);
+router.get("/finance", authMiddleware, checkSuperAdmin, getFinance);
 
 export default router;

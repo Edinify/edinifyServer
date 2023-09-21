@@ -254,8 +254,8 @@ export const updateLessonInMainPanel = async (req, res) => {
             "students.$.attendance": newStudentInfo.attendance,
             "students.$.ratingByStudent": newStudentInfo.ratingByStudent,
             "students.$.noteByStudent": newStudentInfo.noteByStudent,
+            "students.$feedback": newFeedback || "",
           },
-          feedback: newFeedback || "",
         },
         { new: true }
       ).populate("teacher course students.student");

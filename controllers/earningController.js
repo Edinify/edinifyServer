@@ -3,8 +3,12 @@ import { Lesson } from "../models/lessonModel.js";
 
 export const createEarnings = async (date) => {
   const targetDate = new Date(date);
-  const targetMonth = targetDate.getMonth();
+  const targetMonth = targetDate.getMonth() + 1;
   const targetYear = targetDate.getFullYear();
+  console.log("salam earnings");
+  console.log(targetDate);
+  console.log(targetYear);
+  console.log(targetMonth);
   try {
     const confirmedLesson = await Lesson.find({
       $expr: {
@@ -41,6 +45,6 @@ export const createEarnings = async (date) => {
       await checkEarnings.save();
     }
   } catch (err) {
-    console.log({ message: err.message });
+    console.log({ message: { error: err.message } });
   }
 };
