@@ -226,11 +226,13 @@ export const updateLessonInMainPanel = async (req, res) => {
 
     if (role === "student") {
       const checkFeedback = await Feedback.findOne({ lessonId: id });
-
-
+      console.log(feedback, "feedback");
       if (feedback) {
+        console.log("test1");
         if (!checkFeedback) {
-          createFeedbackByStudent({
+          console.log("test2");
+
+          await createFeedbackByStudent({
             teacher: lesson.teacher,
             student: req.user.id,
             lessonId: lesson._id,
@@ -238,16 +240,22 @@ export const updateLessonInMainPanel = async (req, res) => {
             from: "student",
           });
         } else if (checkFeedback.feedback !== feedback) {
-          updateFeedbackByStudent({ ...checkFeedback.toObject(), feedback });
+          console.log("test3");
+
+          await updateFeedbackByStudent({
+            ...checkFeedback.toObject(),
+            feedback,
+          });
         }
-      } else {
-        if (checkFeedback) {
-          deleteFeedbackByStudent(checkFeedback._id);
-        }
+      } else if (checkFeedback) {
+        console.log("test4");
+        await deleteFeedbackByStudent(checkFeedback._id);
       }
 
       const newFeedback = await Feedback.findOne({ lessonId: id });
       const newStudentInfo = req.body?.students[0];
+      console.log("test6");
+      console.log(newFeedback);
 
       const updatedLesson = await Lesson.findOneAndUpdate(
         { _id: id, "students.student": req.user.id },
@@ -255,7 +263,7 @@ export const updateLessonInMainPanel = async (req, res) => {
           $set: {
             "students.$.attendance": newStudentInfo.attendance,
             "students.$.ratingByStudent": newStudentInfo.ratingByStudent,
-            "students.$.feedback": newFeedback.feedback || "",
+            "students.$.feedback": newFeedback?.feedback || "",
           },
         },
         { new: true }
@@ -263,6 +271,7 @@ export const updateLessonInMainPanel = async (req, res) => {
 
       const updatedLessonObj = updatedLesson.toObject();
 
+      console.log(updatedLesson);
       const lessonWithOneStudent = {
         ...updatedLessonObj,
         students: updatedLessonObj.students.filter(
