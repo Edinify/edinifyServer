@@ -27,6 +27,7 @@ import {
   deleteNotificationsForBirthday,
 } from "./controllers/notificationController.js";
 import { calcDate } from "./calculate/calculateDate.js";
+import { getUnviewedLessons } from "./controllers/dashboardController.js";
 
 // import cron from "node-cron";
 
@@ -39,7 +40,7 @@ const uri = process.env.DB_URI;
 app.use(
   cors({
     origin: "http://localhost:3000",
-    credentials:true,
+    credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],
     exposedHeaders: ["Content-Type"],

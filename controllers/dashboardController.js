@@ -1,11 +1,11 @@
-import { calcDate } from "../calculate/calculateDate";
-import { Course } from "../models/courseModel";
-import { Earning } from "../models/earningsModel";
-import { Expense } from "../models/expenseModel";
-import { Income } from "../models/incomeModel";
-import { Lesson } from "../models/lessonModel";
-import { Student } from "../models/studentModel";
-import { Teacher } from "../models/teacherModel";
+import { calcDate } from "../calculate/calculateDate.js";
+import { Course } from "../models/courseModel.js";
+import { Earning } from "../models/earningsModel.js";
+import { Expense } from "../models/expenseModel.js";
+import { Income } from "../models/incomeModel.js";
+import { Lesson } from "../models/lessonModel.js";
+import { Student } from "../models/studentModel.js";
+import { Teacher } from "../models/teacherModel.js";
 
 export const getConfirmedLessonsCount = async (req, res) => {
   const { startDate, endDate, monthCount } = req.query;
@@ -45,11 +45,29 @@ export const getCancelledLessonsCount = async (req, res) => {
 
 export const getUnviewedLessons = async (req, res) => {
   try {
+    const result = [];
+
     const unviewedLessons = await Lesson.find({
-      role: "unviewed",
+      status: "unviewed",
+    }).populate("teacher course students.student");
+
+    unviewedLessons.forEach((lesson) => {
+      const checkTeacher = result.find(
+        (item) =>
+          item?.teacher?._id.toString() === lesson.teacher._id.toString()
+      );
+
+      if (checkTeacher) {
+        checkTeacher.lessons?.push(lesson);
+      } else {
+        result.push({
+          teacher: lesson.teacher,
+          lessons: [lesson],
+        });
+      }
     });
 
-    res.status(200).json(unviewedLessons);
+    res.status(200).json(result);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }

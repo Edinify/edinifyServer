@@ -1,6 +1,25 @@
 import express from "express";
-import { authMiddleware } from "../middleware/auth.js";
+import { authMiddleware, checkSuperAdmin } from "../middleware/auth.js";
+import {
+  getCancelledLessonsCount,
+  getConfirmedLessonsCount,
+  getUnviewedLessons,
+} from "../controllers/dashboardController.js";
 
 const router = express.Router();
+
+router.get(
+  "/confirmed",
+  authMiddleware,
+  checkSuperAdmin,
+  getConfirmedLessonsCount
+);
+router.get(
+  "/cancelled",
+  authMiddleware,
+  checkSuperAdmin,
+  getCancelledLessonsCount
+);
+router.get("/unviewed", authMiddleware, checkSuperAdmin, getUnviewedLessons);
 
 export default router;
