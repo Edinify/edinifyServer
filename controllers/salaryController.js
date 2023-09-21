@@ -89,7 +89,6 @@ export const updateSalaryWhenUpdateLesson = async (lesson) => {
       },
     });
 
-    console.log(lessons);
     lessons.forEach((lesson) => {
       if (lesson.status === "confirmed") {
         confirmedCount++;

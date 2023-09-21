@@ -5,16 +5,14 @@ export const createEarnings = async (date) => {
   const targetDate = new Date(date);
   const targetMonth = targetDate.getMonth() + 1;
   const targetYear = targetDate.getFullYear();
-  console.log("salam earnings");
-  console.log(targetDate);
-  console.log(targetYear);
-  console.log(targetMonth);
+
   try {
     const confirmedLesson = await Lesson.find({
+      status: "confirmed",
       $expr: {
         $and: [
-          { $eq: { $year: "$date" }, targetYear },
-          { $eq: { $month: "$date" }, targetMonth },
+          { $eq: [{ $year: "$date" }, targetYear] },
+          { $eq: [{ $month: "$date" }, targetMonth] },
         ],
       },
     });
@@ -27,8 +25,8 @@ export const createEarnings = async (date) => {
     const checkEarnings = await Earning.findOne({
       $expr: {
         $and: [
-          { $eq: { $year: "$date" }, targetYear },
-          { $eq: { $month: "$date" }, targetMonth },
+          { $eq: [{ $year: "$date" }, targetYear] },
+          { $eq: [{ $month: "$date" }, targetMonth] },
         ],
       },
     });
