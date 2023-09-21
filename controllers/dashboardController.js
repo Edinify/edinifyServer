@@ -130,26 +130,26 @@ export const getFinance = async (req, res) => {
   }
 };
 
-export const courseStatistics = async (req, res) => {
+export const getCoursesStatistics = async (req, res) => {
   const { monthCount, startDate, endDate } = req.query;
   const targetDate = calcDate(monthCount, startDate, endDate);
   try {
     const students = await Student.find({
-      deleted: false,
-      status: true,
       createdAt: {
         $gte: targetDate.startDate,
         $lte: targetDate.endDate,
       },
     });
-    const courses = await Course.find({
-      deleted: false,
-    });
+    const courses = await Course.find();
 
     const result = courses.map((course) => {
-      const courseStatistic = students.filter((student) =>
-        student.courses.includes(course._id.toString())
-      );
+      const courseStatistic = students.filter((student) => {
+        const coursesIds = student.courses.map((item) => item.course) || [];
+
+        return coursesIds.find(
+          (item) => item?.toString() === course._id?.toString()
+        );
+      });
 
       return { courseName: course.name, value: courseStatistic.length };
     });
@@ -165,8 +165,6 @@ export const getAdvertisingStatistics = async (req, res) => {
   const targetDate = calcDate(monthCount, startDate, endDate);
   try {
     const students = await Student.find({
-      deleted: false,
-      status: true,
       createdAt: {
         $gte: targetDate.startDate,
         $lte: targetDate.endDate,
