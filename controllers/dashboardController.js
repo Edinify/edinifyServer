@@ -203,7 +203,7 @@ export const getTachersResults = async (req, res) => {
   try {
     if (monthCount) {
       targetDate = calcDate(monthCount);
-    } else {
+    } else if (startDate && endDate) {
       targetDate = calcDateWithMonthly(startDate, endDate);
     }
     const teachers = await Teacher.find().select("_id fullName");
