@@ -1,8 +1,9 @@
-import { calcDate } from "../calculate/calculateDate.js";
+import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import { Course } from "../models/courseModel.js";
 import { Earning } from "../models/earningsModel.js";
 import { Expense } from "../models/expenseModel.js";
 import { Income } from "../models/incomeModel.js";
+import { Leaderboard } from "../models/leaderboardModel.js";
 import { Lesson } from "../models/lessonModel.js";
 import { Student } from "../models/studentModel.js";
 import { Teacher } from "../models/teacherModel.js";
@@ -10,9 +11,10 @@ import { Teacher } from "../models/teacherModel.js";
 export const getConfirmedLessonsCount = async (req, res) => {
   const { startDate, endDate, monthCount } = req.query;
   const targetDate = calcDate(monthCount, startDate, endDate);
+
   try {
     const confirmedCount = await Lesson.countDocuments({
-      role: "confirmed",
+      status: "confirmed",
       date: {
         $gte: targetDate.startDate,
         $lte: targetDate.endDate,
@@ -30,7 +32,7 @@ export const getCancelledLessonsCount = async (req, res) => {
   const targetDate = calcDate(monthCount, startDate, endDate);
   try {
     const cancelledCount = await Lesson.countDocuments({
-      role: "cancelled",
+      status: "cancelled",
       date: {
         $gte: targetDate.startDate,
         $lte: targetDate.endDate,
@@ -195,39 +197,55 @@ export const getAdvertisingStatistics = async (req, res) => {
   }
 };
 
-const getTopTeachers = async (req, res) => {
+export const getTachersResults = async (req, res) => {
   const { monthCount, startDate, endDate } = req.query;
-  const targetDate = calcDate(monthCount, startDate, endDate);
+  let targetDate;
   try {
-    const lessons = await Lesson.find({
+    if (monthCount) {
+      targetDate = calcDate(monthCount);
+    } else {
+      targetDate = calcDateWithMonthly(startDate, endDate);
+    }
+    const teachers = await Teacher.find().select("_id fullName");
+    const leaderboardData = await Leaderboard.find({
       date: {
         $gte: targetDate.startDate,
         $lte: targetDate.endDate,
       },
-      status: "confirmed",
-      role: "current",
-    }).populate("students.student");
-
-    const teachers = await Teacher.find({
-      deleted: false,
-      status: true,
     });
 
-    const topTeachers = [];
-
-    const result = teachers.map((teacher) => {
-      const filteredLessons = lessons.filter(
-        (lesson) => lesson.teacher.toString() === teacher._id.toString()
+    const teacherListWithLessonCount = teachers.map((teacher) => {
+      const targetLeaderboardData = leaderboardData.filter(
+        (item) => item.teacherId.toString() == teacher._id.toString()
       );
 
-      const studentCount = filteredLessons.reduce(
-        (total, lesson) =>
-          (total += lesson.students.filter(
-            (student) => student.attendance === 1
-          )).length,
+      const totalLessonCount = targetLeaderboardData.reduce(
+        (total, item) => (total += item.lessonCount),
         0
       );
+
+      return {
+        teacher,
+        lessonCount: totalLessonCount,
+      };
     });
+
+    teacherListWithLessonCount.sort((a, b) => b.lessonCount - a.lessonCount);
+    const a =
+      teacherListWithLessonCount[2].lessonCount > 0
+        ? 3
+        : teacherListWithLessonCount[1].lessonCount > 0
+        ? 2
+        : teacherListWithLessonCount[0].lessonCount > 0
+        ? 1
+        : 0;
+
+    const result = {
+      leaderTeacher: [...teacherListWithLessonCount.splice(0, a)],
+      otherTeacher: [...teacherListWithLessonCount.splice(a)],
+    };
+
+    res.status(200).json(result);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }

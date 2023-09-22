@@ -8,6 +8,7 @@ import {
   deleteFeedbackByStudent,
   updateFeedbackByStudent,
 } from "./feedbackController.js";
+import { createOrUpdaeteLeadboard } from "./leadboardController.js";
 import {
   createNotificationForLessonsCount,
   createNotificationForUpdate,
@@ -218,7 +219,7 @@ export const updateLessonInTable = async (req, res) => {
 export const updateLessonInMainPanel = async (req, res) => {
   const { id } = req.params;
   const { role } = req.user;
-  const feedback = req.body.students[0].feedback;
+  const feedback = req.body.students[0]?.feedback || "";
 
   try {
     const lesson = await Lesson.findById(id);
@@ -254,8 +255,6 @@ export const updateLessonInMainPanel = async (req, res) => {
 
       const newFeedback = await Feedback.findOne({ lessonId: id });
       const newStudentInfo = req.body?.students[0];
-      console.log("test6");
-      console.log(newFeedback);
 
       const updatedLesson = await Lesson.findOneAndUpdate(
         { _id: id, "students.student": req.user.id },
@@ -334,6 +333,7 @@ export const updateLessonInMainPanel = async (req, res) => {
     updateSalaryWhenUpdateLesson(updatedLesson);
 
     createEarnings(lesson.date);
+    createOrUpdaeteLeadboard(updatedLesson);
 
     res.status(200).json(updatedLesson);
   } catch (err) {

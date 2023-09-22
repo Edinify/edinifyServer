@@ -6,6 +6,7 @@ import {
   getConfirmedLessonsCount,
   getCoursesStatistics,
   getFinance,
+  getTachersResults,
   getUnviewedLessons,
 } from "../controllers/dashboardController.js";
 
@@ -37,5 +38,6 @@ router.get(
   checkSuperAdmin,
   getAdvertisingStatistics
 );
+router.get("/leadboard",authMiddleware, checkSuperAdmin, getTachersResults);
 
 export default router;
