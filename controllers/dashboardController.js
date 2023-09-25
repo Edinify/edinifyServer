@@ -198,13 +198,16 @@ export const getAdvertisingStatistics = async (req, res) => {
 };
 
 export const getTachersResults = async (req, res) => {
-  const { monthCount, startDate, endDate } = req.query;
+  const { monthCount, startDate, endDate, byFilter } = req.query;
+
+  console.log(startDate, endDate);
   let targetDate;
   try {
     if (monthCount) {
       targetDate = calcDate(monthCount);
     } else if (startDate && endDate) {
       targetDate = calcDateWithMonthly(startDate, endDate);
+      console.log(targetDate);
     }
     const teachers = await Teacher.find().select("_id fullName");
     const leaderboardData = await Leaderboard.find({
@@ -214,7 +217,7 @@ export const getTachersResults = async (req, res) => {
       },
     });
 
-    const teacherListWithLessonCount = teachers.map((teacher) => {
+    const teachersResultsList = teachers.map((teacher) => {
       const targetLeaderboardData = leaderboardData.filter(
         (item) => item.teacherId.toString() == teacher._id.toString()
       );
@@ -224,25 +227,46 @@ export const getTachersResults = async (req, res) => {
         0
       );
 
+      const totalStarCount = targetLeaderboardData.reduce(
+        (total, item) => (total += item.starCount),
+        0
+      );
+
       return {
         teacher,
         lessonCount: totalLessonCount,
+        starCount: totalStarCount,
       };
     });
+    console.log(1);
 
-    teacherListWithLessonCount.sort((a, b) => b.lessonCount - a.lessonCount);
-    const a =
-      teacherListWithLessonCount[2].lessonCount > 0
-        ? 3
-        : teacherListWithLessonCount[1].lessonCount > 0
-        ? 2
-        : teacherListWithLessonCount[0].lessonCount > 0
-        ? 1
-        : 0;
+    let index;
+    if (byFilter === "lessonCount") {
+      teachersResultsList.sort((a, b) => b.lessonCount - a.lessonCount);
+      index =
+        teachersResultsList[2].lessonCount > 0
+          ? 3
+          : teachersResultsList[1].lessonCount > 0
+          ? 2
+          : teachersResultsList[0].lessonCount > 0
+          ? 1
+          : 0;
+    } else if (byFilter === "starCount") {
+      teachersResultsList.sort((a, b) => b.starCount - a.starCount);
+      index =
+        teachersResultsList[2].starCount > 0
+          ? 3
+          : teachersResultsList[1].starCount > 0
+          ? 2
+          : teachersResultsList[0].starCount > 0
+          ? 1
+          : 0;
+    }
+    console.log(index);
 
     const result = {
-      leaderTeacher: [...teacherListWithLessonCount.splice(0, a)],
-      otherTeacher: [...teacherListWithLessonCount.splice(a)],
+      leaderTeacher: [...teachersResultsList.splice(0, index)],
+      otherTeacher: [...teachersResultsList.splice(index)],
     };
 
     res.status(200).json(result);

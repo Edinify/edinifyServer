@@ -3,12 +3,12 @@ import { Income } from "../models/incomeModel.js";
 
 // Get incomes for pagination
 export const getIncomesForPagination = async (req, res) => {
-  const { monthCount, startDate, endDate, category } = req.query;
+  const { monthCount, startDate, endDate, category, sort } = req.query;
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
 
   const targetDate = calcDate(monthCount, startDate, endDate);
-  console.log(req.query, "incomes");
+
   try {
     let totalPages;
     let incomes;
@@ -26,7 +26,6 @@ export const getIncomesForPagination = async (req, res) => {
 
     const incomesCount = await Income.countDocuments(filterObj);
 
-    console.log(incomesCount);
     totalPages = Math.ceil(incomesCount / limit);
 
     incomes = await Income.find(filterObj)

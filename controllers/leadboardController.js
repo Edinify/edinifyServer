@@ -6,9 +6,9 @@ export const createOrUpdaeteLeadboard = async (lesson) => {
     const targetDate = new Date(lesson.date);
     const targetMonth = targetDate.getMonth() + 1;
     const targetYear = targetDate.getFullYear();
+    let totalLessonCount = 0;
+    let totalStarCount = 0;
 
-    console.log(lesson.teacher._id);
-    console.log(targetMonth, targetYear);
     const lessons = await Lesson.find({
       role: "current",
       status: "confirmed",
@@ -21,15 +21,15 @@ export const createOrUpdaeteLeadboard = async (lesson) => {
       },
     });
 
-    console.log(lessons.map(lesson=> lesson.students))
-
-    const totalLessonCount = lessons.reduce(
-      (total, lesson) =>
-        (total += lesson.students.filter(
-          (item) => item.attendance === 1
-        ).length),
-      0
-    );
+    lessons.forEach((lesson) => {
+      const presentStudents = lesson.students.filter(
+        (item) => item.attendance === 1
+      );
+      totalLessonCount += presentStudents.length;
+      presentStudents.forEach((student) => {
+        totalStarCount += student.ratingByStudent;
+      });
+    });
 
     const checkLeadboard = await Leaderboard.findOne({
       teacherId: lesson.teacher._id,
@@ -41,11 +41,11 @@ export const createOrUpdaeteLeadboard = async (lesson) => {
       },
     });
 
-    console.log(checkLeadboard);
     if (!checkLeadboard) {
       await Leaderboard.create({
         teacherId: lesson.teacher._id,
         lessonCount: totalLessonCount,
+        starCount: totalStarCount,
         date: lesson.date,
       });
 
@@ -54,6 +54,7 @@ export const createOrUpdaeteLeadboard = async (lesson) => {
     }
 
     checkLeadboard.lessonCount = totalLessonCount;
+    checkLeadboard.starCount = totalStarCount;
     await checkLeadboard.save();
     console.log("update leadboard successfully");
   } catch (err) {

@@ -12,6 +12,10 @@ const leaderboardSchema = new Schema(
       type: Number,
       required: true,
     },
+    starCount: {
+      type: Number,
+      required: true,
+    },
     date: {
       type: Date,
       required: true,
