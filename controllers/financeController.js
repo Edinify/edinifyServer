@@ -118,20 +118,20 @@ export const getChartData = async (req, res) => {
 
       const filteredIncomes = incomes.filter(
         (income) =>
-          income.date.getMonth() === targetMonth &&
-          income.date.getFullYear() === targetYear
+          income.date?.getMonth() === targetMonth &&
+          income.date?.getFullYear() === targetYear
       );
 
       const filteredExpenses = expenses.filter(
         (expense) =>
-          expense.date.getMonth() === targetMonth &&
-          expense.date.getFullYear() === targetYear
+          expense.date?.getMonth() === targetMonth &&
+          expense.date?.getFullYear() === targetYear
       );
 
       const filteredEarnings = earnings.filter(
         (earning) =>
-          earning.date.getMonth() === targetMonth &&
-          earning.date.getFullYear() === targetYear
+          earning.date?.getMonth() === targetMonth &&
+          earning.date?.getFullYear() === targetYear
       );
 
       const totalIncome = filteredIncomes.reduce(
