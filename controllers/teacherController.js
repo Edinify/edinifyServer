@@ -2,6 +2,7 @@ import { Lesson } from "../models/lessonModel.js";
 import { Teacher } from "../models/teacherModel.js";
 import bcrypt from "bcrypt";
 import { updateSalaryWhenUpdateTeacher } from "./salaryController.js";
+import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 
 // Get teachers
 export const getTeachers = async (req, res) => {
@@ -188,10 +189,67 @@ export const updateTeacherPassword = async (req, res) => {
   }
 };
 
+// Get teacher chart data
 
-// Get teacher chart data 
+export const getTeacherChartData = async (req, res) => {
+  const { monthCount, startDate, endDate } = req.query;
 
-export const getTeacherChartData = async (req,res)=>{
+  console.log(req.query);
+  try {
+    let targetDate;
 
-  
-}
+    if (monthCount) {
+      targetDate = calcDate(monthCount);
+    } else if (startDate && endDate) {
+      targetDate = calcDateWithMonthly(startDate, endDate);
+    }
+
+    const months = [];
+    const studentsCountList = [];
+    const lessonsCountList = [];
+
+    while (targetDate.startDate <= targetDate.endDate) {
+      const targetYear = targetDate.startDate.getFullYear();
+      const targetMonth = targetDate.startDate.getMonth() + 1;
+
+      const monthName = new Intl.DateTimeFormat("en-US", {
+        month: "long",
+      }).format(targetDate.startDate);
+
+      console.log(1);
+      const lessons = await Lesson.find({
+        status: "confirmed",
+        role: "current",
+        $expr: {
+          $and: [
+            { $eq: [{ $year: "$date" }, targetYear] },
+            { $eq: [{ $month: "$date" }, targetMonth] },
+          ],
+        },
+      });
+
+      console.log(2);
+
+      const totalStudentsCount = lessons.reduce(
+        (total, lesson) =>
+          (total += lesson.students.filter(
+            (item) => item.attendance === 1
+          ).length),
+        0
+      );
+
+      months.push({
+        month: monthName,
+        year: targetYear,
+      });
+      lessonsCountList.push(lessons.length);
+      studentsCountList.push(totalStudentsCount);
+
+      targetDate.startDate.setMonth(targetDate.startDate.getMonth() + 1);
+    }
+
+    res.status(200).json({ months, studentsCountList, lessonsCountList });
+  } catch (err) {
+    res.status(500).json({ message: { error: err.message } });
+  }
+};

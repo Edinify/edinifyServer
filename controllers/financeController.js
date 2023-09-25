@@ -65,7 +65,7 @@ export const getFinance = async (req, res) => {
 export const getChartData = async (req, res) => {
   const { monthCount, startDate, endDate } = req.query;
 
-  console.log(req.query, "finance chart");
+  console.log(req.query, "finance query");
   try {
     let targetDate;
 
@@ -75,12 +75,16 @@ export const getChartData = async (req, res) => {
       targetDate = calcDateWithMonthly(startDate, endDate);
     }
 
+    console.log(1);
     const incomes = await Income.find({
       createdAt: {
         $gte: targetDate.startDate,
         $lte: targetDate.endDate,
       },
     });
+
+    console.log(2);
+    console.log(incomes);
 
     const expenses = await Expense.find({
       createdAt: {
@@ -89,12 +93,18 @@ export const getChartData = async (req, res) => {
       },
     });
 
+    console.log(3);
+    console.log(expenses);
+
     const earnings = await Earning.find({
       date: {
         $gte: targetDate.startDate,
         $lte: targetDate.endDate,
       },
     });
+
+    console.log(4);
+    console.log(earnings);
 
     const months = [];
     const chartIncome = [];
@@ -103,36 +113,39 @@ export const getChartData = async (req, res) => {
     const chartProfit = [];
 
     while (targetDate.startDate <= targetDate.endDate) {
+      const targetYear = targetDate.startDate.getFullYear();
+      const targetMonth = targetDate.startDate.getMonth();
+
       const filteredIncomes = incomes.filter(
         (income) =>
-          income.date.getMonth() === targetDate.startDate.getMonth() &&
-          income.date.getFullYear() === targetDate.startDate.getFullYear()
+          income.date.getMonth() === targetMonth &&
+          income.date.getFullYear() === targetYear
       );
 
       const filteredExpenses = expenses.filter(
         (expense) =>
-          expense.date.getMonth() === targetDate.startDate.getMonth() &&
-          expense.date.getFullYear() === targetDate.startDate.getFullYear()
+          expense.date.getMonth() === targetMonth &&
+          expense.date.getFullYear() === targetYear
       );
 
       const filteredEarnings = earnings.filter(
         (earning) =>
-          earning.date.getMonth() === targetDate.startDate.getMonth() &&
-          earning.date.getFullYear() === targetDate.startDate.getFullYear()
+          earning.date.getMonth() === targetMonth &&
+          earning.date.getFullYear() === targetYear
       );
 
       const totalIncome = filteredIncomes.reduce(
-        (total, income) => (total += income?.amount && 0),
+        (total, income) => (total += income.amount),
         0
       );
 
       const totalExpense = filteredExpenses.reduce(
-        (total, expense) => (total += expense?.amount && 0),
+        (total, expense) => (total += expense.amount),
         0
       );
 
       const totalEarnings = filteredEarnings.reduce(
-        (total, curr) => (total += curr?.earnings && 0),
+        (total, curr) => (total += curr.earnings),
         0
       );
 
@@ -147,7 +160,7 @@ export const getChartData = async (req, res) => {
         month: "long",
       }).format(targetDate.startDate);
 
-      months.push({ month: monthName });
+      months.push({ month: monthName, year: targetYear });
       chartIncome.push(totalIncome);
       chartExpense.push(totalExpense);
       chartTurnover.push(turnover);
@@ -155,6 +168,8 @@ export const getChartData = async (req, res) => {
 
       targetDate.startDate.setMonth(targetDate.startDate.getMonth() + 1);
     }
+
+    console.log(5);
 
     res
       .status(200)
