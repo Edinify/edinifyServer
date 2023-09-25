@@ -64,6 +64,8 @@ export const getFinance = async (req, res) => {
 
 export const getChartData = async (req, res) => {
   const { monthCount, startDate, endDate } = req.query;
+
+  console.log(req.query);
   try {
     let targetDate;
 
@@ -145,7 +147,7 @@ export const getChartData = async (req, res) => {
         month: "long",
       }).format(targetDate.startDate);
 
-      months.push(monthName);
+      months.push({ month: monthName });
       chartIncome.push(totalIncome);
       chartExpense.push(totalExpense);
       chartTurnover.push(turnover);
