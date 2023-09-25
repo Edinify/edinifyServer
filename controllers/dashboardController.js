@@ -200,7 +200,6 @@ export const getAdvertisingStatistics = async (req, res) => {
 export const getTachersResults = async (req, res) => {
   const { monthCount, startDate, endDate, byFilter } = req.query;
 
-  console.log(req.query);
   let targetDate;
   try {
     if (monthCount) {
