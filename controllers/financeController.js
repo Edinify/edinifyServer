@@ -65,7 +65,7 @@ export const getFinance = async (req, res) => {
 export const getChartData = async (req, res) => {
   const { monthCount, startDate, endDate } = req.query;
 
-  console.log(req.query);
+  console.log(req.query, "finance chart");
   try {
     let targetDate;
 
@@ -122,17 +122,17 @@ export const getChartData = async (req, res) => {
       );
 
       const totalIncome = filteredIncomes.reduce(
-        (total, income) => (total += income.amount),
+        (total, income) => (total += income?.amount && 0),
         0
       );
 
       const totalExpense = filteredExpenses.reduce(
-        (total, expense) => (total += expense.amount),
+        (total, expense) => (total += expense?.amount && 0),
         0
       );
 
       const totalEarnings = filteredEarnings.reduce(
-        (total, curr) => (total += curr.earnings),
+        (total, curr) => (total += curr?.earnings && 0),
         0
       );
 

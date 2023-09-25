@@ -187,3 +187,11 @@ export const updateTeacherPassword = async (req, res) => {
     res.status(500).json({ message: { error: err.message } });
   }
 };
+
+
+// Get teacher chart data 
+
+export const getTeacherChartData = async (req,res)=>{
+
+  
+}
