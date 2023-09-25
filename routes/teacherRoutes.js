@@ -1,5 +1,9 @@
 import express from "express";
-import { authMiddleware, checkAdminAndSuperAdmin } from "../middleware/auth.js";
+import {
+  authMiddleware,
+  checkAdminAndSuperAdmin,
+  checkTeacher,
+} from "../middleware/auth.js";
 import {
   deleteTeacher,
   getTeacherChartData,
@@ -21,6 +25,6 @@ router.get(
 router.patch("/:id", authMiddleware, checkAdminAndSuperAdmin, updateTeacher);
 router.delete("/:id", authMiddleware, checkAdminAndSuperAdmin, deleteTeacher);
 router.patch("/me/password", authMiddleware, updateTeacherPassword);
-router.get("/me/chart", getTeacherChartData);
+router.get("/me/chart", authMiddleware, checkTeacher, getTeacherChartData);
 
 export default router;
