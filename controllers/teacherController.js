@@ -2,6 +2,8 @@ import { Lesson } from "../models/lessonModel.js";
 import { Teacher } from "../models/teacherModel.js";
 import bcrypt from "bcrypt";
 import { updateSalaryWhenUpdateTeacher } from "./salaryController.js";
+import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
+import { Leaderboard } from "../models/leaderboardModel.js";
 
 // Get teachers
 export const getTeachers = async (req, res) => {
@@ -183,6 +185,203 @@ export const updateTeacherPassword = async (req, res) => {
     );
 
     res.status(200).json(updatedTeacher);
+  } catch (err) {
+    res.status(500).json({ message: { error: err.message } });
+  }
+};
+
+// Get teacher chart data
+
+export const getTeacherChartData = async (req, res) => {
+  const { monthCount, startDate, endDate } = req.query;
+
+  console.log(req.query);
+  try {
+    let targetDate;
+
+    if (monthCount) {
+      targetDate = calcDate(monthCount);
+    } else if (startDate && endDate) {
+      targetDate = calcDateWithMonthly(startDate, endDate);
+    }
+
+    const months = [];
+    const studentsCountList = [];
+    const lessonsCountList = [];
+
+    while (targetDate.startDate <= targetDate.endDate) {
+      const targetYear = targetDate.startDate.getFullYear();
+      const targetMonth = targetDate.startDate.getMonth() + 1;
+
+      const monthName = new Intl.DateTimeFormat("en-US", {
+        month: "long",
+      }).format(targetDate.startDate);
+
+      console.log(1);
+      const lessons = await Lesson.find({
+        status: "confirmed",
+        role: "current",
+        $expr: {
+          $and: [
+            { $eq: [{ $year: "$date" }, targetYear] },
+            { $eq: [{ $month: "$date" }, targetMonth] },
+          ],
+        },
+      });
+
+      console.log(2);
+
+      const totalStudentsCount = lessons.reduce(
+        (total, lesson) =>
+          (total += lesson.students.filter(
+            (item) => item.attendance === 1
+          ).length),
+        0
+      );
+
+      months.push({
+        month: monthName,
+        year: targetYear,
+      });
+      lessonsCountList.push(lessons.length);
+      studentsCountList.push(totalStudentsCount);
+
+      targetDate.startDate.setMonth(targetDate.startDate.getMonth() + 1);
+    }
+
+    res.status(200).json({ months, studentsCountList, lessonsCountList });
+  } catch (err) {
+    res.status(500).json({ message: { error: err.message } });
+  }
+};
+
+// Get teacher confirmed lesson
+
+export const getTeacherConfirmedLessonsCount = async (req, res) => {
+  const { startDate, endDate, monthCount } = req.query;
+  const { id } = req.user;
+
+  console.log(req.query);
+
+  const targetDate = calcDate(monthCount, startDate, endDate);
+  try {
+    const confirmedCount = await Lesson.countDocuments({
+      teacher: id,
+      status: "confirmed",
+      role: "current",
+      date: {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
+      },
+    });
+
+    res.status(200).json(confirmedCount);
+  } catch (err) {
+    res.status(500).json({ message: { error: err.message } });
+  }
+};
+
+export const getTeacherCancelledLessonsCount = async (req, res) => {
+  const { startDate, endDate, monthCount } = req.query;
+  const { id } = req.user;
+
+  const targetDate = calcDate(monthCount, startDate, endDate);
+  try {
+    const cancelledCount = await Lesson.countDocuments({
+      teacher: id,
+      role: "current",
+      status: "cancelled",
+      date: {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
+      },
+    });
+
+    res.status(200).json(cancelledCount);
+  } catch (err) {
+    res.status(500).json({ message: { error: err.message } });
+  }
+};
+
+export const getTeacherUnviewedLessons = async (req, res) => {
+  const { startDate, endDate, monthCount } = req.query;
+  const { id } = req.user;
+
+  const targetDate = calcDate(monthCount, startDate, endDate);
+  try {
+    const unviewedCount = await Lesson.countDocuments({
+      teacher: id,
+      role: "current",
+      status: "unviewed",
+      date: {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
+      },
+    });
+
+    res.status(200).json(unviewedCount);
+  } catch (err) {
+    res.status(500).json({ message: { error: err.message } });
+  }
+};
+
+export const getTeacherLeadboardOrder = async (req, res) => {
+  const { monthCount, startDate, endDate, byFilter } = req.query;
+  const { id } = req.user;
+
+  let targetDate;
+  try {
+    if (monthCount) {
+      targetDate = calcDate(monthCount);
+    } else if (startDate && endDate) {
+      targetDate = calcDateWithMonthly(startDate, endDate);
+    }
+
+    const teachers = await Teacher.find().select("_id fullName");
+    const leaderboardData = await Leaderboard.find({
+      date: {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
+      },
+    });
+
+    const teachersResultsList = teachers.map((teacher) => {
+      const targetLeaderboardData = leaderboardData.filter(
+        (item) => item.teacherId.toString() == teacher._id.toString()
+      );
+
+      const totalLessonCount = targetLeaderboardData.reduce(
+        (total, item) => (total += item.lessonCount),
+        0
+      );
+
+      const totalStarCount = targetLeaderboardData.reduce(
+        (total, item) => (total += item.starCount),
+        0
+      );
+
+      return {
+        teacher,
+        lessonCount: totalLessonCount,
+        starCount: totalStarCount,
+      };
+    });
+
+    if (byFilter === "lessonCount") {
+      teachersResultsList.sort((a, b) => b.lessonCount - a.lessonCount);
+    } else if (byFilter === "starCount") {
+      teachersResultsList.sort((a, b) => b.starCount - a.starCount);
+    }
+
+    const teacherOrder =
+      teachersResultsList.findIndex(
+        (item) => item.teacher._id.toString() == id
+      ) + 1;
+
+    res.status(200).json({
+      teacherOrder,
+      teacherCount: teachersResultsList.length,
+    });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
