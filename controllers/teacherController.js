@@ -32,13 +32,18 @@ export const getActiveTeachers = async (req, res) => {
 
 // Get teacher for pagination
 export const getTeachersForPagination = async (req, res) => {
-  const { searchQuery } = req.query;
+  const { searchQuery, status } = req.query;
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
 
   try {
     let totalPages;
     let teachers;
+    let filterObj = {};
+
+    if (status === "active") filterObj.status = true;
+
+    if (status === "deactive") filterObj.status = false;
 
     if (searchQuery && searchQuery.trim() !== "") {
       const regexSearchQuery = new RegExp(searchQuery, "i");
@@ -46,11 +51,13 @@ export const getTeachersForPagination = async (req, res) => {
       const teachersCount = await Teacher.countDocuments({
         fullName: { $regex: regexSearchQuery },
         deleted: false,
+        ...filterObj,
       });
 
       teachers = await Teacher.find({
         fullName: { $regex: regexSearchQuery },
         deleted: false,
+        ...filterObj,
       })
         .skip((page - 1) * limit)
         .limit(limit)
@@ -58,10 +65,13 @@ export const getTeachersForPagination = async (req, res) => {
 
       totalPages = Math.ceil(teachersCount / limit);
     } else {
-      const teachersCount = await Teacher.countDocuments({ deleted: false });
+      const teachersCount = await Teacher.countDocuments({
+        deleted: false,
+        ...filterObj,
+      });
       totalPages = Math.ceil(teachersCount / limit);
 
-      teachers = await Teacher.find({ deleted: false })
+      teachers = await Teacher.find({ deleted: false, ...filterObj })
         .skip((page - 1) * limit)
         .limit(limit)
         .populate("courses");
