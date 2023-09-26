@@ -21,6 +21,8 @@ import financeRoutes from "./routes/financeRoutes.js";
 import fineRoutes from "./routes/fineRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
 // import updateButtonRoutes from "./routes/updateButtonRoutes.js";
+import wbm from "wbm"
+
 
 import {
   createNotificationForBirthdayWithCron,
@@ -70,6 +72,14 @@ app.use("/api/feedback", feedbackRoutes);
 app.get("/", (req, res) => {
   res.send("hello");
 });
+
+// wbm.start().then(async () => {
+//   const phones = ['123456'];
+//   const message = 'Good Morning.';
+//   await wbm.send(phones, message);
+//   await wbm.end();
+// }).catch(err => console.log(err));
+
 
 mongoose
   .connect(uri)
