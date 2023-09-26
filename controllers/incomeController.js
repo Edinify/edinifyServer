@@ -14,6 +14,15 @@ export const getIncomesForPagination = async (req, res) => {
     let incomes;
 
     const filterObj = {};
+    const sortObj = {};
+
+    if (sort === "lowestAmount") sortObj.amount = 1;
+
+    if (sort === "highestAmount") sortObj.amount = -1;
+
+    if (sort === "latest") sortObj.date = -1;
+
+    if (sort === "oldest") sortObj.date = 1;
 
     if (category) {
       filterObj.category = category;
@@ -29,6 +38,7 @@ export const getIncomesForPagination = async (req, res) => {
     totalPages = Math.ceil(incomesCount / limit);
 
     incomes = await Income.find(filterObj)
+      .sort(sortObj)
       .skip((page - 1) * limit)
       .limit(limit);
 

@@ -30,29 +30,9 @@ router.patch("/:id", authMiddleware, checkAdminAndSuperAdmin, updateTeacher);
 router.delete("/:id", authMiddleware, checkAdminAndSuperAdmin, deleteTeacher);
 router.patch("/me/password", authMiddleware, updateTeacherPassword);
 router.get("/me/chart", authMiddleware, checkTeacher, getTeacherChartData);
-router.get(
-  "/me/confirmed-lessons",
-  authMiddleware,
-  checkTeacher,
-  getTeacherConfirmedLessonsCount
-);
-router.get(
-  "/me/cancelled-lessons",
-  authMiddleware,
-  checkTeacher,
-  getTeacherCancelledLessonsCount
-);
-router.get(
-  "/me/unviewed-lessons",
-  authMiddleware,
-  checkTeacher,
-  getTeacherUnviewedLessons
-);
-router.get(
-  "/me/leaderboard-order",
-  authMiddleware,
-  checkTeacher,
-  getTeacherLeadboardOrder
-);
+router.get("/me/confirmed-lessons", authMiddleware, checkTeacher, getTeacherConfirmedLessonsCount);
+router.get("/me/cancelled-lessons", authMiddleware, checkTeacher, getTeacherCancelledLessonsCount);
+router.get("/me/unviewed-lessons", authMiddleware, checkTeacher, getTeacherUnviewedLessons);
+router.get("/me/leaderboard-order", authMiddleware, checkTeacher, getTeacherLeadboardOrder);
 
 export default router;
