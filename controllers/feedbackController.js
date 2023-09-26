@@ -70,7 +70,8 @@ export const getFeedbacksWithPagination = async (req, res) => {
           ...filterObj,
         })
           .skip((page - 1) * limit)
-          .limit(limit);
+          .limit(limit)
+          .populate("teacher student");
 
         totalPages = Math.ceil(feedbackCount / limit);
       } else if (from === "student") {
@@ -89,7 +90,8 @@ export const getFeedbacksWithPagination = async (req, res) => {
           ...filterObj,
         })
           .skip((page - 1) * limit)
-          .limit(limit);
+          .limit(limit)
+          .populate("teacher student");
 
         totalPages = Math.ceil(feedbackCount / limit);
       }
@@ -98,7 +100,8 @@ export const getFeedbacksWithPagination = async (req, res) => {
       totalPages = Math.ceil(feedbackCount / limit);
       feedbacks = await Feedback.find(filterObj)
         .skip((page - 1) * limit)
-        .limit(limit);
+        .limit(limit)
+        .populate("teacher student");
     }
 
     res.status(200).json({ feedbacks, totalPages });
@@ -165,7 +168,8 @@ export const updateFeedbackByStudent = async (feedback) => {
   try {
     const updatedFeedback = await Feedback.findByIdAndUpdate(
       feedback._id,
-      feedback
+      feedback,
+      { new: true }
     );
 
     if (!updatedFeedback) {
@@ -197,7 +201,7 @@ export const deleteFeedbackByStudent = async (id) => {
   try {
     const deletedFeedback = await Feedback.findByIdAndDelete(id);
 
-    if (!deleteFeedback) {
+    if (!deletedFeedback) {
       throw new Error("feedback not found");
     }
   } catch (err) {

@@ -1,5 +1,7 @@
 import { Admin } from "../models/adminModel.js";
 import bcrypt from "bcrypt";
+import { Student } from "../models/studentModel.js";
+import { Teacher } from "../models/teacherModel.js";
 
 // Get admin
 export const getAdmin = async (req, res) => {
@@ -22,6 +24,66 @@ export const getAdmins = async (req, res) => {
     const admins = await Admin.find({ role: "admin" });
 
     res.status(200).json(admins);
+  } catch (err) {
+    res.status(500).json({ message: { error: err.message } });
+  }
+};
+
+// Update Admin
+export const updateAdmin = async (req, res) => {
+  const { id } = req.params;
+  const { email } = req.body;
+  const updatedData = req.body;
+
+  try {
+    const existingAdmin = await Admin.findOne({ email });
+    const existingStudent = await Student.findOne({ email });
+    const existingTeacher = await Teacher.findOne({ email });
+
+    if (
+      (existingAdmin && existingAdmin._id != id) ||
+      existingStudent ||
+      existingTeacher
+    ) {
+      return res.status(409).json({ key: "email-already-exist" });
+    }
+
+    if (updatedData.password && updatedData.password.length > 5) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(updatedData.password, salt);
+      updatedData.password = hashedPassword;
+    } else {
+      delete updatedData.password;
+    }
+
+    const newAdmin = await Admin.findByIdAndUpdate(id, updatedData, {
+      new: true,
+      runValidators: true,
+    });
+
+    res.status(200).json(newAdmin);
+  } catch (err) {
+    res.status(500).json({
+      message: {
+        error: err.message,
+      },
+    });
+  }
+};
+
+// Delete admin
+export const deleteAdmin = async (req, res) => {
+  const { id } = req.params;
+
+  console.log(id, "delete");
+  try {
+    const deletedAdmin = await Admin.findByIdAndDelete(id);
+
+    if (!deletedAdmin) {
+      return res.status(404).json({ key: "admin-not-found" });
+    }
+
+    res.status(200).json(deleteAdmin);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }

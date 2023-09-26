@@ -8,6 +8,7 @@ import {
   deleteFeedbackByStudent,
   updateFeedbackByStudent,
 } from "./feedbackController.js";
+import { createOrUpdaeteLeadboard } from "./leadboardController.js";
 import {
   createNotificationForLessonsCount,
   createNotificationForUpdate,
@@ -218,7 +219,7 @@ export const updateLessonInTable = async (req, res) => {
 export const updateLessonInMainPanel = async (req, res) => {
   const { id } = req.params;
   const { role } = req.user;
-  const { feedback } = req.body;
+  const feedback = req.body.students[0]?.feedback || "";
 
   try {
     const lesson = await Lesson.findById(id);
@@ -226,10 +227,13 @@ export const updateLessonInMainPanel = async (req, res) => {
 
     if (role === "student") {
       const checkFeedback = await Feedback.findOne({ lessonId: id });
-
+      console.log(feedback, "feedback");
       if (feedback) {
+        console.log("test1");
         if (!checkFeedback) {
-          createFeedbackByStudent({
+          console.log("test2");
+
+          await createFeedbackByStudent({
             teacher: lesson.teacher,
             student: req.user.id,
             lessonId: lesson._id,
@@ -237,31 +241,36 @@ export const updateLessonInMainPanel = async (req, res) => {
             from: "student",
           });
         } else if (checkFeedback.feedback !== feedback) {
-          updateFeedbackByStudent({ ...checkFeedback, feedback });
+          console.log("test3");
+
+          await updateFeedbackByStudent({
+            ...checkFeedback.toObject(),
+            feedback,
+          });
         }
-      } else {
-        if (checkFeedback) {
-          deleteFeedbackByStudent(checkFeedback._id);
-        }
+      } else if (checkFeedback) {
+        console.log("test4");
+        await deleteFeedbackByStudent(checkFeedback._id);
       }
 
       const newFeedback = await Feedback.findOne({ lessonId: id });
       const newStudentInfo = req.body?.students[0];
+
       const updatedLesson = await Lesson.findOneAndUpdate(
         { _id: id, "students.student": req.user.id },
         {
           $set: {
             "students.$.attendance": newStudentInfo.attendance,
             "students.$.ratingByStudent": newStudentInfo.ratingByStudent,
-            "students.$.noteByStudent": newStudentInfo.noteByStudent,
+            "students.$.feedback": newFeedback?.feedback || "",
           },
-          feedback: newFeedback || "",
         },
         { new: true }
       ).populate("teacher course students.student");
 
       const updatedLessonObj = updatedLesson.toObject();
 
+      console.log(updatedLesson);
       const lessonWithOneStudent = {
         ...updatedLessonObj,
         students: updatedLessonObj.students.filter(
@@ -324,6 +333,7 @@ export const updateLessonInMainPanel = async (req, res) => {
     updateSalaryWhenUpdateLesson(updatedLesson);
 
     createEarnings(lesson.date);
+    createOrUpdaeteLeadboard(updatedLesson);
 
     res.status(200).json(updatedLesson);
   } catch (err) {

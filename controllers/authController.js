@@ -63,7 +63,11 @@ export const registerAdmin = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(req.body.password, salt);
 
-    const admin = new Admin({ ...req.body, password: hashedPassword });
+    const admin = new Admin({
+      ...req.body,
+      password: hashedPassword,
+      role: "admin",
+    });
     await admin.save();
 
     res.status(201).json(admin);
@@ -327,7 +331,6 @@ export const changeForgottenPassword = async (req, res) => {
 };
 
 // create accesstoken
-
 
 const createAccessToken = (user) => {
   const AccessToken = jwt.sign(

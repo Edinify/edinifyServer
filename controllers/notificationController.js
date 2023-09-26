@@ -100,8 +100,6 @@ export const createNotificationForLessonsCount = async (students) => {
 
     const Admins = await Admin.find();
     const adminsIdsList = Admins.map((admin) => ({ admin: admin._id }));
-    console.log(adminsIdsList);
-    console.log(completedCourseStudents);
 
     completedCourseStudents.map(async (student) => {
       await Notification.create({
@@ -111,8 +109,6 @@ export const createNotificationForLessonsCount = async (students) => {
         isViewedAdmin: adminsIdsList,
       });
     });
-
-    console.log("success create");
   } catch (err) {
     console.log({ message: { error: err.message } });
   }
@@ -181,7 +177,6 @@ export const deleteNotificationForLessonCount = async (students) => {
       student: { $in: students },
       role: "count",
     });
-    console.log("success");
   } catch (err) {
     console.log({ message: { error: err.message } });
   }
