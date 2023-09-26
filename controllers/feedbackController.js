@@ -55,26 +55,6 @@ export const getFeedbacksWithPagination = async (req, res) => {
       const regexSearchQuery = new RegExp(searchQuery, "i");
 
       if (from === "teacher") {
-        const students = await Student.find({
-          fullName: { $regex: regexSearchQuery },
-        }).select("_id");
-
-        const studentsIds = students.map((student) => student._id);
-        const feedbackCount = await Feedback.countDocuments({
-          student: { $in: studentsIds },
-          ...filterObj,
-        });
-
-        feedbacks = await Feedback.find({
-          student: { $in: studentsIds },
-          ...filterObj,
-        })
-          .skip((page - 1) * limit)
-          .limit(limit)
-          .populate("teacher student");
-
-        totalPages = Math.ceil(feedbackCount / limit);
-      } else if (from === "student") {
         const teachers = await Teacher.find({
           fullName: { $regex: regexSearchQuery },
         }).select("_id");
@@ -87,6 +67,26 @@ export const getFeedbacksWithPagination = async (req, res) => {
 
         feedbacks = await Feedback.find({
           teacher: { $in: teachersIds },
+          ...filterObj,
+        })
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .populate("teacher student");
+
+        totalPages = Math.ceil(feedbackCount / limit);
+      } else if (from === "student") {
+        const students = await Student.find({
+          fullName: { $regex: regexSearchQuery },
+        }).select("_id");
+
+        const studentsIds = students.map((student) => student._id);
+        const feedbackCount = await Feedback.countDocuments({
+          student: { $in: studentsIds },
+          ...filterObj,
+        });
+
+        feedbacks = await Feedback.find({
+          student: { $in: studentsIds },
           ...filterObj,
         })
           .skip((page - 1) * limit)
