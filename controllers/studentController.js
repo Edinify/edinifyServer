@@ -21,13 +21,15 @@ export const getStudentsForPagination = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
 
-  console.log(req.query,'======');
+  console.log(req.query, "======");
   try {
     let totalPages;
     let students;
-    let filterObj = {
-      status: status === "active" ? true : false,
-    };
+    let filterObj = {};
+
+    if (status === "active") filterObj.status = true;
+
+    if (status === "deactive") filterObj.status = false;
 
     if (searchQuery && searchQuery.trim() !== "") {
       const regexSearchQuery = new RegExp(searchQuery, "i");

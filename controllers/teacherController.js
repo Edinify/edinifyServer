@@ -39,9 +39,11 @@ export const getTeachersForPagination = async (req, res) => {
   try {
     let totalPages;
     let teachers;
-    let filterObj = {
-      status: status === "active" ? true : false,
-    };
+    let filterObj = {};
+
+    if (status === "active") filterObj.status = true;
+
+    if (status === "deactive") filterObj.status = false;
 
     if (searchQuery && searchQuery.trim() !== "") {
       const regexSearchQuery = new RegExp(searchQuery, "i");
