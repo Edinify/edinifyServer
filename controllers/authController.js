@@ -80,7 +80,7 @@ export const registerAdmin = async (req, res) => {
 export const registerStudent = async (req, res) => {
   const { email, courses } = req.body;
 
-  console.log("new student", req.body);
+  // console.log("new student", req.body);
   try {
     const existingAdmin = await Admin.findOne({ email });
     const existingStudent = await Student.findOne({ email });
@@ -150,7 +150,7 @@ export const registerTeacher = async (req, res) => {
 
     res.status(201).json({ teacher: { ...teacher, password: "" }, lastPage });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -181,6 +181,7 @@ export const login = async (req, res) => {
     const RefreshToken = createRefreshToken(user);
     saveTokensToDatabase(user._id, RefreshToken, AccessToken);
     // send refresh token to cookies
+    console.log(RefreshToken);
     res.cookie("refreshtoken", RefreshToken, {
       httpOnly: true,
       path: "/api/user/auth/refresh_token",
@@ -236,7 +237,7 @@ export const sendCodeToEmail = async (req, res) => {
 
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        console.log(error);
+        // console.log(error);
         return res.status(500).json({ error: error });
       } else {
         res.status(200).json({ message: "Code sent successfuly" });
@@ -356,12 +357,13 @@ const createRefreshToken = (user) => {
 export const refreshToken = async (req, res) => {
   // console.log(req.headers,'header')
   try {
-    const rf_token = req.headers.cookie.split("=")[1];
-    // console.log(rf_token);
-    const token = await Token.findOne({ refreshToken: rf_token });
+    const parts = req.headers.cookie.split('=')[1];
+    const refreshToken = parts.split(';')[0];
+    // console.log(refreshToken);
+    const token = await Token.findOne({ refreshToken: refreshToken });
     // console.log(token,'db');
     if (token) {
-      jwt.verify(rf_token, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+      jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
         if (err) {
           res.clearCookie("refreshtoken", {
             httpOnly: true,
@@ -373,7 +375,7 @@ export const refreshToken = async (req, res) => {
           revokeTokenFromDatabase(rf_token);
           return res.status(401).json({ message: { error: err.message } });
         } else {
-          console.log(user, "new acces ");
+          // console.log(user, "new acces ");
           const accesstoken = createAccessToken({
             email: user.mail,
             _id: user.id,

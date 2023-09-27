@@ -21,7 +21,7 @@ export const getStudentsForPagination = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
 
-  console.log(req.query, "======");
+  // console.log(req.query, "======");
   try {
     let totalPages;
     let students;

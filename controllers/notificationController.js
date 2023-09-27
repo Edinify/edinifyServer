@@ -34,7 +34,7 @@ export const createNotificationForBirthdayWithCron = async () => {
       });
     });
   } catch (err) {
-    console.log({ message: { error: err.message } });
+    // console.log({ message: { error: err.message } });
   }
 };
 
@@ -87,7 +87,7 @@ export const createNotificationForUpdate = async (teacherId, students) => {
       });
     });
   } catch (err) {
-    console.log({ message: { error: err.message } });
+    // console.log({ message: { error: err.message } });
   }
 };
 
@@ -110,7 +110,7 @@ export const createNotificationForLessonsCount = async (students) => {
       });
     });
   } catch (err) {
-    console.log({ message: { error: err.message } });
+    // console.log({ message: { error: err.message } });
   }
 };
 
@@ -123,7 +123,7 @@ export const getNotificationsForAdmin = async (req, res) => {
       role: { $in: ["birthday", "count"] },
     }).populate("student");
 
-    console.log(notifications);
+    // console.log(notifications);
 
     res.status(200).json(notifications);
   } catch (err) {
@@ -178,7 +178,7 @@ export const deleteNotificationForLessonCount = async (students) => {
       role: "count",
     });
   } catch (err) {
-    console.log({ message: { error: err.message } });
+    // console.log({ message: { error: err.message } });
   }
 };
 
@@ -190,7 +190,7 @@ export const deleteNotificationForUpdateTable = async () => {
       isUpdatedTable: true,
     });
   } catch (err) {
-    console.log({ message: { error: err.message } });
+    // console.log({ message: { error: err.message } });
   }
 };
 

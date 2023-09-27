@@ -76,7 +76,7 @@ app.get("/", (req, res) => {
 //   const message = 'Good Morning.';
 //   await wbm.send(phones, message);
 //   await wbm.end();
-// }).catch(err => console.log(err));
+// }).catch(err => // console.log(err));
 
 
 mongoose
@@ -86,11 +86,11 @@ mongoose
     app.listen(port, () => {
       console.log(`listen server at ${port}`);
       // cron.schedule("* * * * *", () => {
-      //   console.log('salam')
+      //   // console.log('salam')
       // createMonthlySalary()
       //   createNotificationForBirthdayWithCron();
       //   deleteNotificationsForBirthday();
       // });
     });
   })
-  .catch((err) => console.log(err));
+  .catch((err) =>  console.log(err));

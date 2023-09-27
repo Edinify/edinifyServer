@@ -49,15 +49,15 @@ export const createOrUpdaeteLeadboard = async (lesson) => {
         date: lesson.date,
       });
 
-      console.log("create leadboard successfully");
+      // console.log("create leadboard successfully");
       return;
     }
 
     checkLeadboard.lessonCount = totalLessonCount;
     checkLeadboard.starCount = totalStarCount;
     await checkLeadboard.save();
-    console.log("update leadboard successfully");
+    // console.log("update leadboard successfully");
   } catch (err) {
-    console.log({ message: { error: err.message } });
+    // console.log({ message: { error: err.message } });
   }
 };

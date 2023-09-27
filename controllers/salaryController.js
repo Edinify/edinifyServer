@@ -23,7 +23,7 @@ export const createSalariesAtEachMonth = async () => {
 
     await Salary.insertMany(salaries);
   } catch (err) {
-    console.log(err);
+    // console.log(err);
   }
 };
 
@@ -37,9 +37,9 @@ export const createSalaryWhenCreateTeacher = async (teacher) => {
       cancelledCount: 0,
       participantCount: 0,
     });
-    console.log("success");
+    // console.log("success");
   } catch (err) {
-    console.log(err);
+    // console.log(err);
   }
 };
 
@@ -64,7 +64,7 @@ export const updateSalaryWhenUpdateTeacher = async (teacher) => {
       { teacherSalary: teacher.salary }
     );
   } catch (err) {
-    console.log(err);
+    // console.log(err);
   }
 };
 
@@ -120,7 +120,7 @@ export const updateSalaryWhenUpdateLesson = async (lesson) => {
       }
     );
   } catch (err) {
-    console.log(err);
+    // console.log(err);
   }
 };
 
@@ -138,7 +138,7 @@ export const getSalariesForAdmins = async (req, res) => {
     let filterObj = {};
 
     if (searchQuery && searchQuery.trim() !== "") {
-      console.log("check search");
+      // console.log("check search");
       const regexSearchQuery = new RegExp(searchQuery, "i");
 
       const teachersCount = await Teacher.countDocuments({
@@ -243,7 +243,7 @@ export const getSalariesForAdmins = async (req, res) => {
 export const getSalariesForTeacher = async (req, res) => {
   const { startDate, endDate } = req.query;
   const { id } = req.user;
-  console.log(req.user);
+  // console.log(req.user);
   try {
     const teacher = await Teacher.findById(id);
     let salaries;
@@ -289,7 +289,7 @@ export const getSalariesForTeacher = async (req, res) => {
       participantCount += salary.participantCount;
       // bonus da id gelirdi
       totalBonus += (salary.bonus !== null && salary.bonus.amount) || 0;
-      console.log(salary);
+      // console.log(salary);
       if (salary.teacherSalary.monthly) {
         totalSalary += salary.teacherSalary.value;
       } else if (salary.teacherSalary.hourly) {

@@ -19,9 +19,9 @@ export const createFeedbackByStudent = async (feedback) => {
   try {
     await Feedback.create(feedback);
 
-    console.log({ message: "feedback created succuessfully" });
+    // console.log({ message: "feedback created succuessfully" });
   } catch (err) {
-    console.log({ message: err.message });
+    // console.log({ message: err.message });
   }
 };
 
@@ -176,7 +176,7 @@ export const updateFeedbackByStudent = async (feedback) => {
       throw new Error("feedback not found");
     }
   } catch (err) {
-    console.log({ message: err.message });
+    // console.log({ message: err.message });
   }
 };
 
@@ -205,6 +205,6 @@ export const deleteFeedbackByStudent = async (id) => {
       throw new Error("feedback not found");
     }
   } catch (err) {
-    console.log({ message: err.message });
+    // console.log({ message: err.message });
   }
 };

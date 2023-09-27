@@ -164,7 +164,7 @@ export const getCoursesStatistics = async (req, res) => {
 
 export const getAdvertisingStatistics = async (req, res) => {
   const { monthCount, startDate, endDate } = req.query;
-  console.log(req.query);
+  // console.log(req.query);
   const targetDate = calcDate(monthCount, startDate, endDate);
   try {
     const students = await Student.find({
@@ -191,10 +191,10 @@ export const getAdvertisingStatistics = async (req, res) => {
         value: (advertisingStatistics.length * 100) / students.length,
       };
     });
-    console.log(result);
+    // console.log(result);
     res.status(200).json(result);
   } catch (err) {
-    console.log(err);
+    // console.log(err);
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -203,16 +203,16 @@ export const getTachersResults = async (req, res) => {
   const { monthCount, startDate, endDate, byFilter } = req.query;
 
   let targetDate;
-  console.log(req.query);
+  // console.log(req.query);
   try {
-    console.log(1);
+    // console.log(1);
     if (monthCount) {
       targetDate = calcDate(monthCount);
     } else if (startDate && endDate) {
       targetDate = calcDateWithMonthly(startDate, endDate);
-      console.log(targetDate);
+      // console.log(targetDate);
     }
-    console.log(2);
+    // console.log(2);
     const teachers = await Teacher.find().select("_id fullName");
     const leaderboardData = await Leaderboard.find({
       date: {
@@ -221,7 +221,7 @@ export const getTachersResults = async (req, res) => {
       },
     });
 
-    console.log(3);
+    // console.log(3);
 
     const teachersResultsList = teachers.map((teacher) => {
       const targetLeaderboardData = leaderboardData.filter(
@@ -245,9 +245,9 @@ export const getTachersResults = async (req, res) => {
       };
     });
 
-    console.log(4);
+    // console.log(4);
 
-    console.log(teachersResultsList);
+    // console.log(teachersResultsList);
 
     let index;
     if (byFilter === "lessonCount" && teachersResultsList.length) {
@@ -272,14 +272,14 @@ export const getTachersResults = async (req, res) => {
           : 0;
     }
 
-    console.log(5);
+    // console.log(5);
 
     const result = {
       leaderTeacher: [...teachersResultsList.splice(0, index)],
       otherTeacher: [...teachersResultsList.splice(index)],
     };
 
-    console.log(teachersResultsList, "salam");
+    // console.log(teachersResultsList, "salam");
 
     res.status(200).json(result);
   } catch (err) {

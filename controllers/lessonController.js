@@ -227,11 +227,11 @@ export const updateLessonInMainPanel = async (req, res) => {
 
     if (role === "student") {
       const checkFeedback = await Feedback.findOne({ lessonId: id });
-      console.log(feedback, "feedback");
+      // console.log(feedback, "feedback");
       if (feedback) {
-        console.log("test1");
+        // console.log("test1");
         if (!checkFeedback) {
-          console.log("test2");
+          // console.log("test2");
 
           await createFeedbackByStudent({
             teacher: lesson.teacher,
@@ -241,7 +241,7 @@ export const updateLessonInMainPanel = async (req, res) => {
             from: "student",
           });
         } else if (checkFeedback.feedback !== feedback) {
-          console.log("test3");
+          // console.log("test3");
 
           await updateFeedbackByStudent({
             ...checkFeedback.toObject(),
@@ -249,7 +249,7 @@ export const updateLessonInMainPanel = async (req, res) => {
           });
         }
       } else if (checkFeedback) {
-        console.log("test4");
+        // console.log("test4");
         await deleteFeedbackByStudent(checkFeedback._id);
       }
 
@@ -270,7 +270,7 @@ export const updateLessonInMainPanel = async (req, res) => {
 
       const updatedLessonObj = updatedLesson.toObject();
 
-      console.log(updatedLesson);
+      // console.log(updatedLesson);
       const lessonWithOneStudent = {
         ...updatedLessonObj,
         students: updatedLessonObj.students.filter(
@@ -385,7 +385,7 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
     currentWeekStart.setHours(0, 0, 0, 0);
     currentWeekEnd.setHours(23, 59, 59, 999);
 
-    console.log(currentWeekStart, "---", currentWeekEnd);
+    // console.log(currentWeekStart, "---", currentWeekEnd);
 
     const checkCurrentWeeklyLessons = await Lesson.countDocuments({
       date: {
@@ -395,7 +395,7 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
       role: "current",
     });
 
-    console.log(checkCurrentWeeklyLessons);
+    // console.log(checkCurrentWeeklyLessons);
 
     if (checkCurrentWeeklyLessons > 0) {
       return res.status(400).json({ message: "already create current table" });

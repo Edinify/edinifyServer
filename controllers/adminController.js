@@ -75,7 +75,7 @@ export const updateAdmin = async (req, res) => {
 export const deleteAdmin = async (req, res) => {
   const { id } = req.params;
 
-  console.log(id, "delete");
+  // console.log(id, "delete");
   try {
     const deletedAdmin = await Admin.findByIdAndDelete(id);
 

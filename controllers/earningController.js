@@ -43,6 +43,6 @@ export const createEarnings = async (date) => {
       await checkEarnings.save();
     }
   } catch (err) {
-    console.log({ message: { error: err.message } });
+    // console.log({ message: { error: err.message } });
   }
 };

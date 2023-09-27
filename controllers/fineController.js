@@ -23,7 +23,7 @@ export const getFinesWithPagination = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
 
-  console.log(req.query);
+  // console.log(req.query);
   try {
     let targetDate;
     let totalPages;
@@ -109,8 +109,8 @@ export const getFinesForTeacher = async (req, res) => {
 export const updateFine = async (req, res) => {
   const { id } = req.params;
 
-  console.log(id);
-  console.log(req.body);
+  // console.log(id);
+  // console.log(req.body);
   try {
     const updatedFine = await Fine.findByIdAndUpdate(id, req.body, {
       new: true,
