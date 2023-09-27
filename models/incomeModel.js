@@ -44,4 +44,7 @@ const incomeSchema = new Schema(
   { timestamps: true }
 );
 
+incomeSchema.index({ date: 1 });
+incomeSchema.index({ amount: 1 });
+
 export const Income = mongoose.model("Income", incomeSchema);
