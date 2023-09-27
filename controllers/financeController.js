@@ -65,7 +65,6 @@ export const getFinance = async (req, res) => {
 export const getChartData = async (req, res) => {
   const { monthCount, startDate, endDate } = req.query;
 
-  console.log(req.query, "finance query");
   try {
     let targetDate;
 
@@ -75,16 +74,12 @@ export const getChartData = async (req, res) => {
       targetDate = calcDateWithMonthly(startDate, endDate);
     }
 
-    console.log(1);
     const incomes = await Income.find({
       createdAt: {
         $gte: targetDate.startDate,
         $lte: targetDate.endDate,
       },
     });
-
-    console.log(2);
-    console.log(incomes);
 
     const expenses = await Expense.find({
       createdAt: {
@@ -93,18 +88,12 @@ export const getChartData = async (req, res) => {
       },
     });
 
-    console.log(3);
-    console.log(expenses);
-
     const earnings = await Earning.find({
       date: {
         $gte: targetDate.startDate,
         $lte: targetDate.endDate,
       },
     });
-
-    console.log(4);
-    console.log(earnings);
 
     const months = [];
     const chartIncome = [];
@@ -168,8 +157,6 @@ export const getChartData = async (req, res) => {
 
       targetDate.startDate.setMonth(targetDate.startDate.getMonth() + 1);
     }
-
-    console.log(5);
 
     res
       .status(200)

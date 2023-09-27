@@ -9,6 +9,9 @@ export const getIncomesForPagination = async (req, res) => {
 
   const targetDate = calcDate(monthCount, startDate, endDate);
 
+  console.log(1);
+  console.log("queries", req.query);
+
   try {
     let totalPages;
     let incomes;
@@ -33,7 +36,15 @@ export const getIncomesForPagination = async (req, res) => {
       $lte: targetDate.endDate,
     };
 
+    console.log(2);
+    console.log("filterObj", filterObj);
+    console.log(3);
+    console.log("sortObj", sortObj);
+
     const incomesCount = await Income.countDocuments(filterObj);
+
+    console.log(4);
+    console.log("incomesCount", incomesCount);
 
     totalPages = Math.ceil(incomesCount / limit);
 
@@ -41,6 +52,10 @@ export const getIncomesForPagination = async (req, res) => {
       .sort(sortObj)
       .skip((page - 1) * limit)
       .limit(limit);
+
+    console.log(5);
+    console.log("incomes", incomes);
+    console.log("totalPages", totalPages);
 
     res.status(200).json({ incomes, totalPages });
   } catch (err) {
