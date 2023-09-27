@@ -51,7 +51,11 @@ export const getIncomesForPagination = async (req, res) => {
     incomes = await Income.find(filterObj)
       .sort(sortObj)
       .skip((page - 1) * limit)
-      .limit(limit);
+      .limit(limit)
+      .catch((err) => {
+        console.log(err.message);
+        throw new Error(`Error fetching incomes: ${err.message}`);
+      });
 
     console.log(5);
     console.log("incomes", incomes);
