@@ -205,7 +205,6 @@ export const updateTeacherPassword = async (req, res) => {
 export const getTeacherChartData = async (req, res) => {
   const { monthCount, startDate, endDate } = req.query;
 
-  console.log(req.query);
   try {
     let targetDate;
 
@@ -227,7 +226,6 @@ export const getTeacherChartData = async (req, res) => {
         month: "long",
       }).format(targetDate.startDate);
 
-      console.log(1);
       const lessons = await Lesson.find({
         status: "confirmed",
         role: "current",
@@ -238,8 +236,6 @@ export const getTeacherChartData = async (req, res) => {
           ],
         },
       });
-
-      console.log(2);
 
       const totalStudentsCount = lessons.reduce(
         (total, lesson) =>
@@ -270,8 +266,6 @@ export const getTeacherChartData = async (req, res) => {
 export const getTeacherConfirmedLessonsCount = async (req, res) => {
   const { startDate, endDate, monthCount } = req.query;
   const { id } = req.user;
-
-  console.log(req.query);
 
   const targetDate = calcDate(monthCount, startDate, endDate);
   try {

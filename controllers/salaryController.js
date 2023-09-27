@@ -1,3 +1,4 @@
+import { calcDateWithMonthly } from "../calculate/calculateDate.js";
 import { Lesson } from "../models/lessonModel.js";
 import { Salary } from "../models/salaryModel.js";
 import { Teacher } from "../models/teacherModel.js";
@@ -243,42 +244,20 @@ export const getSalariesForAdmins = async (req, res) => {
 export const getSalariesForTeacher = async (req, res) => {
   const { startDate, endDate } = req.query;
   const { id } = req.user;
-  console.log(req.user);
+
   try {
+    const targetDate = calcDateWithMonthly(startDate, endDate);
+
     const teacher = await Teacher.findById(id);
     let salaries;
     let filterObj = {
       teacherId: id,
+      date: {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
+      },
     };
 
-    if (startDate && endDate) {
-      const targetStartDate = new Date(startDate);
-      const targetEndDate = new Date(endDate);
-
-      targetStartDate.setDate(1);
-      targetEndDate.setMonth(targetEndDate.getMonth() + 1);
-      targetEndDate.setDate(0);
-
-      targetStartDate.setHours(0, 0, 0, 0);
-      targetEndDate.setHours(23, 59, 59, 999);
-
-      filterObj.date = {
-        $gte: targetStartDate,
-        $lte: targetEndDate,
-      };
-    } else {
-      const targetDate = new Date();
-      const targetYear = targetDate.getFullYear();
-      const targetMonth = targetDate.getMonth() + 1;
-
-      filterObj.$expr = {
-        $and: [
-          { $eq: [{ $year: "$date" }, targetYear] },
-          { $eq: [{ $month: "$date" }, targetMonth] },
-        ],
-      };
-    }
-    // bonus da id gelirdi .populate("bonus"); <= yox idi elave etdim
     salaries = await Salary.find(filterObj).populate("bonus");
 
     let totalSalary = 0;
@@ -287,9 +266,7 @@ export const getSalariesForTeacher = async (req, res) => {
 
     salaries.forEach((salary) => {
       participantCount += salary.participantCount;
-      // bonus da id gelirdi
-      totalBonus += (salary.bonus !== null && salary.bonus.amount) || 0;
-      console.log(salary);
+      totalBonus += salary?.bonus?.amount || 0;
       if (salary.teacherSalary.monthly) {
         totalSalary += salary.teacherSalary.value;
       } else if (salary.teacherSalary.hourly) {
@@ -305,6 +282,7 @@ export const getSalariesForTeacher = async (req, res) => {
       bonus: totalBonus,
     };
 
+    console.log(result, "result salary");
     res.status(200).json({ salary: result });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
