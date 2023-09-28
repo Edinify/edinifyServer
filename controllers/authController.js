@@ -337,7 +337,7 @@ const createAccessToken = (user) => {
   const AccessToken = jwt.sign(
     { email: user.email, role: user.role, id: user._id },
     process.env.SECRET_KEY,
-    { expiresIn: "6h" }
+    { expiresIn: "12h" }
   );
 
   return AccessToken;
@@ -384,6 +384,8 @@ export const refreshToken = async (req, res) => {
           res.json({ accesstoken });
         }
       });
+    }else{
+      return res.status(401).json({ message: "logout" });
     }
   } catch (err) {
     return res.status(404).json({ msg: err.message });
