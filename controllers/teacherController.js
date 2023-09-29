@@ -6,6 +6,7 @@ import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import { Leaderboard } from "../models/leaderboardModel.js";
 
 // Get teachers
+
 export const getAllTeachers = async (req, res) => {
   try {
     const teachers = await Teacher.find()
