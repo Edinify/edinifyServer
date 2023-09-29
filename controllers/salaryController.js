@@ -24,7 +24,7 @@ export const createSalariesAtEachMonth = async () => {
 
     await Salary.insertMany(salaries);
 
-    console.log('success create salary with cron')
+    console.log("success create salary with cron");
   } catch (err) {
     console.log(err);
   }
@@ -106,7 +106,7 @@ export const updateSalaryWhenUpdateLesson = async (lesson) => {
       }
     });
 
-    await Salary.findOneAndUpdate(
+    const updatedSalary = await Salary.findOneAndUpdate(
       {
         teacherId: lesson.teacher._id,
         $expr: {
@@ -122,6 +122,17 @@ export const updateSalaryWhenUpdateLesson = async (lesson) => {
         participantCount,
       }
     );
+
+    if (!updatedSalary) {
+      await Salary.create({
+        teacherId: lesson.teacher._id,
+        teacherSalary: lesson.teacher.salary,
+        confirmedCount,
+        cancelledCount,
+        participantCount,
+        date: lesson.date,
+      });
+    }
   } catch (err) {
     console.log(err);
   }
