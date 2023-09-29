@@ -6,9 +6,11 @@ import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import { Leaderboard } from "../models/leaderboardModel.js";
 
 // Get teachers
-export const getTeachers = async (req, res) => {
+export const getAllTeachers = async (req, res) => {
   try {
-    const teachers = await Teacher.find().populate("courses");
+    const teachers = await Teacher.find()
+      .select("-password")
+      .populate("courses");
 
     res.status(200).json(teachers);
   } catch (err) {
@@ -22,7 +24,9 @@ export const getActiveTeachers = async (req, res) => {
     const teachers = await Teacher.find({
       deleted: false,
       status: true,
-    }).populate("courses");
+    })
+      .select("-password")
+      .populate("courses");
 
     res.status(200).json(teachers);
   } catch (err) {

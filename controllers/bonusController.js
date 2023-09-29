@@ -12,6 +12,8 @@ export const createBonus = async (req, res) => {
   const targetYear = targetDate.getFullYear();
   const targetMonth = targetDate.getMonth() + 1;
 
+  console.log(req.body, "new bonus");
+
   try {
     const existingBonus = await Bonus.findOne({
       teacher,

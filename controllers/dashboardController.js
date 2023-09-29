@@ -50,6 +50,7 @@ export const getUnviewedLessons = async (req, res) => {
     const result = [];
 
     const unviewedLessons = await Lesson.find({
+      role: "current",
       status: "unviewed",
     }).populate("teacher course students.student");
 
@@ -142,7 +143,12 @@ export const getCoursesStatistics = async (req, res) => {
         $lte: targetDate.endDate,
       },
     });
-    const courses = await Course.find();
+    const courses = await Course.find({
+      createdAt: {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
+      },
+    });
 
     const result = courses.map((course) => {
       const courseStatistic = students.filter((student) => {
@@ -185,9 +191,14 @@ export const getAdvertisingStatistics = async (req, res) => {
         (student) => student.whereComing === advertising
       );
 
+      const value =
+        ((advertisingStatistics.length * 100) / students.length || 0).toFixed(
+          2
+        ) || 0;
+
       return {
         name: advertising,
-        value: (advertisingStatistics.length * 100) / students.length,
+        value,
       };
     });
 
@@ -199,18 +210,15 @@ export const getAdvertisingStatistics = async (req, res) => {
 
 export const getTachersResults = async (req, res) => {
   const { monthCount, startDate, endDate, byFilter } = req.query;
-
   let targetDate;
-  console.log(req.query);
+
   try {
-    console.log(1);
     if (monthCount) {
       targetDate = calcDate(monthCount);
     } else if (startDate && endDate) {
       targetDate = calcDateWithMonthly(startDate, endDate);
-      console.log(targetDate);
     }
-    console.log(2);
+
     const teachers = await Teacher.find().select("_id fullName");
     const leaderboardData = await Leaderboard.find({
       date: {
@@ -218,8 +226,6 @@ export const getTachersResults = async (req, res) => {
         $lte: targetDate.endDate,
       },
     });
-
-    console.log(3);
 
     const teachersResultsList = teachers.map((teacher) => {
       const targetLeaderboardData = leaderboardData.filter(
@@ -242,10 +248,6 @@ export const getTachersResults = async (req, res) => {
         starCount: totalStarCount,
       };
     });
-
-    console.log(4);
-
-    console.log(teachersResultsList);
 
     let index;
     if (byFilter === "lessonCount" && teachersResultsList.length) {
@@ -270,14 +272,10 @@ export const getTachersResults = async (req, res) => {
           : 0;
     }
 
-    console.log(5);
-
     const result = {
-      leaderTeacher: [...teachersResultsList.splice(0, index)],
-      otherTeacher: [...teachersResultsList.splice(index)],
+      leaderTeacher: [...teachersResultsList.slice(0, index)],
+      otherTeacher: [...teachersResultsList.slice(index)],
     };
-
-    console.log(teachersResultsList, "salam");
 
     res.status(200).json(result);
   } catch (err) {

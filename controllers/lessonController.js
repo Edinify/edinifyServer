@@ -290,7 +290,7 @@ export const updateLessonInMainPanel = async (req, res) => {
     }
 
     const earnings = updatedLesson.students.reduce((total, curr) => {
-      if (curr.attendance === 1) {
+      if (curr.attendance === 1 || curr.attendance === -1) {
         return (total += curr.student.payment);
       } else {
         return total;
