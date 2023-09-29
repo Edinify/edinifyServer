@@ -13,6 +13,8 @@ export const getAllTeachers = async (req, res) => {
       .select("-password")
       .populate("courses");
 
+    console.log(teachers);
+
     res.status(200).json(teachers);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
@@ -28,6 +30,8 @@ export const getActiveTeachers = async (req, res) => {
     })
       .select("-password")
       .populate("courses");
+
+    console.log(teachers);
 
     res.status(200).json(teachers);
   } catch (err) {

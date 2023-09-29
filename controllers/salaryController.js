@@ -23,6 +23,8 @@ export const createSalariesAtEachMonth = async () => {
     });
 
     await Salary.insertMany(salaries);
+
+    console.log('success create salary with cron')
   } catch (err) {
     console.log(err);
   }
@@ -95,7 +97,7 @@ export const updateSalaryWhenUpdateLesson = async (lesson) => {
         confirmedCount++;
 
         participantCount += lesson.students.filter(
-          (student) => student.attendance === 1
+          (student) => student.attendance === 1 || student.attendance === -1
         ).length;
       }
 

@@ -80,7 +80,6 @@ export const registerAdmin = async (req, res) => {
 export const registerStudent = async (req, res) => {
   const { email, courses } = req.body;
 
-  console.log("new student", req.body);
   try {
     const existingAdmin = await Admin.findOne({ email });
     const existingStudent = await Student.findOne({ email });
