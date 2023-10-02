@@ -16,9 +16,6 @@ export const createSalariesAtEachMonth = async () => {
       return {
         teacherId: teacher._id,
         teacherSalary: teacher.salary,
-        confirmedCount: 0,
-        cancelledCount: 0,
-        participantCount: 0,
       };
     });
 
@@ -33,14 +30,12 @@ export const createSalariesAtEachMonth = async () => {
 // Create a salary at create teacher
 export const createSalaryWhenCreateTeacher = async (teacher) => {
   try {
-    await Salary.create({
+    const newSalary = await Salary.create({
       teacherId: teacher._id,
       teacherSalary: teacher.salary,
-      confirmedCount: 0,
-      cancelledCount: 0,
-      participantCount: 0,
     });
-    console.log("success");
+
+    return newSalary;
   } catch (err) {
     console.log(err);
   }
@@ -54,7 +49,9 @@ export const updateSalaryWhenUpdateTeacher = async (teacher) => {
   const targetMonth = currentDate.getMonth() + 1;
 
   try {
-    await Salary.findOneAndUpdate(
+    let updatedSalary;
+
+    updatedSalary = await Salary.findOneAndUpdate(
       {
         teacherId: teacher._id,
         $expr: {
@@ -66,6 +63,15 @@ export const updateSalaryWhenUpdateTeacher = async (teacher) => {
       },
       { teacherSalary: teacher.salary }
     );
+
+    if (!updatedSalary) {
+      updatedSalary = await Salary.create({
+        teacherId: teacher._id,
+        teacherSalary: teacher.salary,
+      });
+    }
+
+    return updatedSalary;
   } catch (err) {
     console.log(err);
   }
@@ -106,7 +112,9 @@ export const updateSalaryWhenUpdateLesson = async (lesson) => {
       }
     });
 
-    const updatedSalary = await Salary.findOneAndUpdate(
+    let updatedSalary;
+
+    updatedSalary = await Salary.findOneAndUpdate(
       {
         teacherId: lesson.teacher._id,
         $expr: {
@@ -124,7 +132,7 @@ export const updateSalaryWhenUpdateLesson = async (lesson) => {
     );
 
     if (!updatedSalary) {
-      await Salary.create({
+      updatedSalary = await Salary.create({
         teacherId: lesson.teacher._id,
         teacherSalary: lesson.teacher.salary,
         confirmedCount,
@@ -133,6 +141,8 @@ export const updateSalaryWhenUpdateLesson = async (lesson) => {
         date: lesson.date,
       });
     }
+
+    return updatedSalary;
   } catch (err) {
     console.log(err);
   }

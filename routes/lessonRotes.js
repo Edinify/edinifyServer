@@ -25,6 +25,7 @@ router.post(
   createCurrentLessonsFromMainLessons
 );
 router.patch("/main/panel/:id", authMiddleware, updateLessonInMainPanel);
+
 router.patch(
   "/table/:id",
   authMiddleware,

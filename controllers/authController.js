@@ -137,12 +137,18 @@ export const registerTeacher = async (req, res) => {
     await teacher.populate("courses");
     await teacher.save();
 
-    await Course.updateMany(
-      { _id: { $in: coursesId } },
-      { $addToSet: { teachers: teacher._id } }
-    );
+    const newSalary = createSalaryWhenCreateTeacher(teacher);
 
-    createSalaryWhenCreateTeacher(teacher);
+    if (!newSalary){
+      Teacher.findByIdAndDelete(teacher._id)
+      
+      return res.status(400).json({key: "create-error-occurred"})
+    }
+
+      await Course.updateMany(
+        { _id: { $in: coursesId } },
+        { $addToSet: { teachers: teacher._id } }
+      );
 
     const teachersCount = await Teacher.countDocuments({ deleted: false });
     const lastPage = Math.ceil(teachersCount / 10);

@@ -31,8 +31,10 @@ export const createEarnings = async (date) => {
       },
     });
 
+    let newEarnings;
+
     if (!checkEarnings) {
-      const newEarnings = new Earning({
+      newEarnings = new Earning({
         earnings: totalEarnings,
         date: targetDate,
       });
@@ -40,8 +42,10 @@ export const createEarnings = async (date) => {
       await newEarnings.save();
     } else {
       checkEarnings.earnings = totalEarnings;
-      await checkEarnings.save();
+      newEarnings = await checkEarnings.save();
     }
+
+    return newEarnings
   } catch (err) {
     console.log({ message: { error: err.message } });
   }

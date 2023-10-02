@@ -124,8 +124,16 @@ export const updateTeacher = async (req, res) => {
       runValidators: true,
     }).populate("courses");
 
+    const updatedSalary = updateSalaryWhenUpdateTeacher(updatedTeacher);
+
     if (!updatedTeacher) {
       return res.status(404).json({ message: "Teacher not found" });
+    }
+
+    if (!updatedSalary) {
+      await Teacher.findByIdAndUpdate(teacher);
+
+      return res.status(400).json({ key: "create-error-occurred" });
     }
 
     if (teacher.status && !updatedTeacher.status) {
@@ -134,8 +142,6 @@ export const updateTeacher = async (req, res) => {
         teacher: teacher._id,
       });
     }
-
-    updateSalaryWhenUpdateTeacher(updatedTeacher);
 
     const updatedTeacherObj = updatedTeacher.toObject();
     updatedTeacherObj.password = "";
