@@ -217,10 +217,17 @@ export const updateLessonInTable = async (req, res) => {
 
 // Update lesson in main panel
 export const updateLessonInMainPanel = async (req, res) => {
+  console.log(req.body);
+
   const { whoFor } = req.query;
   const { id } = req.params;
   const { role } = req.user;
   const feedback = req.body.students[0]?.feedback || "";
+  const studentId = req.body.students[0]?.student;
+
+  console.log(whoFor);
+  console.log(role);
+  console.log(req.body);
 
   try {
     const lesson = await Lesson.findById(id);
@@ -233,7 +240,7 @@ export const updateLessonInMainPanel = async (req, res) => {
         if (!checkFeedback) {
           await createFeedbackByStudent({
             teacher: lesson.teacher,
-            student: req.user.id,
+            student: studentId,
             lessonId: lesson._id,
             feedback,
             from: "student",
@@ -252,7 +259,7 @@ export const updateLessonInMainPanel = async (req, res) => {
       const newStudentInfo = req.body?.students[0];
 
       const updatedLesson = await Lesson.findOneAndUpdate(
-        { _id: id, "students.student": req.user.id },
+        { _id: id, "students.student": studentId },
         {
           $set: {
             "students.$.attendance": newStudentInfo.attendance,
@@ -262,6 +269,8 @@ export const updateLessonInMainPanel = async (req, res) => {
         },
         { new: true }
       ).populate("teacher course students.student");
+
+      console.log(updatedLesson);
 
       const newSalary = updateSalaryWhenUpdateLesson(updatedLesson);
       const newEarning = createEarnings(lesson.date);
@@ -278,10 +287,11 @@ export const updateLessonInMainPanel = async (req, res) => {
       const lessonWithOneStudent = {
         ...updatedLessonObj,
         students: updatedLessonObj.students.filter(
-          (item) => item.student._id == req.user.id
+          (item) => item.student._id == studentId
         ),
       };
 
+      console.log(lessonWithOneStudent);
       return res.status(200).json(lessonWithOneStudent);
     }
 
