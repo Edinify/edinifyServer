@@ -217,17 +217,13 @@ export const updateLessonInTable = async (req, res) => {
 
 // Update lesson in main panel
 export const updateLessonInMainPanel = async (req, res) => {
-  console.log(req.body);
+  console.log(req.body, " ne var ne yox");
 
   const { whoFor } = req.query;
   const { id } = req.params;
   const { role } = req.user;
   const feedback = req.body.students[0]?.feedback || "";
   const studentId = req.body.students[0]?.student;
-
-  console.log(whoFor);
-  console.log(role);
-  console.log(req.body);
 
   try {
     const lesson = await Lesson.findById(id);
