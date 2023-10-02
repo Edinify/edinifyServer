@@ -217,8 +217,6 @@ export const updateLessonInTable = async (req, res) => {
 
 // Update lesson in main panel
 export const updateLessonInMainPanel = async (req, res) => {
-  console.log(req.body, " ne var ne yox");
-
   const { whoFor } = req.query;
   const { id } = req.params;
   const { role } = req.user;
@@ -266,8 +264,6 @@ export const updateLessonInMainPanel = async (req, res) => {
         { new: true }
       ).populate("teacher course students.student");
 
-      console.log(updatedLesson);
-
       const newSalary = updateSalaryWhenUpdateLesson(updatedLesson);
       const newEarning = createEarnings(lesson.date);
       const newLeaderboard = createOrUpdaeteLeadboard(updatedLesson);
@@ -287,7 +283,6 @@ export const updateLessonInMainPanel = async (req, res) => {
         ),
       };
 
-      console.log(lessonWithOneStudent);
       return res.status(200).json(lessonWithOneStudent);
     }
 
