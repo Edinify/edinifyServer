@@ -15,19 +15,19 @@ const salarySchema = new Schema(
     },
     confirmedCount: {
       type: Number,
-      require: true,
+      default: 0,
     },
     cancelledCount: {
       type: Number,
-      required: true,
+      default: 0,
     },
     participantCount: {
       type: Number,
-      required: true,
+      default: 0,
     },
     bonus: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Bonus"
+      ref: "Bonus",
     },
     date: {
       type: Date,

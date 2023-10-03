@@ -80,7 +80,6 @@ export const registerAdmin = async (req, res) => {
 export const registerStudent = async (req, res) => {
   const { email, courses } = req.body;
 
-  // console.log("new student", req.body);
   try {
     const existingAdmin = await Admin.findOne({ email });
     const existingStudent = await Student.findOne({ email });
@@ -138,12 +137,18 @@ export const registerTeacher = async (req, res) => {
     await teacher.populate("courses");
     await teacher.save();
 
-    await Course.updateMany(
-      { _id: { $in: coursesId } },
-      { $addToSet: { teachers: teacher._id } }
-    );
+    const newSalary = createSalaryWhenCreateTeacher(teacher);
 
-    createSalaryWhenCreateTeacher(teacher);
+    if (!newSalary){
+      Teacher.findByIdAndDelete(teacher._id)
+      
+      return res.status(400).json({key: "create-error-occurred"})
+    }
+
+      await Course.updateMany(
+        { _id: { $in: coursesId } },
+        { $addToSet: { teachers: teacher._id } }
+      );
 
     const teachersCount = await Teacher.countDocuments({ deleted: false });
     const lastPage = Math.ceil(teachersCount / 10);
