@@ -40,6 +40,20 @@ export const createSalaryWhenCreateTeacher = async (teacher) => {
   }
 };
 
+// Create a salary at create bonus
+export const createSalaryWhenCreateBonus = async (teacher) => {
+  try {
+    const newSalary = await Salary.create({
+      teacherId: teacher._id,
+      teacherSalary: teacher.salary,
+    });
+
+    return newSalary;
+  } catch (err) {
+    console.log(err);
+  }
+};
+
 // UPDATE SALARY
 // Update salary when update teacher
 export const updateSalaryWhenUpdateTeacher = async (teacher) => {
@@ -60,7 +74,48 @@ export const updateSalaryWhenUpdateTeacher = async (teacher) => {
           ],
         },
       },
-      { teacherSalary: teacher.salary }
+      { teacherSalary: teacher.salary },
+      {
+        new: true,
+      }
+    );
+
+    if (!updatedSalary) {
+      updatedSalary = await Salary.create({
+        teacherId: teacher._id,
+        teacherSalary: teacher.salary,
+      });
+    }
+
+    return updatedSalary;
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+// Update salary when update bonus
+export const updateSalaryWhenUpdateBonus = async (teacher) => {
+  const currentDate = new Date();
+  const targetYear = currentDate.getFullYear();
+  const targetMonth = currentDate.getMonth() + 1;
+
+  try {
+    let updatedSalary;
+
+    updatedSalary = await Salary.findOneAndUpdate(
+      {
+        teacherId: teacher._id,
+        $expr: {
+          $and: [
+            { $eq: [{ $year: "$date" }, targetYear] },
+            { $eq: [{ $month: "$date" }, targetMonth] },
+          ],
+        },
+      },
+      { teacherSalary: teacher.salary },
+      {
+        new: true,
+      }
     );
 
     if (!updatedSalary) {
@@ -127,7 +182,8 @@ export const updateSalaryWhenUpdateLesson = async (lesson) => {
         confirmedCount,
         cancelledCount,
         participantCount,
-      }
+      },
+      { new: true }
     );
 
     if (!updatedSalary) {
