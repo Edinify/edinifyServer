@@ -3,6 +3,7 @@ import { Salary } from "../models/salaryModel.js";
 import { Teacher } from "../models/teacherModel.js";
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import { checkAdmin } from "../middleware/auth.js";
+import { updateSalaryWhenUpdateBonus } from "./salaryController.js";
 
 // Create
 
@@ -12,11 +13,7 @@ export const createBonus = async (req, res) => {
   const targetYear = targetDate.getFullYear();
   const targetMonth = targetDate.getMonth() + 1;
 
-  console.log(1);
-  console.log(req.body, "new bonus");
-
   try {
-    console.log(2);
     const existingBonus = await Bonus.findOne({
       teacher,
       $expr: {
@@ -27,45 +24,23 @@ export const createBonus = async (req, res) => {
       },
     });
 
-    console.log(3);
     if (existingBonus) {
       return res.status(409).json({ key: "bonus-already-exist" });
     }
 
     const bonus = await Bonus.create(req.body);
+    await bonus.populate("teacher");
 
-    console.log(4);
-    const updatedSalary = await Salary.findOneAndUpdate(
-      {
-        teacherId: teacher,
-        $expr: {
-          $and: [
-            { $eq: [{ $year: "$date" }, targetYear] },
-            { $eq: [{ $month: "$date" }, targetMonth] },
-          ],
-        },
-      },
-      {
-        bonus: bonus._id,
-      },
-      { new: true }
-    );
-
-    console.log(5);
-    console.log(updatedSalary);
+    const updatedSalary = await updateSalaryWhenUpdateBonus(bonus.teacher);
 
     if (!updatedSalary) {
-      console.log(22);
+      console.log(5);
       await Bonus.findByIdAndDelete(bonus._id);
       return res.status(400).json({ key: "create-error-occurred" });
     }
 
-    console.log(6);
-
     const bonusCount = await Bonus.countDocuments();
     const lastPage = Math.ceil(bonusCount / 10);
-
-    console.log(7);
 
     res.status(201).json({ bonus, lastPage });
   } catch (err) {
