@@ -41,22 +41,22 @@ export const createOrUpdaeteLeadboard = async (lesson) => {
       },
     });
 
+    let newLeaderBoard;
+
     if (!checkLeadboard) {
-      await Leaderboard.create({
+      newLeaderBoard = await Leaderboard.create({
         teacherId: lesson.teacher._id,
         lessonCount: totalLessonCount,
         starCount: totalStarCount,
         date: lesson.date,
       });
-
-      console.log("create leadboard successfully");
-      return;
+    } else {
+      checkLeadboard.lessonCount = totalLessonCount;
+      checkLeadboard.starCount = totalStarCount;
+      newLeaderBoard = await checkLeadboard.save();
     }
 
-    checkLeadboard.lessonCount = totalLessonCount;
-    checkLeadboard.starCount = totalStarCount;
-    await checkLeadboard.save();
-    console.log("update leadboard successfully");
+    return newLeaderBoard;
   } catch (err) {
     console.log({ message: { error: err.message } });
   }

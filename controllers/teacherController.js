@@ -6,9 +6,14 @@ import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import { Leaderboard } from "../models/leaderboardModel.js";
 
 // Get teachers
-export const getTeachers = async (req, res) => {
+
+export const getAllTeachers = async (req, res) => {
   try {
-    const teachers = await Teacher.find().populate("courses");
+    const teachers = await Teacher.find()
+      .select("-password")
+      .populate("courses");
+
+    console.log(teachers);
 
     res.status(200).json(teachers);
   } catch (err) {
@@ -22,7 +27,11 @@ export const getActiveTeachers = async (req, res) => {
     const teachers = await Teacher.find({
       deleted: false,
       status: true,
-    }).populate("courses");
+    })
+      .select("-password")
+      .populate("courses");
+
+    console.log(teachers);
 
     res.status(200).json(teachers);
   } catch (err) {
@@ -115,8 +124,16 @@ export const updateTeacher = async (req, res) => {
       runValidators: true,
     }).populate("courses");
 
+    const updatedSalary = updateSalaryWhenUpdateTeacher(updatedTeacher);
+
     if (!updatedTeacher) {
       return res.status(404).json({ message: "Teacher not found" });
+    }
+
+    if (!updatedSalary) {
+      await Teacher.findByIdAndUpdate(teacher);
+
+      return res.status(400).json({ key: "create-error-occurred" });
     }
 
     if (teacher.status && !updatedTeacher.status) {
@@ -125,8 +142,6 @@ export const updateTeacher = async (req, res) => {
         teacher: teacher._id,
       });
     }
-
-    updateSalaryWhenUpdateTeacher(updatedTeacher);
 
     const updatedTeacherObj = updatedTeacher.toObject();
     updatedTeacherObj.password = "";
@@ -205,7 +220,6 @@ export const updateTeacherPassword = async (req, res) => {
 export const getTeacherChartData = async (req, res) => {
   const { monthCount, startDate, endDate } = req.query;
 
-  console.log(req.query);
   try {
     let targetDate;
 
@@ -227,7 +241,6 @@ export const getTeacherChartData = async (req, res) => {
         month: "long",
       }).format(targetDate.startDate);
 
-      console.log(1);
       const lessons = await Lesson.find({
         status: "confirmed",
         role: "current",
@@ -238,8 +251,6 @@ export const getTeacherChartData = async (req, res) => {
           ],
         },
       });
-
-      console.log(2);
 
       const totalStudentsCount = lessons.reduce(
         (total, lesson) =>
@@ -270,8 +281,6 @@ export const getTeacherChartData = async (req, res) => {
 export const getTeacherConfirmedLessonsCount = async (req, res) => {
   const { startDate, endDate, monthCount } = req.query;
   const { id } = req.user;
-
-  console.log(req.query);
 
   const targetDate = calcDate(monthCount, startDate, endDate);
   try {
