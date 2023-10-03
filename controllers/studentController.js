@@ -77,6 +77,11 @@ export const getStudentsForPagination = async (req, res) => {
 export const getStudentsByCourseId = async (req, res) => {
   const { courseId, day, time, role, date } = req.query;
 
+  const targetDate = new Date(date);
+  const targetMonth = targetDate.getMonth() + 1;
+  const targetYear = targetDate.getFullYear();
+  const targetDayOfMonth = targetDate.getDate();
+
   try {
     const students = await Student.find({
       courses: {
@@ -92,7 +97,6 @@ export const getStudentsByCourseId = async (req, res) => {
     const newStudents = await Promise.all(
       students.map(async (student) => {
         let checkStudent;
-
         if (role === "main") {
           checkStudent = await Lesson.findOne({
             "students.student": student._id,
@@ -100,15 +104,23 @@ export const getStudentsByCourseId = async (req, res) => {
             time: time,
             role: role,
           });
+
+          console.log(checkStudent);
         } else if (role === "current") {
           checkStudent = await Lesson.findOne({
             "students.student": student._id,
             day: day,
             time: time,
             role: role,
-            date: date,
             status: {
               $in: ["unviewed", "confirmed"],
+            },
+            $expr: {
+              $and: [
+                { $eq: [{ $year: "$date" }, targetYear] },
+                { $eq: [{ $month: "$date" }, targetMonth] },
+                { $eq: [{ $dayOfMonth: "$date" }, targetDayOfMonth] },
+              ],
             },
           });
         }
