@@ -25,14 +25,16 @@ export const createNotificationForBirthdayWithCron = async () => {
     const Admins = await Admin.find();
     const adminsIdsList = Admins.map((admin) => ({ admin: admin._id }));
 
-    birthdayStudents.map(async (student) => {
-      await Notification.create({
+    const notifications = birthdayStudents.map((student) => {
+      return {
         role: "birthday",
         student: student._id,
         isBirthday: true,
         isViewedAdmin: adminsIdsList,
-      });
+      };
     });
+
+    await Notification.insertMany(notifications);
   } catch (err) {
     console.log({ message: { error: err.message } });
   }
