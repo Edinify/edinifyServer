@@ -13,6 +13,7 @@ import {
   createNotificationForLessonsCount,
   createNotificationForUpdate,
   deleteNotificationForLessonCount,
+  deleteNotificationForUpdateTable,
 } from "./notificationController.js";
 import { updateSalaryWhenUpdateLesson } from "./salaryController.js";
 
@@ -176,6 +177,9 @@ export const updateLessonInTable = async (req, res) => {
   const { id } = req.params;
 
   try {
+    const lesson = await Lesson.findById(id).populate(
+      "teacher students.student"
+    );
     let newLesson = req.body;
 
     if (newLesson.teacher) {
@@ -202,12 +206,16 @@ export const updateLessonInTable = async (req, res) => {
     updatedLesson.earnings = earnings;
     await updatedLesson.save();
 
-    // if (updatedLesson.role === "current") {
-    //   createNotificationForUpdate(
-    //     updatedLesson.teacher._id,
-    //     updatedLesson.students
-    //   );
-    // }
+    if (updatedLesson.role === "current") {
+      if (lesson.students.length > updatedLesson.students.length) {
+        createNotificationForUpdate(lesson.teacher._id, lesson.students);
+      } else {
+        createNotificationForUpdate(
+          updatedLesson.teacher._id,
+          updatedLesson.students
+        );
+      }
+    }
 
     res.status(200).json(updatedLesson);
   } catch (err) {
@@ -356,7 +364,9 @@ export const deleteLessonInTablePanel = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const deletedLesson = await Lesson.findByIdAndDelete(id);
+    const deletedLesson = await Lesson.findByIdAndDelete(id).populate(
+      "teacher students.student"
+    );
 
     if (!deletedLesson) {
       res.status(404).json({ message: "Lesson not found" });
@@ -395,8 +405,6 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
     currentWeekStart.setHours(0, 0, 0, 0);
     currentWeekEnd.setHours(23, 59, 59, 999);
 
-    console.log(currentWeekStart, "---", currentWeekEnd);
-
     const checkCurrentWeeklyLessons = await Lesson.countDocuments({
       date: {
         $gte: currentWeekStart,
@@ -404,8 +412,6 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
       },
       role: "current",
     });
-
-    console.log(checkCurrentWeeklyLessons);
 
     if (checkCurrentWeeklyLessons > 0) {
       return res.status(400).json({ message: "already create current table" });
@@ -431,6 +437,9 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
     );
 
     await Lesson.insertMany(currentTableData);
+
+    deleteNotificationForUpdateTable();
+    
 
     res.status(201).json({ message: "Create current tables" });
   } catch (err) {

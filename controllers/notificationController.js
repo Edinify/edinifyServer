@@ -1,6 +1,7 @@
 import { Admin } from "../models/adminModel.js";
 import { Notification } from "../models/notificationModel.js";
 import { Student } from "../models/studentModel.js";
+import { Teacher } from "../models/teacherModel.js";
 
 // CREATE NOTIFICATION
 
@@ -22,8 +23,12 @@ export const createNotificationForBirthdayWithCron = async () => {
       status: true,
     });
 
-    const Admins = await Admin.find();
-    const adminsIdsList = Admins.map((admin) => ({ admin: admin._id }));
+    const admins = await Admin.find();
+    const teachers = await Teacher.find({ deleted: false, status: true });
+    const adminsIdsList = admins.map((admin) => ({ admin: admin._id }));
+    const teachersIdsList = teachers.map((teacher) => ({
+      teacher: teacher._id,
+    }));
 
     const notifications = birthdayStudents.map((student) => {
       return {
@@ -31,6 +36,7 @@ export const createNotificationForBirthdayWithCron = async () => {
         student: student._id,
         isBirthday: true,
         isViewedAdmin: adminsIdsList,
+        isViewedTeacher: teachersIdsList,
       };
     });
 
@@ -52,6 +58,11 @@ export const createNotificationForBirthdayAtCreateAndUpdateStudent = async (
   const studentBirthdayDate = studentBirthday.getDate();
   const studentBirthdayMonth = studentBirthday.getMonth() + 1;
 
+  await Notification.findOneAndDelete({
+    student: student._id,
+    role: "birthday",
+  });
+
   if (
     (currFirstDate.getDate() === studentBirthdayDate &&
       currFirstDate.getMonth() + 1 === studentBirthdayMonth) ||
@@ -60,14 +71,19 @@ export const createNotificationForBirthdayAtCreateAndUpdateStudent = async (
     (currThirdDate.getDate() === studentBirthdayDate &&
       currThirdDate.getMonth() + 1 === studentBirthdayMonth)
   ) {
-    const Admins = await Admin.find();
-    const adminsIdsList = Admins.map((admin) => ({ admin: admin._id }));
+    const admins = await Admin.find();
+    const teachers = await Teacher.find({ deleted: false, status: true });
+    const adminsIdsList = admins.map((admin) => ({ admin: admin._id }));
+    const teachersIdsList = teachers.map((teacher) => ({
+      teacher: teacher._id,
+    }));
 
     await Notification.create({
       role: "birthday",
       student: student._id,
       isBirthday: true,
       isViewedAdmin: adminsIdsList,
+      isViewedTeacher: teachersIdsList,
     });
   }
 };
@@ -75,18 +91,18 @@ export const createNotificationForBirthdayAtCreateAndUpdateStudent = async (
 // Create notification for update table
 export const createNotificationForUpdate = async (teacherId, students) => {
   try {
-    await Notification.create({
-      role: "update-teacher-table",
-      teacher: teacherId,
-      isUpdatedTable: true,
+    const studentsIds = students.map((item) => {
+      return {
+        student: item.student._id,
+      };
     });
 
-    students.map(async (item) => {
-      await Notification.create({
-        role: "update-student-table",
-        student: item.student._id,
-        isUpdatedTable: true,
-      });
+    await Notification.create({
+      role: "update-table",
+      teacher: teacherId,
+      isUpdatedTable: true,
+      isViewedTeacher: [{ teacher: teacherId }],
+      isViewedStudent: studentsIds,
     });
   } catch (err) {
     console.log({ message: { error: err.message } });
@@ -96,20 +112,23 @@ export const createNotificationForUpdate = async (teacherId, students) => {
 // Create notification for lesson count
 export const createNotificationForLessonsCount = async (students) => {
   try {
-    const completedCourseStudents = students.filter(
-      (student) => student.lessonAmount === 0
+    const completedCourseStudents = students.filter((student) =>
+      student.courses.find((item) => item.lessonAmount === 0)
     );
 
-    const Admins = await Admin.find();
-    const adminsIdsList = Admins.map((admin) => ({ admin: admin._id }));
-
-    completedCourseStudents.map(async (student) => {
-      await Notification.create({
-        role: "count",
+    const admins = await Admin.find();
+    const adminsIdsList = admins.map((admin) => ({ admin: admin._id }));
+    const studentsIdsList = completedCourseStudents.map((student) => {
+      return {
         student: student._id,
-        isZeroClassCount: true,
-        isViewedAdmin: adminsIdsList,
-      });
+      };
+    });
+
+    await Notification.create({
+      role: "count",
+      isZeroClassCount: true,
+      isViewedAdmin: adminsIdsList,
+      isViewedStudent: studentsIdsList,
     });
   } catch (err) {
     console.log({ message: { error: err.message } });
@@ -199,7 +218,7 @@ export const deleteNotificationForUpdateTable = async () => {
 // delete notification for birthday
 export const deleteNotificationsForBirthday = async (req, res) => {
   const currDate = new Date();
-  currDate.setDate(currDate.getDate() - 1);
+  currDate.setDate(currDate.getDate() + 2);
 
   try {
     const students = await Student.find({
@@ -244,14 +263,22 @@ export const doAsNotificationsSeen = async (req, res) => {
       );
     } else if (role === "teacher") {
       updatedNotifications = await Notification.updateMany(
-        { isViewedTeacher: false },
-        { isViewedTeacher: true },
+        { "isViewedTeacher.viewed": false, "isViewedTeacher.teacher": id },
+        {
+          $set: {
+            "isViewedTeacher.$.viewed": true,
+          },
+        },
         { new: true }
       );
     } else if (role === "student") {
       updatedNotifications = await Notification.updateMany(
-        { isViewedStudent: false },
-        { isViewedStudent: true },
+        { "isViewedStudent.viewed": false, "isViewedStudent.student": id },
+        {
+          $set: {
+            "isViewedStudent.$.viewed": true,
+          },
+        },
         { new: true }
       );
     }

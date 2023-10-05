@@ -1,9 +1,13 @@
 import { Lesson } from "../models/lessonModel.js";
 import { Student } from "../models/studentModel.js";
 import bcrypt from "bcrypt";
-import { createNotificationForLessonsCount } from "./notificationController.js";
+import {
+  createNotificationForBirthdayAtCreateAndUpdateStudent,
+  createNotificationForLessonsCount,
+} from "./notificationController.js";
 
 // Get students
+
 export const getStudents = async (req, res) => {
   try {
     const students = await Student.find()
@@ -169,9 +173,12 @@ export const updateStudent = async (req, res) => {
       return res.status(404).json({ key: "student-not-found" });
     }
 
-    // if (student.lessonAmount !== 0 && updatedStudent.lessonAmount === 0) {
-    //   createNotificationForLessonsCount([updatedStudent]);
-    // }
+    if (
+      student.birthday.getDate() != updatedStudent.birthday.getDate() ||
+      student.birthday.getMonth() != updatedStudent.birthday.getMonth()
+    ) {
+      createNotificationForBirthdayAtCreateAndUpdateStudent(updatedStudent);
+    }
 
     if (student.status && !updatedStudent.status) {
       await Lesson.updateMany(

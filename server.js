@@ -30,7 +30,7 @@ import { calcDate } from "./calculate/calculateDate.js";
 import { getUnviewedLessons } from "./controllers/dashboardController.js";
 import { createSalariesAtEachMonth } from "./controllers/salaryController.js";
 
-// import cron from "node-cron";
+import cron from "node-cron";
 
 dotenv.config();
 
@@ -80,10 +80,8 @@ mongoose
       console.log(`listen server at ${port}`);
       // cron.schedule("* * * * *", () => {
       //   console.log('salam')
-      // createMonthlySalary()
       //   createNotificationForBirthdayWithCron();
-      //   deleteNotificationsForBirthday();
-      //   createSalariesAtEachMonth();
+      // deleteNotificationsForBirthday()
       // });
 
       // cron.schedule("0 0 * * *", () => {
