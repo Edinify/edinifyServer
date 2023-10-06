@@ -10,11 +10,9 @@ const studentSchema = new Schema(
     },
     motherName: {
       type: String,
-      required: true,
     },
     fatherName: {
       type: String,
-      required: true,
     },
     email: {
       type: String,
@@ -27,27 +25,21 @@ const studentSchema = new Schema(
     },
     fin: {
       type: String,
-      required: true,
     },
     seria: {
       type: String,
-      required: true,
     },
     birthday: {
       type: Date,
-      required: true,
     },
     motherPhone: {
       type: String,
-      required: true,
     },
     fatherPhone: {
       type: String,
-      required: true,
     },
     emergencyPhone: {
       type: String,
-      required: true,
     },
     role: {
       type: String,
@@ -89,15 +81,12 @@ const studentSchema = new Schema(
     },
     educationalInstitution: {
       type: String,
-      required: true,
     },
     educationDegree: {
       type: String,
-      required: true,
     },
     healthStatus: {
       type: String,
-      required: true,
     },
     deleted: {
       type: Boolean,

@@ -143,12 +143,7 @@ export const getCoursesStatistics = async (req, res) => {
         $lte: targetDate.endDate,
       },
     });
-    const courses = await Course.find({
-      createdAt: {
-        $gte: targetDate.startDate,
-        $lte: targetDate.endDate,
-      },
-    });
+    const courses = await Course.find();
 
     const result = courses.map((course) => {
       const courseStatistic = students.filter((student) => {
