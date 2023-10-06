@@ -105,7 +105,7 @@ export const registerStudent = async (req, res) => {
       { $addToSet: { students: student._id } }
     );
 
-    // createNotificationForBirthdayAtCreateAndUpdateStudent(student);
+    createNotificationForBirthdayAtCreateAndUpdateStudent(student);
 
     const studentsCount = await Student.countDocuments({ deleted: false });
     const lastPage = Math.ceil(studentsCount / 10);
@@ -139,16 +139,16 @@ export const registerTeacher = async (req, res) => {
 
     const newSalary = createSalaryWhenCreateTeacher(teacher);
 
-    if (!newSalary){
-      Teacher.findByIdAndDelete(teacher._id)
-      
-      return res.status(400).json({key: "create-error-occurred"})
+    if (!newSalary) {
+      Teacher.findByIdAndDelete(teacher._id);
+
+      return res.status(400).json({ key: "create-error-occurred" });
     }
 
-      await Course.updateMany(
-        { _id: { $in: coursesId } },
-        { $addToSet: { teachers: teacher._id } }
-      );
+    await Course.updateMany(
+      { _id: { $in: coursesId } },
+      { $addToSet: { teachers: teacher._id } }
+    );
 
     const teachersCount = await Teacher.countDocuments({ deleted: false });
     const lastPage = Math.ceil(teachersCount / 10);
