@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import {
   createNotificationForBirthdayAtCreateAndUpdateStudent,
   createNotificationForLessonsCount,
+  deleteNotificationForLessonCount,
 } from "./notificationController.js";
 
 // Get students
@@ -88,12 +89,7 @@ export const getStudentsByCourseId = async (req, res) => {
 
   try {
     const students = await Student.find({
-      courses: {
-        $elemMatch: {
-          course: courseId,
-          lessonAmount: { $gt: 0 },
-        },
-      },
+      "courses.course": courseId,
       status: true,
       deleted: false,
     });
@@ -109,8 +105,15 @@ export const getStudentsByCourseId = async (req, res) => {
             role: role,
           });
 
-          console.log(checkStudent);
+          console.log("main");
         } else if (role === "current") {
+          console.log(targetYear, "target year");
+          console.log(targetMonth, "target month");
+          console.log(targetDayOfMonth, "target day");
+          console.log(student, "student");
+          console.log(day, "day");
+          console.log(time, "time");
+          console.log(role, "role");
           checkStudent = await Lesson.findOne({
             "students.student": student._id,
             day: day,
@@ -128,6 +131,8 @@ export const getStudentsByCourseId = async (req, res) => {
             },
           });
         }
+
+        console.log(2, checkStudent);
 
         if (checkStudent) {
           return { ...student.toObject(), disable: true };
@@ -262,5 +267,56 @@ export const updateStudentPassword = async (req, res) => {
     res.status(200).json(cleanedUpdatedStudent);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
+  }
+};
+
+// Student lesson amount
+export const decrementLessonAmount = async (lesson) => {
+  try {
+    const studentsIds = lesson.students
+      .filter((item) => item.attendance !== 2)
+      .map((item) => item.student._id);
+
+    const updatedStudent = await Student.updateMany(
+      {
+        _id: { $in: studentsIds },
+        "courses.course": lesson.course._id,
+      },
+      { $inc: { "courses.$.lessonAmount": -1 } }
+    );
+
+    if (!updatedStudent.acknowledged || updatedStudent.modifiedCount < 1) {
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.log(err);
+    return false;
+  }
+};
+
+export const incrementLessonAmount = async (lesson) => {
+  try {
+    const studentsIds = lesson.students
+      .filter((item) => item.attendance !== 2)
+      .map((item) => item.student._id);
+
+    const updatedStudent = await Student.updateMany(
+      {
+        _id: { $in: studentsIds },
+        "courses.course": lesson.course._id,
+      },
+      { $inc: { "courses.$.lessonAmount": 1 } }
+    );
+
+    if (!updatedStudent.acknowledged || updatedStudent.modifiedCount < 1) {
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.log(err);
+    return false;
   }
 };

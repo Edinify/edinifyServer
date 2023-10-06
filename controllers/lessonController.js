@@ -16,6 +16,10 @@ import {
   deleteNotificationForUpdateTable,
 } from "./notificationController.js";
 import { updateSalaryWhenUpdateLesson } from "./salaryController.js";
+import {
+  decrementLessonAmount,
+  incrementLessonAmount,
+} from "./studentController.js";
 
 // Create lesson
 export const createLesson = async (req, res) => {
@@ -235,6 +239,7 @@ export const updateLessonInMainPanel = async (req, res) => {
     const lesson = await Lesson.findById(id);
     let newLesson = req.body;
 
+    // Update lesson for one student
     if (role === "student" || whoFor === "student") {
       const checkFeedback = await Feedback.findOne({ lessonId: id });
 
@@ -294,6 +299,7 @@ export const updateLessonInMainPanel = async (req, res) => {
       return res.status(200).json(lessonWithOneStudent);
     }
 
+    // Update lesson for teacher and students
     const updatedLesson = await Lesson.findByIdAndUpdate(id, newLesson, {
       new: true,
     }).populate("teacher course students.student");
@@ -302,6 +308,7 @@ export const updateLessonInMainPanel = async (req, res) => {
       return res.status(404).json({ message: "Lesson not found" });
     }
 
+    // Calculate updated lesson earnings
     const earnings = updatedLesson.students.reduce((total, curr) => {
       if (curr.attendance === 1 || curr.attendance === -1) {
         return (total += curr.student.payment);
@@ -313,33 +320,23 @@ export const updateLessonInMainPanel = async (req, res) => {
     updatedLesson.earnings = earnings;
     await updatedLesson.save();
 
-    if (updatedLesson.status !== lesson.status) {
-      const students = updatedLesson.students
-        .filter((item) => item.attendance === 1 || item.attendance === -1)
-        .map((item) => item.student._id);
+    // Lesson amount calculate for students
+    if (lesson.status === "confirmed" && updatedLesson.status !== "confirmed") {
+      const updatedStudents = incrementLessonAmount(updatedLesson);
 
-      if (updatedLesson.status === "confirmed") {
-        await Student.updateMany(
-          {
-            _id: { $in: students },
-            "courses.course": updatedLesson.course._id,
-          },
-          { $inc: { "courses.$.lessonAmount": -1 } }
-        );
+      if (!updatedStudents) {
+        await Lesson.findByIdAndUpdate(lesson._id, lesson);
+        return res.status(400).json({ key: "create-error-occurred" });
+      }
+    } else if (
+      lesson.status !== "confirmed" &&
+      updatedLesson.status === "confirmed"
+    ) {
+      const updatedStudents = decrementLessonAmount(updatedLesson);
 
-        const updatedStudents = await Student.find({ _id: { $in: students } });
-
-        createNotificationForLessonsCount(updatedStudents);
-      } else if (lesson.status === "confirmed") {
-        await Student.updateMany(
-          {
-            _id: { $in: students },
-            "courses.course": updatedLesson.course._id,
-          },
-          { $inc: { "courses.$.lessonAmount": 1 } }
-        );
-
-        deleteNotificationForLessonCount(students);
+      if (!updatedStudents) {
+        await Lesson.findByIdAndUpdate(lesson._id, lesson);
+        return res.status(400).json({ key: "create-error-occurred" });
       }
     }
 
@@ -439,7 +436,6 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
     await Lesson.insertMany(currentTableData);
 
     deleteNotificationForUpdateTable();
-    
 
     res.status(201).json({ message: "Create current tables" });
   } catch (err) {
