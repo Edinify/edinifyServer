@@ -238,7 +238,7 @@ export const sendCodeToEmail = async (req, res) => {
 
     const mailOptions = {
       from: mainEmail,
-      to: "ceyhunresulov23@gmail.com",
+      to: email,
       subject: "Code to change password at edinfy",
       text: randomCode,
     };

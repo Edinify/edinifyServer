@@ -94,8 +94,8 @@ export const updateSalaryWhenUpdateTeacher = async (teacher) => {
   }
 };
 
-// Update salary when update bonus
-export const updateSalaryWhenUpdateBonus = async (teacher) => {
+// Update Or Create salary when update bonus
+export const updateOrCreateSalaryWhenCreateBonus = async (bonus) => {
   const currentDate = new Date();
   const targetYear = currentDate.getFullYear();
   const targetMonth = currentDate.getMonth() + 1;
@@ -105,7 +105,7 @@ export const updateSalaryWhenUpdateBonus = async (teacher) => {
 
     updatedSalary = await Salary.findOneAndUpdate(
       {
-        teacherId: teacher._id,
+        teacherId: bonus.teacher._id,
         $expr: {
           $and: [
             { $eq: [{ $year: "$date" }, targetYear] },
@@ -113,22 +113,27 @@ export const updateSalaryWhenUpdateBonus = async (teacher) => {
           ],
         },
       },
-      { teacherSalary: teacher.salary },
+      { bonus: bonus._id },
       {
         new: true,
       }
     );
 
     if (!updatedSalary) {
+      console.log(bonus.teacher.salary);
       updatedSalary = await Salary.create({
-        teacherId: teacher._id,
-        teacherSalary: teacher.salary,
+        teacherId: bonus.teacher._id,
+        bonus: bonus._id,
+        teacherSalary: bonus.teacher.salary,
       });
+      console.log(3);
+      console.log(updatedSalary);
     }
 
     return updatedSalary;
   } catch (err) {
     console.log(err);
+    return false;
   }
 };
 
@@ -288,6 +293,8 @@ export const getSalariesForAdmins = async (req, res) => {
       let totalSalary = 0;
       let participantCount = 0;
       let totalBonus = 0;
+
+      console.log(targetSalaries);
 
       targetSalaries.forEach((salary) => {
         totalConfirmed += salary.confirmedCount;

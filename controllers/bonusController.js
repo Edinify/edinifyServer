@@ -1,12 +1,9 @@
 import { Bonus } from "../models/bonusModel.js";
-import { Salary } from "../models/salaryModel.js";
 import { Teacher } from "../models/teacherModel.js";
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
-import { checkAdmin } from "../middleware/auth.js";
-import { updateSalaryWhenUpdateBonus } from "./salaryController.js";
+import { updateOrCreateSalaryWhenCreateBonus } from "./salaryController.js";
 
 // Create
-
 export const createBonus = async (req, res) => {
   const { teacher } = req.body;
   const targetDate = new Date();
@@ -31,10 +28,9 @@ export const createBonus = async (req, res) => {
     const bonus = await Bonus.create(req.body);
     await bonus.populate("teacher");
 
-    const updatedSalary = await updateSalaryWhenUpdateBonus(bonus.teacher);
+    const updatedSalary = await updateOrCreateSalaryWhenCreateBonus(bonus);
 
     if (!updatedSalary) {
-      console.log(5);
       await Bonus.findByIdAndDelete(bonus._id);
       return res.status(400).json({ key: "create-error-occurred" });
     }
@@ -43,6 +39,47 @@ export const createBonus = async (req, res) => {
     const lastPage = Math.ceil(bonusCount / 10);
 
     res.status(201).json({ bonus, lastPage });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const createBonusOnSalary = async (req, res) => {
+  const { teacher } = req.body;
+  const targetDate = new Date();
+  const targetYear = targetDate.getFullYear();
+  const targetMonth = targetDate.getMonth() + 1;
+
+  try {
+    let bonus;
+
+    const existingBonus = await Bonus.findOne({
+      teacher,
+      $expr: {
+        $and: [
+          { $eq: [{ $year: "$createdAt" }, targetYear] },
+          { $eq: [{ $month: "$createdAt" }, targetMonth] },
+        ],
+      },
+    });
+
+    if (existingBonus) {
+      bonus = await Bonus.findByIdAndUpdate(existingBonus._id, req.body, {
+        new: true,
+      }).populate("teacher");
+    } else {
+      bonus = await Bonus.create(req.body);
+      await bonus.populate("teacher");
+    }
+
+    const updatedSalary = await updateOrCreateSalaryWhenCreateBonus(bonus);
+
+    if (!updatedSalary) {
+      await Bonus.findByIdAndDelete(bonus._id);
+      return res.status(400).json({ key: "create-error-occurred" });
+    }
+
+    res.status(201).json({ message: "create bonus successfull" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
