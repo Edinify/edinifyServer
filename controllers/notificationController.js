@@ -295,7 +295,7 @@ export const deleteNotificationsForBirthday = async (req, res) => {
   }
 };
 
-// Do as notification seen
+// Do as notification seen.
 export const doAsNotificationsSeen = async (req, res) => {
   const { role, id } = req.user;
 
