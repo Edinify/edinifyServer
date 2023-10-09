@@ -7,7 +7,10 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-import { createNotificationForBirthdayAtCreateAndUpdateStudent } from "./notificationController.js";
+import {
+  createNotificationForBirthdayAtCreateAndUpdateStudent,
+  createNotificationForOneStudentLessonCount,
+} from "./notificationController.js";
 import { createSalaryWhenCreateTeacher } from "./salaryController.js";
 
 dotenv.config();
@@ -105,6 +108,7 @@ export const registerStudent = async (req, res) => {
       { $addToSet: { students: student._id } }
     );
 
+    createNotificationForOneStudentLessonCount(student);
     createNotificationForBirthdayAtCreateAndUpdateStudent(student);
 
     const studentsCount = await Student.countDocuments({ deleted: false });

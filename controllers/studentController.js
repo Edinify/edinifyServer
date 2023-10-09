@@ -289,6 +289,12 @@ export const decrementLessonAmount = async (lesson) => {
       return false;
     }
 
+    const targetStudents = await Student.find({
+      _id: { $in: studentsIds },
+    });
+
+    createNotificationForLessonsCount(targetStudents);
+
     return true;
   } catch (err) {
     console.log(err);
@@ -313,6 +319,12 @@ export const incrementLessonAmount = async (lesson) => {
     if (!updatedStudent.acknowledged || updatedStudent.modifiedCount < 1) {
       return false;
     }
+
+    const targetStudents = await Student.find({
+      _id: { $in: studentsIds },
+    });
+
+    deleteNotificationForLessonCount(targetStudents);
 
     return true;
   } catch (err) {
