@@ -21,8 +21,6 @@ import financeRoutes from "./routes/financeRoutes.js";
 import fineRoutes from "./routes/fineRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
 // import updateButtonRoutes from "./routes/updateButtonRoutes.js";
-import wbm from "wbm"
-
 
 import {
   createNotificationForBirthdayWithCron,
@@ -39,10 +37,11 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT;
 const uri = process.env.DB_URI;
+const urlPort = process.env.URL_PORT;
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: urlPort,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],
@@ -80,7 +79,6 @@ app.get("/", (req, res) => {
 //   await wbm.send(phones, message);
 //   await wbm.end();
 // }).catch(err => console.log(err));
-
 
 mongoose
   .connect(uri)
