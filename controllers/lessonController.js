@@ -10,9 +10,7 @@ import {
 } from "./feedbackController.js";
 import { createOrUpdaeteLeadboard } from "./leadboardController.js";
 import {
-  createNotificationForLessonsCount,
   createNotificationForUpdate,
-  deleteNotificationForLessonCount,
   deleteNotificationForUpdateTable,
 } from "./notificationController.js";
 import { updateSalaryWhenUpdateLesson } from "./salaryController.js";
@@ -322,7 +320,7 @@ export const updateLessonInMainPanel = async (req, res) => {
 
     // Lesson amount calculate for students
     if (lesson.status === "confirmed" && updatedLesson.status !== "confirmed") {
-      const updatedStudents = incrementLessonAmount(updatedLesson);
+      const updatedStudents = await incrementLessonAmount(updatedLesson);
 
       if (!updatedStudents) {
         await Lesson.findByIdAndUpdate(lesson._id, lesson);
@@ -332,7 +330,7 @@ export const updateLessonInMainPanel = async (req, res) => {
       lesson.status !== "confirmed" &&
       updatedLesson.status === "confirmed"
     ) {
-      const updatedStudents = decrementLessonAmount(updatedLesson);
+      const updatedStudents = await decrementLessonAmount(updatedLesson);
 
       if (!updatedStudents) {
         await Lesson.findByIdAndUpdate(lesson._id, lesson);
@@ -387,7 +385,7 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
   try {
     const mainTableData = await Lesson.find({
       role: "main",
-    });
+    }).populate("teacher");
 
     const currentWeekStart = new Date();
     const currentWeekEnd = new Date();
@@ -419,16 +417,15 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
         const date = new Date(currentWeekStart);
         date.setDate(date.getDate() + data.day - 1);
 
-        const teacher = await Teacher.findById(data.teacher);
-
         const dataObj = data.toObject();
         delete dataObj._id;
         delete dataObj.status;
         return {
           ...dataObj,
+          teacher: data.teacher._id,
           date: date,
           role: "current",
-          salary: teacher.salary,
+          salary: data.teacher.salary,
         };
       })
     );
