@@ -116,22 +116,48 @@ export const createNotificationForLessonsCount = async (students) => {
       student.courses.find((item) => item.lessonAmount === 0)
     );
 
+    if (completedCourseStudents.length < 0) return true;
+
     const admins = await Admin.find();
     const adminsIdsList = admins.map((admin) => ({ admin: admin._id }));
-    const studentsIdsList = completedCourseStudents.map((student) => {
-      return {
-        student: student._id,
-      };
-    });
+
+    const newNotificationsList = completedCourseStudents.map((student) => ({
+      role: "count",
+      student: student._id,
+      isZeroClassCount: true,
+      isViewedAdmin: adminsIdsList,
+      isViewedStudent: [{ student: student._id }],
+    }));
+
+    await Notification.insertMany(newNotificationsList);
+
+    return true;
+  } catch (err) {
+    console.log({ message: { error: err.message } });
+
+    console.log(8);
+    return false;
+  }
+};
+
+export const createNotificationForOneStudentLessonCount = async (student) => {
+  try {
+    const admins = await Admin.find();
+    const adminsIdsList = admins.map((admin) => ({ admin: admin._id }));
 
     await Notification.create({
       role: "count",
+      student: student._id,
       isZeroClassCount: true,
       isViewedAdmin: adminsIdsList,
-      isViewedStudent: studentsIdsList,
+      isViewedStudent: [{ student: student._id }],
     });
-  } catch (err) {
-    console.log({ message: { error: err.message } });
+
+    return true;
+  } catch (error) {
+    console.log(err);
+
+    return false;
   }
 };
 
@@ -194,12 +220,37 @@ export const getNotificationsForStudent = async (req, res) => {
 // Delete notification for lesson count
 export const deleteNotificationForLessonCount = async (students) => {
   try {
+    const studentsIds = students.filter((student) =>
+      student.courses.find((item) => item.lessonAmount === 1)
+    );
+
     await Notification.deleteMany({
-      student: { $in: students },
+      student: { $in: studentsIds },
       role: "count",
     });
+
+    return true;
   } catch (err) {
     console.log({ message: { error: err.message } });
+    return false;
+  }
+};
+
+export const deleteNotificationForOneStudentLessonCount = async (student) => {
+  try {
+    const studentsIds = students.filter((student) =>
+      student.courses.find((item) => item.lessonAmount === 1)
+    );
+
+    await Notification.deleteMany({
+      student: { $in: studentsIds },
+      role: "count",
+    });
+
+    return true;
+  } catch (err) {
+    console.log({ message: { error: err.message } });
+    return false;
   }
 };
 
