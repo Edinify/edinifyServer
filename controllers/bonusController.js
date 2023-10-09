@@ -150,7 +150,7 @@ export const getBonusesWithPagination = async (req, res) => {
 export const getBonusesForTeacher = async (req, res) => {
   const { monthCount, startDate, endDate } = req.query;
   const { id } = req.user;
-
+  console.log(req.query);
   try {
     let targetDate;
     if (startDate && endDate) {
