@@ -37,11 +37,10 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT;
 const uri = process.env.DB_URI;
-const urlPort = process.env.URL_PORT;
 
 app.use(
   cors({
-    origin: urlPort,
+    origin: "*",
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],
