@@ -72,7 +72,7 @@ app.use("/api/feedback", feedbackRoutes);
 app.get("/", (req, res) => {
   res.send("salam");
 });
-
+// 
 // wbm.start().then(async () => {
 //   const phones = ['123456'];
 //   const message = 'Good Morning.';
