@@ -39,4 +39,6 @@ router.delete(
   deleteLessonInTablePanel
 );
 
+// router.delete("/delete-current",deleteCurrentLesson);
+
 export default router;

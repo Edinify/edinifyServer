@@ -21,8 +21,6 @@ import financeRoutes from "./routes/financeRoutes.js";
 import fineRoutes from "./routes/fineRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
 // import updateButtonRoutes from "./routes/updateButtonRoutes.js";
-import wbm from "wbm"
-
 
 import {
   createNotificationForBirthdayWithCron,
@@ -79,7 +77,6 @@ app.get("/", (req, res) => {
 //   await wbm.send(phones, message);
 //   await wbm.end();
 // }).catch(err => // console.log(err));
-
 
 mongoose
   .connect(uri)

@@ -57,6 +57,7 @@ export const getWeeklyLessonsForMainTable = async (req, res) => {
       role: "main",
     }).populate("teacher course students.student");
 
+    console.log(lessons);
     res.status(200).json(lessons);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
@@ -434,8 +435,18 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
 
     deleteNotificationForUpdateTable();
 
-    res.status(201).json({ message: "Create current tables" });
+    res.status(201).json({ message: "create current table" });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
 };
+
+
+
+// export const deleteCurrentLesson = async (req, res) => {
+//   await Lesson.deleteMany({ role: "current" });
+
+//   const teachers = await Teacher.find();
+
+//   res.status(200).json(teachers);
+// };
