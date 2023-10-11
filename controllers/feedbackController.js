@@ -112,10 +112,12 @@ export const getFeedbacksWithPagination = async (req, res) => {
 
 export const getFeedbacksForTeacher = async (req, res) => {
   const { monthCount, startDate, endDate, searchQuery } = req.query;
+  const { id } = req.user;
 
   try {
     const targetDate = calcDate(monthCount, startDate, endDate);
     const filterObj = {
+      teacher: id,
       from: "teacher",
       createdAt: {
         $gte: targetDate.startDate,

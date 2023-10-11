@@ -168,6 +168,7 @@ export const registerTeacher = async (req, res) => {
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
+  console.log(email, password);
   try {
     const admin = await Admin.findOne({ email });
     const student = await Student.findOne({ email });
@@ -175,12 +176,14 @@ export const login = async (req, res) => {
 
     const user = admin || student || teacher;
 
+    console.log(user);
     if (!user) {
       return res.status(404).json({ key: "user-not-found" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
+    console.log(isPasswordValid);
     if (!isPasswordValid) {
       return res.status(404).json({ key: "invalid-password" });
     }
@@ -188,6 +191,10 @@ export const login = async (req, res) => {
     // refresh and accesstoken callback for creating
     const AccessToken = createAccessToken(user);
     const RefreshToken = createRefreshToken(user);
+
+    console.log(AccessToken);
+    console.log(RefreshToken);
+
     saveTokensToDatabase(user._id, RefreshToken, AccessToken);
     // send refresh token to cookies
     res.cookie("refreshtoken", RefreshToken, {
@@ -342,13 +349,17 @@ export const changeForgottenPassword = async (req, res) => {
 // create accesstoken
 
 const createAccessToken = (user) => {
-  const AccessToken = jwt.sign(
-    { email: user.email, role: user.role, id: user._id },
-    process.env.SECRET_KEY,
-    { expiresIn: "6h" }
-  );
+  try {
+    const AccessToken = jwt.sign(
+      { email: user.email, role: user.role, id: user._id },
+      process.env.SECRET_KEY,
+      { expiresIn: "6h" }
+    );
 
-  return AccessToken;
+    return AccessToken;
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 // create refreshtoken

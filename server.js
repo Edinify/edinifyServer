@@ -21,8 +21,6 @@ import financeRoutes from "./routes/financeRoutes.js";
 import fineRoutes from "./routes/fineRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
 // import updateButtonRoutes from "./routes/updateButtonRoutes.js";
-import wbm from "wbm"
-
 
 import {
   createNotificationForBirthdayWithCron,
@@ -42,7 +40,7 @@ const uri = process.env.DB_URI;
 
 app.use(
   cors({
-    origin: process.env.URL_PORT,
+    origin: "*",
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],
@@ -80,7 +78,6 @@ app.get("/", (req, res) => {
 //   await wbm.send(phones, message);
 //   await wbm.end();
 // }).catch(err => console.log(err));
-
 
 mongoose
   .connect(uri)
