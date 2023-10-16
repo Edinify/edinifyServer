@@ -210,9 +210,32 @@ export const updateLessonInTable = async (req, res) => {
     await updatedLesson.save();
 
     if (updatedLesson.role === "current") {
-      if (lesson.students.length > updatedLesson.students.length) {
+      let checkChanged = false;
+
+      for (let i = 0; i < lesson.students.length; i++) {
+        if (lesson.students.length != updatedLesson.students.length) {
+          checkChanged = true;
+          break;
+        }
+
+        if (
+          !updatedLesson.students.find(
+            (item) =>
+              item.student._id.toString() ==
+              lesson.students[i].student._id.toString()
+          )
+        ) {
+          checkChanged = true;
+          break;
+        }
+      }
+
+      if (
+        lesson.students.length > updatedLesson.students.length &&
+        checkChanged
+      ) {
         createNotificationForUpdate(lesson.teacher._id, lesson.students);
-      } else {
+      } else if (checkChanged) {
         createNotificationForUpdate(
           updatedLesson.teacher._id,
           updatedLesson.students
@@ -440,8 +463,6 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
     res.status(500).json({ message: { error: err.message } });
   }
 };
-
-
 
 // export const deleteCurrentLesson = async (req, res) => {
 //   await Lesson.deleteMany({ role: "current" });

@@ -4,6 +4,8 @@ import bcrypt from "bcrypt";
 import { updateSalaryWhenUpdateTeacher } from "./salaryController.js";
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import { Leaderboard } from "../models/leaderboardModel.js";
+import { Admin } from "../models/adminModel.js";
+import { Student } from "../models/studentModel.js";
 
 // Get teachers
 
@@ -99,10 +101,16 @@ export const updateTeacher = async (req, res) => {
   let updatedData = req.body;
 
   try {
+    const existingAdmin = await Admin.findOne({ email: updatedData.email });
+    const existingStudent = await Student.findOne({ email: updatedData.email });
     const existingTeacher = await Teacher.findOne({ email: updatedData.email });
 
-    if (existingTeacher && existingTeacher._id != id) {
-      return res.status(400).json({ key: "email-already-exists" });
+    if (
+      (existingTeacher && existingTeacher._id != id) ||
+      existingAdmin ||
+      existingStudent
+    ) {
+      return res.status(409).json({ key: "email-already-exist" });
     }
 
     if (updatedData.password && updatedData.password.length > 5) {
@@ -387,6 +395,8 @@ export const getTeacherLeadboardOrder = async (req, res) => {
     } else if (byFilter === "starCount") {
       teachersResultsList.sort((a, b) => b.starCount - a.starCount);
     }
+
+    console.log(teachersResultsList);
 
     const teacherOrder =
       teachersResultsList.findIndex(

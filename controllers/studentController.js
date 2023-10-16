@@ -4,8 +4,12 @@ import bcrypt from "bcrypt";
 import {
   createNotificationForBirthdayAtCreateAndUpdateStudent,
   createNotificationForLessonsCount,
+  createNotificationForOneStudentLessonsCount,
   deleteNotificationForLessonCount,
+  deleteNotificationForOneStudentLessonCount,
 } from "./notificationController.js";
+import { Admin } from "../models/adminModel.js";
+import { Teacher } from "../models/teacherModel.js";
 
 // Get students
 
@@ -154,11 +158,16 @@ export const updateStudent = async (req, res) => {
   let updatedData = req.body;
 
   try {
-    const student = await Student.findById(id);
+    const existingAdmin = await Admin.findOne({ email: updatedData.email });
     const existingStudent = await Student.findOne({ email: updatedData.email });
+    const existingTeacher = await Teacher.findOne({ email: updatedData.email });
 
-    if (existingStudent && existingStudent._id != id) {
-      return res.status(409).json({ key: "email-already-exists" });
+    if (
+      (existingStudent && existingStudent._id != id) ||
+      existingAdmin ||
+      existingTeacher
+    ) {
+      return res.status(409).json({ key: "email-already-exist" });
     }
 
     if (updatedData.password && updatedData.password.length > 5) {
@@ -195,6 +204,12 @@ export const updateStudent = async (req, res) => {
           $pull: { students: { student: student._id } },
         }
       );
+    }
+
+    if (updatedStudent.courses.find((item) => item.lessonAmount < 1)) {
+      createNotificationForOneStudentLessonsCount(updatedStudent);
+    } else {
+      deleteNotificationForOneStudentLessonCount(updatedStudent);
     }
 
     const updatedStudentObj = updatedStudent.toObject();

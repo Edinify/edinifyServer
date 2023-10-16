@@ -44,8 +44,7 @@ export const getFinance = async (req, res) => {
       0
     );
 
-    const turnover =
-      totalIncome > totalEarnings ? totalEarnings : totalIncome - totalEarnings;
+    const turnover = totalIncome > totalEarnings ? totalEarnings : totalIncome;
 
     const profit = turnover - totalExpense;
 
@@ -139,9 +138,7 @@ export const getChartData = async (req, res) => {
       );
 
       const turnover =
-        totalIncome > totalEarnings
-          ? totalEarnings
-          : totalIncome - totalEarnings;
+        totalIncome > totalEarnings ? totalEarnings : totalIncome;
 
       const profit = turnover - totalExpense;
 

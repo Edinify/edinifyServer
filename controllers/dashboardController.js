@@ -115,8 +115,7 @@ export const getFinance = async (req, res) => {
       0
     );
 
-    const turnover =
-      totalIncome > totalEarnings ? totalEarnings : totalIncome - totalEarnings;
+    const turnover = totalIncome > totalEarnings ? totalEarnings : totalIncome;
 
     const profit = turnover - totalExpense;
 

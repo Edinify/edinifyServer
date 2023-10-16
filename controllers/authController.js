@@ -9,7 +9,8 @@ import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import {
   createNotificationForBirthdayAtCreateAndUpdateStudent,
-  createNotificationForOneStudentLessonCount,
+  createNotificationForLessonsCount,
+  createNotificationForOneStudentLessonsCount,
 } from "./notificationController.js";
 import { createSalaryWhenCreateTeacher } from "./salaryController.js";
 
@@ -108,7 +109,7 @@ export const registerStudent = async (req, res) => {
       { $addToSet: { students: student._id } }
     );
 
-    createNotificationForOneStudentLessonCount(student);
+    createNotificationForOneStudentLessonsCount(student);
     createNotificationForBirthdayAtCreateAndUpdateStudent(student);
 
     const studentsCount = await Student.countDocuments({ deleted: false });
@@ -168,11 +169,12 @@ export const registerTeacher = async (req, res) => {
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
-  console.log(email, password);
   try {
-    const admin = await Admin.findOne({ email });
-    const student = await Student.findOne({ email });
-    const teacher = await Teacher.findOne({ email });
+    const regexEmail = new RegExp(email, "i");
+
+    const admin = await Admin.findOne({ email: regexEmail });
+    const student = await Student.findOne({ email: regexEmail });
+    const teacher = await Teacher.findOne({ email: regexEmail });
 
     const user = admin || student || teacher;
 
@@ -432,7 +434,7 @@ export const getUser = async (req, res) => {
     } else if (role === "teacher") {
       user = await Teacher.findById(id);
     } else if (role === "student") {
-      user = await Student.findById(id);
+      user = await Student.findById(id).populate("courses.course");
     }
 
     if (!user) {

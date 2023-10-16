@@ -14,6 +14,5 @@ router.get("/admin", authMiddleware, getNotificationsForAdmin);
 router.get("/teacher", authMiddleware, getNotificationsForTeacher);
 router.get("/student", authMiddleware, getNotificationsForStudent);
 router.patch("/viewed", authMiddleware, doAsNotificationsSeen);
-router.delete("/delete", authMiddleware, deleteNotificationForUpdateTable);
 
 export default router;
