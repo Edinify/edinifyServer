@@ -396,12 +396,14 @@ export const getTeacherLeadboardOrder = async (req, res) => {
       teachersResultsList.sort((a, b) => b.starCount - a.starCount);
     }
 
-    console.log(teachersResultsList);
+    const teacherIndex = teachersResultsList.findIndex(
+      (item) => item.teacher._id.toString() == id
+    );
 
     const teacherOrder =
-      teachersResultsList.findIndex(
-        (item) => item.teacher._id.toString() == id
-      ) + 1;
+      teachersResultsList[teacherIndex][byFilter] > 0
+        ? teacherIndex + 1
+        : teachersResultsList.length;
 
     res.status(200).json({
       teacherOrder,
