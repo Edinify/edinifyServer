@@ -158,6 +158,7 @@ export const updateStudent = async (req, res) => {
   let updatedData = req.body;
 
   try {
+    const student = await Student.findById(id);
     const existingAdmin = await Admin.findOne({ email: updatedData.email });
     const existingStudent = await Student.findOne({ email: updatedData.email });
     const existingTeacher = await Teacher.findOne({ email: updatedData.email });
@@ -292,6 +293,8 @@ export const decrementLessonAmount = async (lesson) => {
       .filter((item) => item.attendance !== 2)
       .map((item) => item.student._id);
 
+    console.log(studentsIds);
+
     const updatedStudent = await Student.updateMany(
       {
         _id: { $in: studentsIds },
@@ -299,6 +302,8 @@ export const decrementLessonAmount = async (lesson) => {
       },
       { $inc: { "courses.$.lessonAmount": -1 } }
     );
+
+    console.log(updatedStudent);
 
     if (!updatedStudent.acknowledged || updatedStudent.modifiedCount < 1) {
       return false;

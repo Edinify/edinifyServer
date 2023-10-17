@@ -77,9 +77,6 @@ export const createNotificationForBirthdayAtCreateAndUpdateStudent = async (
       teacher: teacher._id,
     }));
 
-    console.log(adminsIdsList);
-    console.log(teachersIdsList);
-
     await Notification.create({
       role: "birthday",
       student: student._id,

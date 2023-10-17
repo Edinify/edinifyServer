@@ -109,7 +109,10 @@ export const registerStudent = async (req, res) => {
       { $addToSet: { students: student._id } }
     );
 
-    createNotificationForOneStudentLessonsCount(student);
+    if (student.courses.find((item) => item.lessonAmount < 1)) {
+      createNotificationForOneStudentLessonsCount(student);
+    }
+
     createNotificationForBirthdayAtCreateAndUpdateStudent(student);
 
     const studentsCount = await Student.countDocuments({ deleted: false });

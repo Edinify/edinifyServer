@@ -142,6 +142,7 @@ export const updateSalaryWhenUpdateLesson = async (lesson) => {
   const targetDate = new Date(lesson.date);
   const targetYear = targetDate.getFullYear();
   const targetMonth = targetDate.getMonth() + 1;
+
   try {
     let confirmedCount = 0;
     let cancelledCount = 0;
@@ -368,7 +369,6 @@ export const getSalariesForTeacher = async (req, res) => {
       bonus: totalBonus,
     };
 
-    console.log(result, "result salary");
     res.status(200).json({ salary: result });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
