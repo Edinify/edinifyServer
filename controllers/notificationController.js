@@ -218,9 +218,10 @@ export const getNotificationsForTeacher = async (req, res) => {
         },
       ],
     })
-      .select("role isViewedTeachers")
-      .populate({ path: "student", select: "fullName birthday createdAt" });
+      .select("role isViewedTeachers createdAt")
+      .populate({ path: "student", select: "fullName birthday" });
 
+    console.log(notifications);
     res.status(200).json(notifications);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
