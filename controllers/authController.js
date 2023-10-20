@@ -206,7 +206,6 @@ export const login = async (req, res) => {
 
     res.status(200).json({
       AccessToken: AccessToken,
-      RefreshToken: RefreshToken,
     });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
@@ -353,7 +352,7 @@ const createAccessToken = (user) => {
   const AccessToken = jwt.sign(
     { email: user.email, role: user.role, id: user._id },
     process.env.SECRET_KEY,
-    { expiresIn: "12h" }
+    { expiresIn: "10s" }
   );
 
     return AccessToken;
@@ -364,20 +363,20 @@ const createRefreshToken = (user) => {
   const RefreshToken = jwt.sign(
     { mail: user.email, role: user.role, id: user._id },
     process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: "7d" }
+    { expiresIn: "2m" }
   );
   return RefreshToken;
 };
 
 // verify refresh token
 export const refreshToken = async (req, res) => {
-  // console.log(req.headers,'header')
+  console.log(req.headers,'header')
   try {
     const parts = req.headers.cookie.split('=')[1];
     const refreshToken = parts.split(';')[0];
-    // console.log(refreshToken);
+    console.log(refreshToken);
     const token = await Token.findOne({ refreshToken: refreshToken });
-    // console.log(token,'db');
+    console.log(token,'db');
     if (token) {
       jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
         if (err) {
@@ -388,7 +387,7 @@ export const refreshToken = async (req, res) => {
             secure: true,
           });
           console.log(err.message);
-          revokeTokenFromDatabase(rf_token);
+          revokeTokenFromDatabase(token._id);
           return res.status(401).json({ message: { error: err.message } });
         } else {
           // console.log(user, "new acces ");
@@ -418,8 +417,16 @@ const saveTokensToDatabase = async (userId, refreshToken, accessToken) => {
   await token.save();
 };
 
-const revokeTokenFromDatabase = async (refreshToken) => {
-  await Token.deleteOne({ refreshToken });
+const revokeTokenFromDatabase = async (id) => {
+  try {
+    console.log(id);
+    await Token.findByIdAndDelete({_id:id});
+    let test = await Token.findById({_id:id})
+    console.log(test);
+  } catch (error) {
+    console.log(error);
+  }
+  
 };
 
 // Get user
