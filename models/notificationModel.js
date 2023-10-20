@@ -6,7 +6,7 @@ const notificationSchema = new Schema(
   {
     role: {
       type: String,
-      enum: ["birthday", "count", "update-table"],
+      enum: ["birthday", "count", "update-table", "fine"],
     },
     student: {
       type: mongoose.Schema.Types.ObjectId,
@@ -16,30 +16,11 @@ const notificationSchema = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Teacher",
     },
-    isZeroClassCount: {
-      type: Boolean,
-      required: function () {
-        return this.role === "count";
-      },
-    },
-    isUpdatedTable: {
-      type: Boolean,
-      required: function () {
-        return this.role === "update-table";
-      },
-    },
-    isBirthday: {
-      type: Boolean,
-      required: function () {
-        return this.role === "birthday";
-      },
-    },
-    isViewedAdmin: {
+    isViewedAdmins: {
       type: [
         {
           admin: {
             type: mongoose.Schema.Types.ObjectId,
-            required: true,
           },
           viewed: {
             type: Boolean,
@@ -48,12 +29,11 @@ const notificationSchema = new Schema(
         },
       ],
     },
-    isViewedTeacher: {
+    isViewedTeachers: {
       type: [
         {
           teacher: {
             type: mongoose.Schema.Types.ObjectId,
-            required: true,
           },
           viewed: {
             type: Boolean,
@@ -63,18 +43,8 @@ const notificationSchema = new Schema(
       ],
     },
     isViewedStudent: {
-      type: [
-        {
-          student: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-          },
-          viewed: {
-            type: Boolean,
-            default: false,
-          },
-        },
-      ],
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

@@ -34,7 +34,6 @@ export const createNotificationForBirthdayWithCron = async () => {
       return {
         role: "birthday",
         student: student._id,
-        isBirthday: true,
         isViewedAdmin: adminsIdsList,
         isViewedTeacher: teachersIdsList,
       };
@@ -81,9 +80,8 @@ export const createNotificationForBirthdayAtCreateAndUpdateStudent = async (
     await Notification.create({
       role: "birthday",
       student: student._id,
-      isBirthday: true,
-      isViewedAdmin: adminsIdsList,
-      isViewedTeacher: teachersIdsList,
+      isViewedAdmins: adminsIdsList,
+      isViewedTeachers: teachersIdsList,
     });
   }
 };
@@ -91,19 +89,34 @@ export const createNotificationForBirthdayAtCreateAndUpdateStudent = async (
 // Create notification for update table
 export const createNotificationForUpdate = async (teacherId, students) => {
   try {
-    const studentsIds = students.map((item) => {
-      return {
-        student: item.student._id,
-      };
+    const studentsIds = students.map((item) => item.student._id);
+
+    await Notification.deleteMany({
+      role: "update-table",
+      $or: [
+        {
+          student: { $in: studentsIds },
+          isViewedStudent: false,
+        },
+        {
+          teacher: teacherId,
+          "isViewedTeachers.viewed": false,
+        },
+      ],
     });
+
+    const notifications = students.map((item) => ({
+      role: "update-table",
+      student: item.student._id,
+    }));
 
     await Notification.create({
       role: "update-table",
       teacher: teacherId,
-      isUpdatedTable: true,
-      isViewedTeacher: [{ teacher: teacherId }],
-      isViewedStudent: studentsIds,
+      isViewedTeachers: [{ teacher: teacherId }],
     });
+
+    await Notification.insertMany(notifications);
   } catch (err) {
     // console.log({ message: { error: err.message } });
   }
@@ -113,50 +126,74 @@ export const createNotificationForUpdate = async (teacherId, students) => {
 export const createNotificationForLessonsCount = async (students) => {
   try {
     const completedCourseStudents = students.filter((student) =>
-      student.courses.find((item) => item.lessonAmount === 0)
+      student.courses.find(
+        (item) => item.lessonAmount === 0 || item.lessonAmount === -1
+      )
     );
 
     if (completedCourseStudents.length < 0) return true;
 
     const admins = await Admin.find();
     const adminsIdsList = admins.map((admin) => ({ admin: admin._id }));
+    const studentsIdsList = completedCourseStudents.map(
+      (student) => student._id
+    );
 
     const newNotificationsList = completedCourseStudents.map((student) => ({
       role: "count",
       student: student._id,
-      isZeroClassCount: true,
-      isViewedAdmin: adminsIdsList,
-      isViewedStudent: [{ student: student._id }],
+      isViewedAdmins: adminsIdsList,
     }));
+
+    await Notification.deleteMany({
+      role: "count",
+      student: { $in: studentsIdsList },
+    });
 
     await Notification.insertMany(newNotificationsList);
 
     return true;
   } catch (err) {
     console.log({ message: { error: err.message } });
-
-    console.log(8);
     return false;
   }
 };
 
-export const createNotificationForOneStudentLessonCount = async (student) => {
+export const createNotificationForOneStudentLessonsCount = async (student) => {
   try {
+    const countNotification = await Notification.findOne({
+      role: "count",
+      student: student._id,
+    });
+
+    if (countNotification) return true;
+
     const admins = await Admin.find();
     const adminsIdsList = admins.map((admin) => ({ admin: admin._id }));
 
     await Notification.create({
       role: "count",
       student: student._id,
-      isZeroClassCount: true,
-      isViewedAdmin: adminsIdsList,
-      isViewedStudent: [{ student: student._id }],
+      isViewedAdmins: adminsIdsList,
     });
 
     return true;
-  } catch (error) {
-    console.log(err);
+  } catch (err) {
+    console.log({ message: { error: err.message } });
+    return false;
+  }
+};
 
+// Create notification for teacher fine
+export const createNotificationForTeacherFine = async (teacherId) => {
+  try {
+    await Notification.create({
+      role: "fine",
+      teacher: teacherId,
+      isViewedTeachers: [{ teacher: teacherId }],
+    });
+  } catch (err) {
+    console.log({ message: { error: err.message } });
     return false;
   }
 };
@@ -168,9 +205,9 @@ export const getNotificationsForAdmin = async (req, res) => {
   try {
     const notifications = await Notification.find({
       role: { $in: ["birthday", "count"] },
-    }).populate("student");
-
-    // console.log(notifications);
+    })
+      .select("isViewedAdmins role")
+      .populate({ path: "student", select: "fullName createdAt birthday" });
 
     res.status(200).json(notifications);
   } catch (err) {
@@ -186,14 +223,15 @@ export const getNotificationsForTeacher = async (req, res) => {
       $or: [
         { role: "birthday" },
         {
-          role: "update-teacher-table",
+          role: "update-table",
           teacher: id,
         },
       ],
     })
-      .select("-isViewedAdmin")
-      .populate("student");
+      .select("role isViewedTeachers createdAt")
+      .populate({ path: "student", select: "fullName birthday" });
 
+    console.log(notifications);
     res.status(200).json(notifications);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
@@ -205,9 +243,9 @@ export const getNotificationsForStudent = async (req, res) => {
   const { id } = req.user;
   try {
     const notifications = await Notification.find({
-      role: { $in: ["count", "update-student-table"] },
+      role: { $in: ["count", "update-table"] },
       student: id,
-    }).select("-isViewedAdmin");
+    }).select("role isViewedStudent createdAt");
 
     res.status(200).json(notifications);
   } catch (err) {
@@ -238,12 +276,8 @@ export const deleteNotificationForLessonCount = async (students) => {
 
 export const deleteNotificationForOneStudentLessonCount = async (student) => {
   try {
-    const studentsIds = students.filter((student) =>
-      student.courses.find((item) => item.lessonAmount === 1)
-    );
-
-    await Notification.deleteMany({
-      student: { $in: studentsIds },
+    await Notification.findOneAndDelete({
+      student: student._id,
       role: "count",
     });
 
@@ -255,21 +289,20 @@ export const deleteNotificationForOneStudentLessonCount = async (student) => {
 };
 
 // delete notification for update table
-
 export const deleteNotificationForUpdateTable = async () => {
   try {
     await Notification.deleteMany({
-      isUpdatedTable: true,
+      role: "update-table",
     });
   } catch (err) {
     // console.log({ message: { error: err.message } });
   }
 };
 
-// delete notification for birthday
-export const deleteNotificationsForBirthday = async (req, res) => {
+// Delete notification for birthday
+export const deleteNotificationsForBirthday = async () => {
   const currDate = new Date();
-  currDate.setDate(currDate.getDate() + 2);
+  currDate.setDate(currDate.getDate() - 7);
 
   try {
     const students = await Student.find({
@@ -291,7 +324,7 @@ export const deleteNotificationsForBirthday = async (req, res) => {
       role: "birthday",
     });
   } catch (err) {
-    res.status(500).json({ message: { error: err.message } });
+    console.log({ message: { error: err.message } });
   }
 };
 
@@ -304,31 +337,37 @@ export const doAsNotificationsSeen = async (req, res) => {
 
     if (role === "admin" || role === "super-admin") {
       updatedNotifications = await Notification.updateMany(
-        { "isViewedAdmin.viewed": false, "isViewedAdmin.admin": id },
+        {
+          role: { $in: ["count", "birthday"] },
+          "isViewedAdmins.viewed": false,
+          "isViewedAdmins.admin": id,
+        },
         {
           $set: {
-            "isViewedAdmin.$.viewed": true,
+            "isViewedAdmins.$.viewed": true,
           },
         },
         { new: true }
       );
     } else if (role === "teacher") {
       updatedNotifications = await Notification.updateMany(
-        { "isViewedTeacher.viewed": false, "isViewedTeacher.teacher": id },
+        {
+          role: { $in: ["update-table", "birthday"] },
+          "isViewedTeachers.viewed": false,
+          "isViewedTeachers.teacher": id,
+        },
         {
           $set: {
-            "isViewedTeacher.$.viewed": true,
+            "isViewedTeachers.$.viewed": true,
           },
         },
         { new: true }
       );
     } else if (role === "student") {
       updatedNotifications = await Notification.updateMany(
-        { "isViewedStudent.viewed": false, "isViewedStudent.student": id },
+        { student: id, role: { $in: ["count", "update-table"] } },
         {
-          $set: {
-            "isViewedStudent.$.viewed": true,
-          },
+          isViewedStudent: true,
         },
         { new: true }
       );

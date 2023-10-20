@@ -46,10 +46,17 @@ export const getCancelledLessonsCount = async (req, res) => {
 };
 
 export const getUnviewedLessons = async (req, res) => {
+  const currentDate = new Date();
+  currentDate.setDate(currentDate.getDate() - 1);
+  currentDate.setHours(23, 59, 59, 999);
+
   try {
     const result = [];
 
     const unviewedLessons = await Lesson.find({
+      date: {
+        $lte: currentDate,
+      },
       role: "current",
       status: "unviewed",
     }).populate("teacher course students.student");
@@ -115,8 +122,7 @@ export const getFinance = async (req, res) => {
       0
     );
 
-    const turnover =
-      totalIncome > totalEarnings ? totalEarnings : totalIncome - totalEarnings;
+    const turnover = totalIncome > totalEarnings ? totalEarnings : totalIncome;
 
     const profit = turnover - totalExpense;
 
