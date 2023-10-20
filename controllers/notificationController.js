@@ -126,19 +126,29 @@ export const createNotificationForUpdate = async (teacherId, students) => {
 export const createNotificationForLessonsCount = async (students) => {
   try {
     const completedCourseStudents = students.filter((student) =>
-      student.courses.find((item) => item.lessonAmount === 0)
+      student.courses.find(
+        (item) => item.lessonAmount === 0 || item.lessonAmount === -1
+      )
     );
 
     if (completedCourseStudents.length < 0) return true;
 
     const admins = await Admin.find();
     const adminsIdsList = admins.map((admin) => ({ admin: admin._id }));
+    const studentsIdsList = completedCourseStudents.map(
+      (student) => student._id
+    );
 
     const newNotificationsList = completedCourseStudents.map((student) => ({
       role: "count",
       student: student._id,
       isViewedAdmins: adminsIdsList,
     }));
+
+    await Notification.deleteMany({
+      role: "count",
+      student: { $in: studentsIdsList },
+    });
 
     await Notification.insertMany(newNotificationsList);
 
@@ -196,7 +206,7 @@ export const getNotificationsForAdmin = async (req, res) => {
     const notifications = await Notification.find({
       role: { $in: ["birthday", "count"] },
     })
-      .select("isViewedAdmins role ")
+      .select("isViewedAdmins role")
       .populate({ path: "student", select: "fullName createdAt birthday" });
 
     res.status(200).json(notifications);

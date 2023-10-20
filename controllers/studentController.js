@@ -293,7 +293,13 @@ export const decrementLessonAmount = async (lesson) => {
       .filter((item) => item.attendance !== 2)
       .map((item) => item.student._id);
 
-    console.log(studentsIds);
+    await Student.updateMany(
+      {
+        _id: { $in: studentsIds },
+        "courses.course": { $ne: lesson.course._id },
+      },
+      { $addToSet: { courses: { course: lesson.course._id, lessonAmount: 0 } } }
+    );
 
     const updatedStudent = await Student.updateMany(
       {
@@ -328,6 +334,14 @@ export const incrementLessonAmount = async (lesson) => {
       .filter((item) => item.attendance !== 2)
       .map((item) => item.student._id);
 
+    await Student.updateMany(
+      {
+        _id: { $in: studentsIds },
+        "courses.course": { $ne: lesson.course._id },
+      },
+      { $addToSet: { courses: { course: lesson.course._id, lessonAmount: 0 } } }
+    );
+
     const updatedStudent = await Student.updateMany(
       {
         _id: { $in: studentsIds },
@@ -336,7 +350,10 @@ export const incrementLessonAmount = async (lesson) => {
       { $inc: { "courses.$.lessonAmount": 1 } }
     );
 
-    if (!updatedStudent.acknowledged || updatedStudent.modifiedCount < 1) {
+    if (
+      !updatedStudent.acknowledged ||
+      updatedStudent.modifiedCount < studentsIds.length
+    ) {
       return false;
     }
 
