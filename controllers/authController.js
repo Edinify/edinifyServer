@@ -205,6 +205,7 @@ export const login = async (req, res) => {
     console.log(RefreshToken);
     res.cookie("refreshtoken", RefreshToken, {
       httpOnly: true,
+      secure: true,
       path: "/api/user/auth/refresh_token",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
     });
@@ -357,7 +358,7 @@ const createAccessToken = (user) => {
   const AccessToken = jwt.sign(
     { email: user.email, role: user.role, id: user._id },
     process.env.SECRET_KEY,
-    { expiresIn: "10s" }
+    { expiresIn: "6h" }
   );
 
     return AccessToken;
@@ -368,7 +369,7 @@ const createRefreshToken = (user) => {
   const RefreshToken = jwt.sign(
     { mail: user.email, role: user.role, id: user._id },
     process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: "2m" }
+    { expiresIn: "7d" }
   );
   return RefreshToken;
 };
