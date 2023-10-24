@@ -205,8 +205,9 @@ export const login = async (req, res) => {
     console.log(RefreshToken);
     res.cookie("refreshtoken", RefreshToken, {
       httpOnly: true,
-      secure: true,
       path: "/api/user/auth/refresh_token",
+      sameSite: "None",
+      secure: true,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
     });
 
