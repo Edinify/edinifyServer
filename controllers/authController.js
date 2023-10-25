@@ -197,19 +197,20 @@ export const login = async (req, res) => {
     const AccessToken = createAccessToken(user);
     const RefreshToken = createRefreshToken(user);
 
-    console.log(AccessToken);
-    console.log(RefreshToken);
+    // console.log(AccessToken);
+    // console.log(RefreshToken);
 
     saveTokensToDatabase(user._id, RefreshToken, AccessToken);
     // send refresh token to cookies
     console.log(RefreshToken);
-    res.cookie("refreshtoken", RefreshToken, {
+    res.cookie( "refreshtoken", RefreshToken, {
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
       httpOnly: true,
       path: "/api/user/auth/refresh_token",
       sameSite: "None",
       secure: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
     });
+
 
     res.status(200).json({
       AccessToken: AccessToken,
