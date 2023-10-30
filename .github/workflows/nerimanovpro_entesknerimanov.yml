@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     steps:
-      - name: Checkout code
+      - name: Checkout code 
         uses: actions/checkout@v2
 
       - name: Install Dependencies

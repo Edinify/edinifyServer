@@ -206,7 +206,7 @@ export const login = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
       httpOnly: true,
       path: "/api/user/auth/refresh_token",
-      sameSite: "None",
+      sameSite: "Lax",
       secure: true,
     });
 
@@ -359,7 +359,7 @@ const createAccessToken = (user) => {
   const AccessToken = jwt.sign(
     { email: user.email, role: user.role, id: user._id },
     process.env.SECRET_KEY,
-    { expiresIn: "12h" }
+    { expiresIn: "6h" }
   );
 
     return AccessToken;
@@ -390,7 +390,7 @@ export const refreshToken = async (req, res) => {
           res.clearCookie("refreshtoken", {
             httpOnly: true,
             path: "/api/user/auth/refresh_token",
-            sameSite: "None",
+            sameSite: "Lax",
             secure: true,
           });
           console.log(err.message);
