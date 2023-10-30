@@ -19,7 +19,7 @@ export const getUpdateButtonStatus = async (req, res) => {
       },
     });
 
-    console.log(currentLessonsCount);
+    // console.log(currentLessonsCount);
 
     const disabled = currentLessonsCount > 0;
 

@@ -10,11 +10,9 @@ const studentSchema = new Schema(
     },
     motherName: {
       type: String,
-      required: true,
     },
     fatherName: {
       type: String,
-      required: true,
     },
     email: {
       type: String,
@@ -25,25 +23,27 @@ const studentSchema = new Schema(
       type: String,
       required: true,
     },
+    fin: {
+      type: String,
+    },
+    seria: {
+      type: String,
+    },
     birthday: {
       type: Date,
-      required: true,
     },
     motherPhone: {
       type: String,
-      required: true,
     },
     fatherPhone: {
       type: String,
-      required: true,
+    },
+    emergencyPhone: {
+      type: String,
     },
     role: {
       type: String,
       default: "student",
-    },
-    lessonAmount: {
-      type: Number,
-      required: true,
     },
     payment: {
       type: Number,
@@ -56,12 +56,18 @@ const studentSchema = new Schema(
     },
     whereFrom: {
       mainArea: String,
-      part: String
+      part: String,
     },
     courses: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Course",
+        course: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Course",
+        },
+        lessonAmount: {
+          type: Number,
+          required: true,
+        },
       },
     ],
     whereComing: {
@@ -73,21 +79,18 @@ const studentSchema = new Schema(
       type: Boolean,
       default: true,
     },
-    school: {
+    educationalInstitution: {
       type: String,
-      required: true,
     },
     educationDegree: {
       type: String,
-      required: true,
     },
     healthStatus: {
       type: String,
-      required: true,
     },
-    phoneUrgent: {
-      type: String,
-      required: true,
+    deleted: {
+      type: Boolean,
+      default: false,
     },
     otp: Number,
   },

@@ -3,21 +3,29 @@ import {
   deleteStudent,
   getStudents,
   updateStudent,
-  getStudent,
   updateStudentPassword,
   getStudentsByCourseId,
   getStudentsForPagination,
 } from "../controllers/studentController.js";
-import { authMiddleware } from "../middleware/auth.js";
+import { authMiddleware, checkAdminAndSuperAdmin } from "../middleware/auth.js";
 
 const router = express.Router();
 
 router.get("/", authMiddleware, getStudents);
-router.get("/pagination", authMiddleware, getStudentsForPagination);
-router.get("/:id", authMiddleware, getStudent);
-router.get("/by/course", getStudentsByCourseId);
-router.patch("/:id", authMiddleware, updateStudent);
-router.delete("/:id", authMiddleware, deleteStudent);
+router.get(
+  "/pagination",
+  authMiddleware,
+  checkAdminAndSuperAdmin,
+  getStudentsForPagination
+);
+router.get(
+  "/by/course",
+  authMiddleware,
+  checkAdminAndSuperAdmin,
+  getStudentsByCourseId
+);
+router.patch("/:id", authMiddleware, checkAdminAndSuperAdmin, updateStudent);
+router.delete("/:id", authMiddleware, checkAdminAndSuperAdmin, deleteStudent);
 router.patch("/me/password", authMiddleware, updateStudentPassword);
 
 export default router;

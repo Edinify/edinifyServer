@@ -17,9 +17,9 @@ const courseSchema = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Teacher",
     },
-    status: {
+    deleted: {
       type: Boolean,
-      default: true,
+      default: false,
     },
   },
   { timestamps: true }

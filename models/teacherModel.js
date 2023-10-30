@@ -17,6 +17,14 @@ const teacherSchema = new Schema(
       type: String,
       required: true,
     },
+    fin: {
+      type: String,
+      required: true,
+    },
+    seria: {
+      type: String,
+      required: true,
+    },
     courses: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -24,8 +32,9 @@ const teacherSchema = new Schema(
       },
     ],
     salary: {
-      type: Number,
-      required: true,
+      monthly: { type: Boolean, required: true },
+      hourly: { type: Boolean, required: true },
+      value: { type: Number, required: true },
     },
     status: {
       type: Boolean,
@@ -34,12 +43,6 @@ const teacherSchema = new Schema(
     role: {
       type: String,
       default: "teacher",
-    },
-    fincode: {
-      type: String,
-    },
-    seriaNumber: {
-      type: String,
     },
     phone: {
       type: String,
@@ -50,6 +53,10 @@ const teacherSchema = new Schema(
       required: true,
     },
     maritalStatus: {
+      type: String,
+      required: true,
+    },
+    healthStatus: {
       type: String,
       required: true,
     },
@@ -65,6 +72,10 @@ const teacherSchema = new Schema(
     birthday: {
       type: Date,
       required: true,
+    },
+    deleted: {
+      type: Boolean,
+      default: false,
     },
     otp: Number,
   },

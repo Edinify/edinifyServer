@@ -43,7 +43,7 @@ const lessonSchema = new Schema(
             type: Number,
             default: 0,
           },
-          noteByStudent: {
+          feedback: {
             type: String,
             default: "",
           },
@@ -61,15 +61,22 @@ const lessonSchema = new Schema(
       enum: ["unviewed", "confirmed", "cancelled"],
       default: "unviewed",
     },
+    feedback: {
+      type: String,
+      default: "",
+    },
     note: {
       type: String,
+      default: "",
     },
     task: {
       type: String,
+      default: "",
     },
     salary: {
-      type: Number,
-      required: true,
+      monthly: { type: Boolean, required: true },
+      hourly: { type: Boolean, required: true },
+      value: { type: Number, required: true },
     },
     earnings: {
       type: Number,

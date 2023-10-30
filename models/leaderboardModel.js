@@ -2,17 +2,17 @@ import mongoose from "mongoose";
 
 const Schema = mongoose.Schema;
 
-const expenseSchema = new Schema(
+const leaderboardSchema = new Schema(
   {
-    category: {
-      type: String,
+    teacherId: {
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
-    appointment: {
-      type: String,
+    lessonCount: {
+      type: Number,
       required: true,
     },
-    amount: {
+    starCount: {
       type: Number,
       required: true,
     },
@@ -24,7 +24,4 @@ const expenseSchema = new Schema(
   { timestamps: true }
 );
 
-expenseSchema.index({ amount: 1 });
-expenseSchema.index({ date: 1 });
-
-export const Expense = mongoose.model("Expense", expenseSchema);
+export const Leaderboard = mongoose.model("Leaderboard", leaderboardSchema);

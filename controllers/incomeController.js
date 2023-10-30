@@ -1,8 +1,8 @@
 import { calcDate } from "../calculate/calculateDate.js";
-import { Expense } from "../models/expenseModel.js";
+import { Income } from "../models/incomeModel.js";
 
-// Get expenses for pagination
-export const getExpensesForPagination = async (req, res) => {
+// Get incomes for pagination
+export const getIncomesForPagination = async (req, res) => {
   const { monthCount, startDate, endDate, category, sort } = req.query;
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
@@ -11,14 +11,9 @@ export const getExpensesForPagination = async (req, res) => {
 
   try {
     let totalPages;
-    let expenses;
+    let incomes;
 
-    const filterObj = {
-      date: {
-        $gte: targetDate.startDate,
-        $lte: targetDate.endDate,
-      },
-    };
+    const filterObj = {};
     const sortObj = {};
 
     if (sort === "lowestAmount") sortObj.amount = 1;
@@ -33,64 +28,70 @@ export const getExpensesForPagination = async (req, res) => {
       filterObj.category = category;
     }
 
-    const expensesCount = await Expense.countDocuments(filterObj);
+    filterObj.date = {
+      $gte: targetDate.startDate,
+      $lte: targetDate.endDate,
+    };
 
-    totalPages = Math.ceil(expensesCount / limit);
+    const incomesCount = await Income.countDocuments(filterObj);
 
-    expenses = await Expense.find(filterObj)
+    totalPages = Math.ceil(incomesCount / limit);
+
+    incomes = await Income.find(filterObj)
       .sort(sortObj)
       .skip((page - 1) * limit)
       .limit(limit);
 
-    res.status(200).json({ expenses, totalPages });
+    res.status(200).json({ incomes, totalPages });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
 };
 
-// Create expense
-export const createExpense = async (req, res) => {
+// Create income
+export const createIncome = async (req, res) => {
   try {
-    const newExpense = new Expense(req.body);
-    await newExpense.save();
+    const newIncome = new Income(req.body);
+    await newIncome.save();
 
-    const expensesCount = await Expense.countDocuments();
-    const lastPage = Math.ceil(expensesCount / 10);
+    const incomesCount = await Income.countDocuments();
+    const lastPage = Math.ceil(incomesCount / 10);
 
-    res.status(201).json({ expense: newExpense, lastPage });
+    res.status(201).json({ income: newIncome, lastPage });
   } catch (err) {
+    // console.log(err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// Update expense
-export const updateExpense = async (req, res) => {
+// Update income
+export const updateIncome = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const updatedExpense = await Expense.findByIdAndUpdate(id, req.body, {
+    const updatedIncome = await Income.findByIdAndUpdate(id, req.body, {
       new: true,
       runValidators: true,
     });
 
-    if (!updatedExpense) {
+    if (!updatedIncome) {
       return res.status(404).json({ message: "Expense not found" });
     }
 
-    res.status(200).json(updatedExpense);
+    res.status(200).json(updatedIncome);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
 };
 
-// Delete expense
-export const deleteExpense = async (req, res) => {
+// Delete income
+export const deleteIncome = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const deletedExpense = await Expense.findByIdAndDelete(id);
+    const deletedIncome = await Income.findByIdAndDelete(id);
 
-    if (!deletedExpense) {
+    if (!deletedIncome) {
       return res.status(404).json({ message: "Expense not found" });
     }
 

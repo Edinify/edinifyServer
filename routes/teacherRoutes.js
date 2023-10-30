@@ -1,9 +1,18 @@
 import express from "express";
-import { authMiddleware } from "../middleware/auth.js";
+import {
+  authMiddleware,
+  checkAdminAndSuperAdmin,
+  checkTeacher,
+} from "../middleware/auth.js";
 import {
   deleteTeacher,
-  getTeacher,
-  getTeachers,
+  getActiveTeachers,
+  getAllTeachers,
+  getTeacherCancelledLessonsCount,
+  getTeacherChartData,
+  getTeacherConfirmedLessonsCount,
+  getTeacherLeadboardOrder,
+  getTeacherUnviewedLessons,
   getTeachersForPagination,
   updateTeacher,
   updateTeacherPassword,
@@ -11,11 +20,46 @@ import {
 
 const router = express.Router();
 
-router.get("/", authMiddleware, getTeachers);
-router.get("/pagination", authMiddleware, getTeachersForPagination);
-router.get("/:id", authMiddleware, getTeacher);
-router.patch("/:id", authMiddleware, updateTeacher);
-router.delete("/:id", authMiddleware, deleteTeacher);
+router.get("/all", authMiddleware, checkAdminAndSuperAdmin, getAllTeachers);
+router.get(
+  "/active",
+  authMiddleware,
+  checkAdminAndSuperAdmin,
+  getActiveTeachers
+);
+router.get(
+  "/pagination",
+  authMiddleware,
+  checkAdminAndSuperAdmin,
+  getTeachersForPagination
+);
+router.patch("/:id", authMiddleware, checkAdminAndSuperAdmin, updateTeacher);
+router.delete("/:id", authMiddleware, checkAdminAndSuperAdmin, deleteTeacher);
 router.patch("/me/password", authMiddleware, updateTeacherPassword);
+router.get("/me/chart", authMiddleware, checkTeacher, getTeacherChartData);
+router.get(
+  "/me/confirmed-lessons",
+  authMiddleware,
+  checkTeacher,
+  getTeacherConfirmedLessonsCount
+);
+router.get(
+  "/me/cancelled-lessons",
+  authMiddleware,
+  checkTeacher,
+  getTeacherCancelledLessonsCount
+);
+router.get(
+  "/me/unviewed-lessons",
+  authMiddleware,
+  checkTeacher,
+  getTeacherUnviewedLessons
+);
+router.get(
+  "/me/leaderboard-order",
+  authMiddleware,
+  checkTeacher,
+  getTeacherLeadboardOrder
+);
 
 export default router;
