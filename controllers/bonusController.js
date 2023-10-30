@@ -40,6 +40,15 @@ export const createBonus = async (req, res) => {
 
     res.status(201).json({ bonus, lastPage });
   } catch (err) {
+    logger.error({
+      method: "CREATE",
+      status: 500,
+      message: err.message,
+      for: "CREATE BONUS",
+      user: req.user,
+      forTeacher: teacher,
+      functionName: createBonus.name,
+    });
     res.status(500).json({ message: err.message });
   }
 };

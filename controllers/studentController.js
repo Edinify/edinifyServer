@@ -86,6 +86,8 @@ export const getStudentsForPagination = async (req, res) => {
 export const getStudentsByCourseId = async (req, res) => {
   const { courseId, day, time, role, date } = req.query;
 
+  console.log(role);
+
   const targetDate = new Date(date);
   const targetMonth = targetDate.getMonth() + 1;
   const targetYear = targetDate.getFullYear();
@@ -98,11 +100,12 @@ export const getStudentsByCourseId = async (req, res) => {
       deleted: false,
     });
 
+    let checkStudent;
+
     const newStudents = await Promise.all(
       students.map(async (student) => {
-        let checkStudent;
         if (role === "main") {
-          checkStudent = await Lesson.findOne({
+          checkStudent = await Lesson.find({
             "students.student": student._id,
             day: day,
             time: time,
@@ -111,16 +114,19 @@ export const getStudentsByCourseId = async (req, res) => {
 
           console.log("main");
         } else if (role === "current") {
-          console.log(targetYear, "target year");
-          console.log(targetMonth, "target month");
-          console.log(targetDayOfMonth, "target day");
-          console.log(student, "student");
-          console.log(day, "day");
-          console.log(time, "time");
-          console.log(role, "role");
-          checkStudent = await Lesson.findOne({
+          // console.log(targetYear, "target year");
+          // console.log(targetMonth, "target month");
+          // console.log(targetDayOfMonth, "target day");
+          // console.log(day, "day");
+          // console.log(time, "time");
+          // console.log(role, "role");
+          // console.log(student._id, "student id");
+          // console.log(student.fullName, "student name");
+          // console.log(student);
+
+          checkStudent = await Lesson.find({
             "students.student": student._id,
-            day: day,
+            day: Number(day),
             time: time,
             role: role,
             status: {
@@ -136,9 +142,7 @@ export const getStudentsByCourseId = async (req, res) => {
           });
         }
 
-        console.log(2, checkStudent);
-
-        if (checkStudent) {
+        if (checkStudent.length > 0) {
           return { ...student.toObject(), disable: true };
         } else {
           return { ...student.toObject(), disable: false };
@@ -196,6 +200,28 @@ export const updateStudent = async (req, res) => {
     }
 
     if (student.status && !updatedStudent.status) {
+      const firstDayCurrWeek = new Date();
+      firstDayCurrWeek.setDate(
+        firstDayCurrWeek.getDate() -
+          (firstDayCurrWeek.getDay() > 0 ? firstDayCurrWeek.getDay() : 7) +
+          1
+      );
+
+      firstDayCurrWeek.setHours(0, 0, 0, 0);
+
+      const studentCurrentLessonsCount = await Lesson.countDocuments({
+        "students.student": student._id,
+        role: "current",
+        date: {
+          $gte: firstDayCurrWeek,
+        },
+      });
+
+      if (studentCurrentLessonsCount > 0) {
+        await Student.findByIdAndUpdate(student._id, student);
+        return res.status(400).json({ key: "has-current-week-lessons" });
+      }
+
       await Lesson.updateMany(
         {
           role: "main",
@@ -225,22 +251,53 @@ export const updateStudent = async (req, res) => {
 // Delete student
 export const deleteStudent = async (req, res) => {
   const { id } = req.params;
+  const firstDayCurrWeek = new Date();
+  firstDayCurrWeek.setDate(
+    firstDayCurrWeek.getDate() -
+      (firstDayCurrWeek.getDay() > 0 ? firstDayCurrWeek.getDay() : 7) +
+      1
+  );
+
+  firstDayCurrWeek.setHours(0, 0, 0, 0);
 
   try {
     const student = await Student.findById(id);
+
     if (!student) {
       return res.status(404).json({ key: "student-not-found" });
+    }
+
+    const studentCurrentLessonsCount = await Lesson.countDocuments({
+      "students.student": student._id,
+      role: "current",
+      date: {
+        $gte: firstDayCurrWeek,
+      },
+    });
+
+    if (studentCurrentLessonsCount > 0) {
+      return res.status(400).json({ key: "has-current-week-lessons" });
     }
 
     const studentLessonCount = await Lesson.countDocuments({
       "students.student": id,
     });
+
     if (studentLessonCount > 0) {
       await Student.findByIdAndUpdate(id, { deleted: true });
-      return res.status(200).json({ message: "Student successfully deleted" });
+    } else {
+      await Student.findByIdAndDelete(id);
     }
 
-    await Student.findByIdAndDelete(id);
+    await Lesson.updateMany(
+      {
+        role: "main",
+        "students.student": student._id,
+      },
+      {
+        $pull: { students: { student: student._id } },
+      }
+    );
 
     res.status(200).json({ message: "Student successfully deleted" });
   } catch (err) {

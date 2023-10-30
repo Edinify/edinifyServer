@@ -13,6 +13,7 @@ import {
   createNotificationForOneStudentLessonsCount,
 } from "./notificationController.js";
 import { createSalaryWhenCreateTeacher } from "./salaryController.js";
+import logger from "../config/logger.js";
 
 dotenv.config();
 
@@ -75,8 +76,18 @@ export const registerAdmin = async (req, res) => {
     await admin.save();
 
     res.status(201).json(admin);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    logger.error({
+      method: "CREATE",
+      status: 500,
+      message: err.message,
+      for: "CREATE ADMIN",
+      user: req.user,
+      postedData: { ...req.body, password: "" },
+      functionName: registerAdmin.name,
+    });
+
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -120,6 +131,24 @@ export const registerStudent = async (req, res) => {
 
     res.status(201).json({ student, lastPage });
   } catch (error) {
+    logger.error({
+      method: "CREATE",
+      status: 500,
+      message: err.message,
+      for: "CREATE STUDENT",
+      user: req.user,
+      postedData: {
+        ...req.body,
+        password: "",
+        fin: "",
+        seria: "",
+        motherPhone: "",
+        fatherPhone: "",
+        emergencyPhone: "",
+        otp: "",
+      },
+      functionName: registerStudent.name,
+    });
     res.status(500).json({ error: error.message });
   }
 };
@@ -162,9 +191,25 @@ export const registerTeacher = async (req, res) => {
     const lastPage = Math.ceil(teachersCount / 10);
 
     res.status(201).json({ teacher: { ...teacher, password: "" }, lastPage });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    logger.error({
+      method: "CREATE",
+      status: 500,
+      message: err.message,
+      for: "CREATE TEACHER",
+      user: req.user,
+      postedData: {
+        ...req.body,
+        password: "",
+        fin: "",
+        seria: "",
+        phone: "",
+        otp: "",
+      },
+      functionName: registerTeacher.name,
+    });
+
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -188,7 +233,6 @@ export const login = async (req, res) => {
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
-    console.log(isPasswordValid);
     if (!isPasswordValid) {
       return res.status(404).json({ key: "invalid-password" });
     }
@@ -196,9 +240,6 @@ export const login = async (req, res) => {
     // refresh and accesstoken callback for creating
     const AccessToken = createAccessToken(user);
     const RefreshToken = createRefreshToken(user);
-
-    console.log(AccessToken);
-    console.log(RefreshToken);
 
     saveTokensToDatabase(user._id, RefreshToken, AccessToken);
     // send refresh token to cookies
@@ -213,6 +254,15 @@ export const login = async (req, res) => {
       RefreshToken: RefreshToken,
     });
   } catch (err) {
+    logger.error({
+      method: "POST",
+      status: 500,
+      message: err.message,
+      for: "LOGIN",
+      postedData: req.body,
+      functionName: login.name,
+    });
+
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -282,6 +332,14 @@ export const sendCodeToEmail = async (req, res) => {
       }
     }, 120000);
   } catch (err) {
+    logger.error({
+      method: "POST",
+      status: 500,
+      message: err.message,
+      for: "SEND CODE TO EMAIL FOR FORGET PASSWORD",
+      postedData: req.body,
+      functionName: sendCodeToEmail.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -313,6 +371,15 @@ export const checkOtpCode = async (req, res) => {
 
     res.status(200).json({ userId });
   } catch (err) {
+    logger.error({
+      method: "POST",
+      status: 500,
+      message: err.message,
+      for: "CHECK OTP CODE",
+      postedData: req.body,
+      functionName: checkOtpCode.name,
+    });
+
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -347,6 +414,15 @@ export const changeForgottenPassword = async (req, res) => {
 
     res.status(200).json({ key: "change-password" });
   } catch (err) {
+    logger.error({
+      method: "POST",
+      status: 500,
+      message: err.message,
+      for: "CHANGE FORGETTEN PASSWORD",
+      postedData: req.body,
+      functionName: changeForgottenPassword.name,
+    });
+
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -356,13 +432,30 @@ export const changeForgottenPassword = async (req, res) => {
 const createAccessToken = (user) => {
   try {
     const AccessToken = jwt.sign(
-      { email: user.email, role: user.role, id: user._id },
+      {
+        email: user.email,
+        role: user.role,
+        id: user._id,
+        fullName: user.fullName,
+      },
       process.env.SECRET_KEY,
       { expiresIn: "6h" }
     );
 
     return AccessToken;
   } catch (error) {
+    logger.error({
+      method: "POST",
+      message: error.message,
+      for: "CREATE ACCESS TOKEN",
+      functionName: createAccessToken.name,
+      tokenInfo: {
+        email: user.email,
+        role: user.role,
+        id: user._id,
+        fullName: user.fullName,
+      },
+    });
     console.log(error);
   }
 };
@@ -370,7 +463,12 @@ const createAccessToken = (user) => {
 // create refreshtoken
 const createRefreshToken = (user) => {
   const RefreshToken = jwt.sign(
-    { mail: user.email, role: user.role, id: user._id },
+    {
+      mail: user.email,
+      role: user.role,
+      id: user._id,
+      fullName: user.fullName,
+    },
     process.env.REFRESH_TOKEN_SECRET,
     { expiresIn: "7d" }
   );
@@ -409,6 +507,14 @@ export const refreshToken = async (req, res) => {
       });
     }
   } catch (err) {
+    logger.error({
+      method: "POST",
+      status: 500,
+      message: err.message,
+      for: "VERIFY REFRESH TOKEN",
+      functionName: refreshToken.name,
+    });
+
     return res.status(404).json({ msg: err.message });
   }
 };
@@ -430,6 +536,7 @@ const revokeTokenFromDatabase = async (refreshToken) => {
 // Get user
 export const getUser = async (req, res) => {
   const { id, role } = req.user;
+
   try {
     let user;
     if (role === "admin" || role === "super-admin") {
@@ -450,6 +557,15 @@ export const getUser = async (req, res) => {
 
     res.status(200).json(userObj);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      for: "GET USER",
+      user: req.user,
+      functionName: getUser.name,
+    });
+
     res.status(500).json({ message: { error: err.message } });
   }
 };

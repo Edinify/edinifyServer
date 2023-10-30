@@ -128,19 +128,41 @@ export const updateTeacher = async (req, res) => {
       runValidators: true,
     }).populate("courses");
 
-    const updatedSalary = updateSalaryWhenUpdateTeacher(updatedTeacher);
-
     if (!updatedTeacher) {
       return res.status(404).json({ message: "Teacher not found" });
     }
 
+    const updatedSalary = updateSalaryWhenUpdateTeacher(updatedTeacher);
+
     if (!updatedSalary) {
-      await Teacher.findByIdAndUpdate(teacher);
+      await Teacher.findByIdAndUpdate(teacher._id, teacher);
 
       return res.status(400).json({ key: "create-error-occurred" });
     }
 
     if (teacher.status && !updatedTeacher.status) {
+      const firstDayCurrWeek = new Date();
+      firstDayCurrWeek.setDate(
+        firstDayCurrWeek.getDate() -
+          (firstDayCurrWeek.getDay() > 0 ? firstDayCurrWeek.getDay() : 7) +
+          1
+      );
+
+      firstDayCurrWeek.setHours(0, 0, 0, 0);
+
+      const teacherCurrentLessonsCount = await Lesson.countDocuments({
+        teacher: teacher._id,
+        role: "current",
+        date: {
+          $gte: firstDayCurrWeek,
+        },
+      });
+
+      if (teacherCurrentLessonsCount > 0) {
+        await Teacher.findByIdAndUpdate(teacher._id, teacher);
+        return res.status(400).json({ key: "has-current-week-lessons" });
+      }
+
       await Lesson.deleteMany({
         role: "main",
         teacher: teacher._id,
@@ -159,11 +181,32 @@ export const updateTeacher = async (req, res) => {
 // Delete teacher
 export const deleteTeacher = async (req, res) => {
   const { id } = req.params;
+  const firstDayCurrWeek = new Date();
+  firstDayCurrWeek.setDate(
+    firstDayCurrWeek.getDate() -
+      (firstDayCurrWeek.getDay() > 0 ? firstDayCurrWeek.getDay() : 7) +
+      1
+  );
+
+  firstDayCurrWeek.setHours(0, 0, 0, 0);
 
   try {
     const teacher = await Teacher.findById(id);
+
     if (!teacher) {
       return res.status(404).json({ message: "Teacher not found" });
+    }
+
+    const teacherCurrentLessonsCount = await Lesson.countDocuments({
+      teacher: teacher._id,
+      role: "current",
+      date: {
+        $gte: firstDayCurrWeek,
+      },
+    });
+
+    if (teacherCurrentLessonsCount > 0) {
+      return res.status(400).json({ key: "has-current-week-lessons" });
     }
 
     const teacherLessonsCount = await Lesson.countDocuments({
@@ -223,6 +266,7 @@ export const updateTeacherPassword = async (req, res) => {
 
 export const getTeacherChartData = async (req, res) => {
   const { monthCount, startDate, endDate } = req.query;
+  const { id } = req.user;
 
   try {
     let targetDate;
@@ -246,8 +290,9 @@ export const getTeacherChartData = async (req, res) => {
       }).format(targetDate.startDate);
 
       const lessons = await Lesson.find({
-        status: "confirmed",
         role: "current",
+        status: "confirmed",
+        teacher: id,
         $expr: {
           $and: [
             { $eq: [{ $year: "$date" }, targetYear] },
@@ -256,13 +301,18 @@ export const getTeacherChartData = async (req, res) => {
         },
       });
 
-      const totalStudentsCount = lessons.reduce(
-        (total, lesson) =>
-          (total += lesson.students.filter(
-            (item) => item.attendance === 1
-          ).length),
-        0
-      );
+      const totalStudentsCount = lessons.reduce((list, lesson) => {
+        return [
+          ...list,
+          ...lesson.students
+            .filter(
+              (item) =>
+                item.attendance != 2 &&
+                !list.find((id) => id.toString() == item.student.toString())
+            )
+            .map((item) => item.student),
+        ];
+      }, []).length;
 
       months.push({
         month: monthName,

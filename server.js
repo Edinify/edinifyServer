@@ -21,7 +21,6 @@ import financeRoutes from "./routes/financeRoutes.js";
 import fineRoutes from "./routes/fineRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
 // import updateButtonRoutes from "./routes/updateButtonRoutes.js";
-// 
 
 import {
   createNotificationForBirthdayWithCron,
@@ -32,6 +31,7 @@ import { getUnviewedLessons } from "./controllers/dashboardController.js";
 import { createSalariesAtEachMonth } from "./controllers/salaryController.js";
 
 import cron from "node-cron";
+import logger from "./config/logger.js";
 
 dotenv.config();
 
