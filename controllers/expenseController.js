@@ -1,4 +1,5 @@
 import { calcDate } from "../calculate/calculateDate.js";
+import logger from "../config/logger.js";
 import { Expense } from "../models/expenseModel.js";
 
 // Get expenses for pagination
@@ -44,6 +45,15 @@ export const getExpensesForPagination = async (req, res) => {
 
     res.status(200).json({ expenses, totalPages });
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET EXPENSES FOR PAGINATION",
+      user: req.user,
+      functionName: getExpensesForPagination.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -59,6 +69,15 @@ export const createExpense = async (req, res) => {
 
     res.status(201).json({ expense: newExpense, lastPage });
   } catch (err) {
+    logger.error({
+      method: "CREATE",
+      status: 500,
+      message: err.message,
+      posteData: req.body,
+      for: "CREATE EXPENSE",
+      user: req.user,
+      functionName: createExpense.name,
+    });
     res.status(500).json({ error: err.message });
   }
 };
@@ -79,6 +98,15 @@ export const updateExpense = async (req, res) => {
 
     res.status(200).json(updatedExpense);
   } catch (err) {
+    logger.error({
+      method: "PATCH",
+      status: 500,
+      message: err.message,
+      expenseId: id,
+      for: "UPDATE EXPENSE",
+      user: req.user,
+      functionName: updateExpense.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -96,6 +124,15 @@ export const deleteExpense = async (req, res) => {
 
     res.status(200).json({ message: "Expense successfully deleted" });
   } catch (err) {
+    logger.error({
+      method: "DELETE",
+      status: 500,
+      message: err.message,
+      expenseId: id,
+      for: "DELETE EXPENSE",
+      user: req.user,
+      functionName: deleteExpense.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };

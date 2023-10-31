@@ -120,14 +120,11 @@ export const updateOrCreateSalaryWhenCreateBonus = async (bonus) => {
     );
 
     if (!updatedSalary) {
-      console.log(bonus.teacher.salary);
       updatedSalary = await Salary.create({
         teacherId: bonus.teacher._id,
         bonus: bonus._id,
         teacherSalary: bonus.teacher.salary,
       });
-      console.log(3);
-      console.log(updatedSalary);
     }
 
     return updatedSalary;

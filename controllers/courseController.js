@@ -1,3 +1,4 @@
+import logger from "../config/logger.js";
 import { Course } from "../models/courseModel.js";
 
 // Get courses
@@ -7,6 +8,14 @@ export const getCourses = async (req, res) => {
 
     res.status(200).json(courses);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      for: "GET COURSES",
+      user: req.user,
+      functionName: getCourses.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -47,6 +56,14 @@ export const getCoursesForPagination = async (req, res) => {
 
     res.status(200).json({ courses, totalPages });
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      for: "GET COURSES FOR PAGINATION",
+      user: req.user,
+      functionName: getCoursesForPagination.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -54,6 +71,7 @@ export const getCoursesForPagination = async (req, res) => {
 // Create course
 export const createCourse = async (req, res) => {
   const { name } = req.body;
+
   try {
     const existingCourse = await Course.findOne({
       name: { $regex: new RegExp(name, "i") },
@@ -88,6 +106,15 @@ export const createCourse = async (req, res) => {
 
     res.status(201).json({ course: newCourse, lastPage });
   } catch (err) {
+    logger.error({
+      method: "CREATE",
+      status: 500,
+      message: err.message,
+      for: "CREATE COURSE",
+      user: req.user,
+      postedData: req.body,
+      functionName: createCourse.name,
+    });
     res.status(500).json({ error: err.message });
   }
 };
@@ -118,6 +145,16 @@ export const updateCourse = async (req, res) => {
 
     res.status(200).json(updatedCourse);
   } catch (err) {
+    logger.error({
+      method: "PATCH",
+      status: 500,
+      message: err.message,
+      for: "UPDATE COURSE",
+      user: req.user,
+      updatedData: req.body,
+      courseId: id,
+      functionName: updateCourse.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -137,6 +174,15 @@ export const deleteCourse = async (req, res) => {
 
     res.status(200).json({ message: "course successfully deleted" });
   } catch (err) {
+    logger.error({
+      method: "DELETE",
+      status: 500,
+      message: err.message,
+      for: "DELETE COURSE",
+      user: req.user,
+      courseId: id,
+      functionName: deleteCourse.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };

@@ -1,4 +1,5 @@
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
+import logger from "../config/logger.js";
 import { Feedback } from "../models/feedbackModel.js";
 import { Student } from "../models/studentModel.js";
 import { Teacher } from "../models/teacherModel.js";
@@ -11,6 +12,15 @@ export const createFeedbackByTeacher = async (req, res) => {
 
     res.status(201).json(feedback);
   } catch (err) {
+    logger.error({
+      method: "CREATE",
+      status: 500,
+      message: err.message,
+      postedData: req.body,
+      for: "CREATE FEEDBACK BY TEACHER",
+      user: req.user,
+      functionName: createFeedbackByTeacher.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -106,6 +116,15 @@ export const getFeedbacksWithPagination = async (req, res) => {
 
     res.status(200).json({ feedbacks, totalPages });
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET FEEDBACKS FOR PAGINATION",
+      user: req.user,
+      functionName: getFeedbacksWithPagination.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -143,6 +162,15 @@ export const getFeedbacksForTeacher = async (req, res) => {
 
     res.status(200).json(feedbacks);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET FEEDBACKS FOR TEACHER",
+      user: req.user,
+      functionName: getFeedbacksForTeacher.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -162,6 +190,16 @@ export const updateFeedbackByTeacher = async (req, res) => {
 
     res.status(200).json({ feedback: updatedFeedback });
   } catch (err) {
+    logger.error({
+      method: "PATCH",
+      status: 500,
+      message: err.message,
+      updateData: req.body,
+      feedbackId: id,
+      for: "UPDATE FEEDBACK BY TEACHER",
+      user: req.user,
+      functionName: updateFeedbackByTeacher.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -195,6 +233,15 @@ export const deleteFeedback = async (req, res) => {
 
     res.status(200).json({ feedback: deletedFeedback });
   } catch (err) {
+    logger.error({
+      method: "DELETE",
+      status: 500,
+      message: err.message,
+      feedbackId: id,
+      for: "DELETE FEEDBACK",
+      user: req.user,
+      functionName: deleteFeedback.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };

@@ -1,4 +1,5 @@
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
+import logger from "../config/logger.js";
 import { Course } from "../models/courseModel.js";
 import { Earning } from "../models/earningsModel.js";
 import { Expense } from "../models/expenseModel.js";
@@ -23,6 +24,15 @@ export const getConfirmedLessonsCount = async (req, res) => {
 
     res.status(200).json(confirmedCount);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET CONFIRMED LESSONS COUNT FOR DASHBOARD",
+      user: req.user,
+      functionName: getConfirmedLessonsCount.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -41,6 +51,15 @@ export const getCancelledLessonsCount = async (req, res) => {
 
     res.status(200).json(cancelledCount);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET CANCELLED LESSONS COUNT FOR DASHBOARD",
+      user: req.user,
+      functionName: getCancelledLessonsCount.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -79,6 +98,14 @@ export const getUnviewedLessons = async (req, res) => {
 
     res.status(200).json(result);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      for: "GET UNVIEWED LESSONS FOR DASHBOARD",
+      user: req.user,
+      functionName: getUnviewedLessons.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -135,6 +162,14 @@ export const getFinance = async (req, res) => {
 
     res.status(200).json(result);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      for: "GET FINANCE FOR DASHBOARD",
+      user: req.user,
+      functionName: getFinance.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -165,6 +200,15 @@ export const getCoursesStatistics = async (req, res) => {
 
     res.status(200).json(result);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET COURSES STATISTICS FOR DASHBOARD",
+      user: req.user,
+      functionName: getCoursesStatistics.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -205,6 +249,15 @@ export const getAdvertisingStatistics = async (req, res) => {
 
     res.status(200).json(result);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET ADVERTISING STATISTICS FOR DASHBOARD",
+      user: req.user,
+      functionName: getAdvertisingStatistics.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -280,6 +333,15 @@ export const getTachersResults = async (req, res) => {
 
     res.status(200).json(result);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET TEACHERS RESULTS FOR DASHBOARD",
+      user: req.user,
+      functionName: getTachersResults.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -326,6 +388,15 @@ export const getLessonsCountChartData = async (req, res) => {
 
     res.status(200).json({ months, values: studentsCountList });
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET LESSONS COUNT CHART DATA FOR DASHBOARD",
+      user: req.user,
+      functionName: getLessonsCountChartData.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
