@@ -213,7 +213,7 @@ export const registerTeacher = async (req, res) => {
   }
 };
 
-// Login
+// Login .
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
