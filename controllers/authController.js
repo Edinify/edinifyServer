@@ -198,6 +198,8 @@ export const login = async (req, res) => {
     const RefreshToken = createRefreshToken(user);
 
     // console.log(AccessToken);
+
+    
     // console.log(RefreshToken);
 
     saveTokensToDatabase(user._id, RefreshToken, AccessToken);
@@ -207,7 +209,7 @@ export const login = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
       httpOnly: true,
       path: "/api/user/auth/refresh_token",
-      sameSite: "Lax",
+      sameSite: "None",
       secure: true,
     });
 
@@ -360,7 +362,7 @@ const createAccessToken = (user) => {
   const AccessToken = jwt.sign(
     { email: user.email, role: user.role, id: user._id },
     process.env.SECRET_KEY,
-    { expiresIn: "6h" }
+    { expiresIn: "10s" }
   );
 
     return AccessToken;
@@ -371,7 +373,7 @@ const createRefreshToken = (user) => {
   const RefreshToken = jwt.sign(
     { mail: user.email, role: user.role, id: user._id },
     process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: "7d" }
+    { expiresIn: "2m" }
   );
   return RefreshToken;
 };
