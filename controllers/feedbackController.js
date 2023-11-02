@@ -13,7 +13,7 @@ export const createFeedbackByTeacher = async (req, res) => {
     res.status(201).json(feedback);
   } catch (err) {
     logger.error({
-      method: "CREATE",
+      method: "POST",
       status: 500,
       message: err.message,
       postedData: req.body,
@@ -25,12 +25,21 @@ export const createFeedbackByTeacher = async (req, res) => {
   }
 };
 
-export const createFeedbackByStudent = async (feedback) => {
+export const createFeedbackByStudent = async (feedback, req) => {
   try {
     await Feedback.create(feedback);
 
     console.log({ message: "feedback created succuessfully" });
   } catch (err) {
+    logger.error({
+      method: "POST",
+      status: 500,
+      message: err.message,
+      postedData: feedback,
+      for: "CREATE FEEDBACK BY STUDENT",
+      user: req.user,
+      functionName: createFeedbackByStudent.name,
+    });
     console.log({ message: err.message });
   }
 };

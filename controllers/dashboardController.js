@@ -112,6 +112,7 @@ export const getUnviewedLessons = async (req, res) => {
 
 export const getFinance = async (req, res) => {
   const targetDate = calcDate(1);
+  console.log(targetDate.startDate, targetDate.endDate);
   try {
     const incomes = await Income.find({
       createdAt: {
@@ -133,6 +134,8 @@ export const getFinance = async (req, res) => {
         $lte: targetDate.endDate,
       },
     });
+
+    console.log(earnings)
 
     const totalIncome = incomes.reduce(
       (total, income) => (total += income.amount),
@@ -266,6 +269,7 @@ export const getTachersResults = async (req, res) => {
   const { monthCount, startDate, endDate, byFilter } = req.query;
   let targetDate;
 
+  console.log(req.query);
   try {
     if (monthCount) {
       targetDate = calcDate(monthCount);
@@ -273,6 +277,7 @@ export const getTachersResults = async (req, res) => {
       targetDate = calcDateWithMonthly(startDate, endDate);
     }
 
+    console.log(targetDate.startDate, targetDate.endDate);
     const teachers = await Teacher.find().select("_id fullName");
     const leaderboardData = await Leaderboard.find({
       date: {
