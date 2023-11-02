@@ -199,7 +199,7 @@ export const login = async (req, res) => {
 
     // console.log(AccessToken);
 
-    
+
     // console.log(RefreshToken);
 
     saveTokensToDatabase(user._id, RefreshToken, AccessToken);
@@ -362,7 +362,7 @@ const createAccessToken = (user) => {
   const AccessToken = jwt.sign(
     { email: user.email, role: user.role, id: user._id },
     process.env.SECRET_KEY,
-    { expiresIn: "10s" }
+    { expiresIn: "6h" }
   );
 
     return AccessToken;
@@ -373,7 +373,7 @@ const createRefreshToken = (user) => {
   const RefreshToken = jwt.sign(
     { mail: user.email, role: user.role, id: user._id },
     process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: "2m" }
+    { expiresIn: "7d" }
   );
   return RefreshToken;
 };
