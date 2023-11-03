@@ -251,7 +251,6 @@ export const login = async (req, res) => {
 
     res.status(200).json({
       AccessToken: AccessToken,
-      RefreshToken: RefreshToken,
     });
   } catch (err) {
     logger.error({
