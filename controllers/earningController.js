@@ -3,17 +3,23 @@ import { Lesson } from "../models/lessonModel.js";
 
 export const createEarnings = async (date) => {
   const targetDate = new Date(date);
-  const targetMonth = targetDate.getMonth() + 1;
+  const targetMonth = targetDate.getMonth();
   const targetYear = targetDate.getFullYear();
 
+  console.log(1, "EARNINGS");
+  console.log(targetDate);
+  console.log(targetMonth);
+  console.log(targetYear);
+  const startDate = new Date(targetYear, targetMonth, 1);
+  const endDate = new Date(targetYear, targetMonth + 1);
+
+  console.log(startDate, endDate);
   try {
     const confirmedLesson = await Lesson.find({
       status: "confirmed",
-      $expr: {
-        $and: [
-          { $eq: [{ $year: "$date" }, targetYear] },
-          { $eq: [{ $month: "$date" }, targetMonth] },
-        ],
+      date: {
+        $gte: startDate,
+        $lte: endDate,
       },
     });
 
@@ -22,31 +28,50 @@ export const createEarnings = async (date) => {
       0
     );
 
-    const checkEarnings = await Earning.findOne({
+
+    const checkEarnings = await Earning.find({
       $expr: {
         $and: [
           { $eq: [{ $year: "$date" }, targetYear] },
-          { $eq: [{ $month: "$date" }, targetMonth] },
+          { $eq: [{ $month: "$date" }, targetMonth + 1] },
         ],
       },
     });
 
-    let newEarnings;
 
-    if (!checkEarnings) {
-      newEarnings = new Earning({
-        earnings: totalEarnings,
-        date: targetDate,
-      });
+    const checkEarningsIds = checkEarnings.map((item) => item._id);
 
-      await newEarnings.save();
-    } else {
-      checkEarnings.earnings = totalEarnings;
-      newEarnings = await checkEarnings.save();
-    }
+    await Earning.deleteMany({ _id: { $in: checkEarningsIds } });
 
-    return newEarnings
+    let newEarnings = new Earning({
+      earnings: totalEarnings,
+      date: targetDate,
+    });
+
+    await newEarnings.save();
+
+    // if (!checkEarnings) {
+    //   newEarnings = new Earning({
+    //     earnings: totalEarnings,
+    //     date: targetDate,
+    //   });
+
+    //   await newEarnings.save();
+
+    //   console.log(5);
+    //   console.log(newEarnings);
+    // } else {
+    //   checkEarnings.earnings = totalEarnings;
+    //   newEarnings = await checkEarnings.save();
+    //   console.log(6);
+    //   console.log(newEarnings);
+    // }
+
+
+
+    return newEarnings;
   } catch (err) {
-    console.log({ message: { error: err.message } });
+    console.log(err);
+    console.log({ message: { error: err.message } }, "erning error");
   }
 };

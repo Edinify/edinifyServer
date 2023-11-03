@@ -1,4 +1,5 @@
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
+import logger from "../config/logger.js";
 import { Fine } from "../models/fineModel.js";
 import { Teacher } from "../models/teacherModel.js";
 import { createNotificationForTeacherFine } from "./notificationController.js";
@@ -7,8 +8,6 @@ import { createNotificationForTeacherFine } from "./notificationController.js";
 
 export const createFine = async (req, res) => {
   const { teacher } = req.body;
-
-  console.log(req.body);
 
   try {
     const fine = await Fine.create(req.body);
@@ -20,6 +19,15 @@ export const createFine = async (req, res) => {
 
     res.status(201).json({ fine, lastPage });
   } catch (err) {
+    logger.error({
+      method: "POST",
+      status: 500,
+      message: err.message,
+      postedData: req.body,
+      for: "CREATE FINE",
+      user: req.user,
+      functionName: createFine.name,
+    });
     res.status(500).json({ message: err.message });
   }
 };
@@ -85,6 +93,15 @@ export const getFinesWithPagination = async (req, res) => {
 
     res.status(200).json({ fines, totalPages });
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET FINES FOR PAGINATION",
+      user: req.user,
+      functionName: getFinesWithPagination.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -108,6 +125,15 @@ export const getFinesForTeacher = async (req, res) => {
 
     res.status(200).json(fines);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET FINES FOR TEACHER",
+      user: req.user,
+      functionName: getFinesForTeacher.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -129,6 +155,16 @@ export const updateFine = async (req, res) => {
 
     res.status(200).json(updatedFine);
   } catch (err) {
+    logger.error({
+      method: "PATCH",
+      status: 500,
+      message: err.message,
+      updatedData: req.body,
+      fineId: id,
+      for: "UPDATE FINE",
+      user: req.user,
+      functionName: updateFine.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -145,6 +181,15 @@ export const deleteFine = async (req, res) => {
 
     res.status(200).json({ message: "Fine successfully deleted" });
   } catch (err) {
+    logger.error({
+      method: "DELETE",
+      status: 500,
+      message: err.message,
+      fineId: id,
+      for: "DELETE FINE",
+      user: req.user,
+      functionName: deleteFine.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };

@@ -70,7 +70,7 @@ export const createExpense = async (req, res) => {
     res.status(201).json({ expense: newExpense, lastPage });
   } catch (err) {
     logger.error({
-      method: "CREATE",
+      method: "POST",
       status: 500,
       message: err.message,
       posteData: req.body,
