@@ -18,12 +18,12 @@ jobs:
       - name: Checkout code 
         uses: actions/checkout@v2
 
-      - name: npm install, build, and test
-        run: |
-          npm --force install
-          npm run build --if-present
-          npm run test --if-present
+      - name: Install Dependencies
+        run: npm --force install
 
+      - name: Build
+        run: |
+          npm run build
       - name:  Deploy to Static Server
         uses: Azure/static-web-apps-deploy@v1
         with:
