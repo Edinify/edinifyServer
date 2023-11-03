@@ -439,7 +439,7 @@ const createAccessToken = (user) => {
         fullName: user.fullName,
       },
       process.env.SECRET_KEY,
-      { expiresIn: "10s" }
+      { expiresIn: "3d" }
     );
 
     return AccessToken;
@@ -470,7 +470,7 @@ const createRefreshToken = (user) => {
       fullName: user.fullName,
     },
     process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: "2m" }
+    { expiresIn: "10d" }
   );
   return RefreshToken;
 };
@@ -479,12 +479,13 @@ const createRefreshToken = (user) => {
 export const refreshToken = async (req, res) => {
   console.log(req.headers,'header')
   try {
-    const rf_token = req.headers.cookie.split("=")[1];
-    // console.log(rf_token);
-    const token = await Token.findOne({ refreshToken: rf_token });
-    // console.log(token,'db');
+    const parts = req.headers.cookie.split('=')[1];
+    const refreshToken = parts.split(';')[0];
+    console.log(refreshToken);
+    const token = await Token.findOne({ refreshToken: refreshToken });
+    console.log(token,'db');
     if (token) {
-      jwt.verify(rf_token, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+      jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
         if (err) {
           res.clearCookie("refreshtoken", {
             httpOnly: true,
@@ -493,10 +494,10 @@ export const refreshToken = async (req, res) => {
             secure: true,
           });
           console.log(err.message);
-          revokeTokenFromDatabase(rf_token);
+          revokeTokenFromDatabase(token._id);
           return res.status(401).json({ message: { error: err.message } });
         } else {
-          console.log(user, "new acces ");
+          // console.log(user, "new acces ");
           const accesstoken = createAccessToken({
             email: user.mail,
             _id: user.id,
@@ -505,6 +506,8 @@ export const refreshToken = async (req, res) => {
           res.json({ accesstoken });
         }
       });
+    }else{
+      return res.status(401).json({ message: "logout" });
     }
   } catch (err) {
     logger.error({
@@ -515,7 +518,7 @@ export const refreshToken = async (req, res) => {
       functionName: refreshToken.name,
     });
 
-    return res.status(404).json({ msg: err.message });
+    return res.status(401).json({ msg: err.message });
   }
 };
 
