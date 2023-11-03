@@ -516,6 +516,7 @@ const revokeTokenFromDatabase = async (id) => {
   }
   
 };
+// 
 
 // Get user
 export const getUser = async (req, res) => {
