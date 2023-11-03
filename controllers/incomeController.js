@@ -1,4 +1,5 @@
 import { calcDate } from "../calculate/calculateDate.js";
+import logger from "../config/logger.js";
 import { Income } from "../models/incomeModel.js";
 
 // Get incomes for pagination
@@ -44,6 +45,15 @@ export const getIncomesForPagination = async (req, res) => {
 
     res.status(200).json({ incomes, totalPages });
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET INCOMES FOR PAGINATION",
+      user: req.user,
+      functionName: getIncomesForPagination.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -59,7 +69,15 @@ export const createIncome = async (req, res) => {
 
     res.status(201).json({ income: newIncome, lastPage });
   } catch (err) {
-    // console.log(err);
+    logger.error({
+      method: "POST",
+      status: 500,
+      message: err.message,
+      postedData: req.body,
+      for: "CREATE INCOME",
+      user: req.user,
+      functionName: createIncome.name,
+    });
     res.status(500).json({ error: err.message });
   }
 };
@@ -80,6 +98,16 @@ export const updateIncome = async (req, res) => {
 
     res.status(200).json(updatedIncome);
   } catch (err) {
+    logger.error({
+      method: "PATCH",
+      status: 500,
+      message: err.message,
+      incomeId: id,
+      updatedData: req.body,
+      for: "UPDATE INCOME",
+      user: req.user,
+      functionName: updateIncome.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -97,6 +125,15 @@ export const deleteIncome = async (req, res) => {
 
     res.status(200).json({ message: "Expense successfully deleted" });
   } catch (err) {
+    logger.error({
+      method: "DELETE",
+      status: 500,
+      message: err.message,
+      incomeId: id,
+      for: "DELETE INCOME",
+      user: req.user,
+      functionName: deleteIncome.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };

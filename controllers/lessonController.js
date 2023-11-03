@@ -1,3 +1,4 @@
+import logger from "../config/logger.js";
 import { Feedback } from "../models/feedbackModel.js";
 import { Lesson } from "../models/lessonModel.js";
 import { Student } from "../models/studentModel.js";
@@ -39,6 +40,15 @@ export const createLesson = async (req, res) => {
 
     res.status(201).json(newLesson);
   } catch (err) {
+    logger.error({
+      method: "POST",
+      status: 500,
+      message: err.message,
+      postedData: req.body,
+      for: "CREATE LESSON",
+      user: req.user,
+      functionName: createLesson.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -60,6 +70,15 @@ export const getWeeklyLessonsForMainTable = async (req, res) => {
     console.log(lessons);
     res.status(200).json(lessons);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET WEEKLY LESSONS FOR MAIN TABLE",
+      user: req.user,
+      functionName: getWeeklyLessonsForMainTable.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -97,6 +116,15 @@ export const getWeeklyLessonsForCurrentTable = async (req, res) => {
 
     res.status(200).json(lessons);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET WEEKLY LESSONS FOR CURRENT TABLE",
+      user: req.user,
+      functionName: getWeeklyLessonsForCurrentTable.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -171,6 +199,15 @@ export const getWeeklyLessonsForMainPanel = async (req, res) => {
 
     res.status(200).json(lessons);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET WEEKLY LESSONS FOR MAIN PANEL",
+      user: req.user,
+      functionName: getWeeklyLessonsForMainPanel.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -245,6 +282,16 @@ export const updateLessonInTable = async (req, res) => {
 
     res.status(200).json(updatedLesson);
   } catch (err) {
+    logger.error({
+      method: "PATCH",
+      status: 500,
+      message: err.message,
+      lessonId: id,
+      updatedData: req.body,
+      for: "UPDATE LESSON IN TABLE",
+      user: req.user,
+      functionName: updateLessonInTable.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -273,7 +320,7 @@ export const updateLessonInMainPanel = async (req, res) => {
             lessonId: lesson._id,
             feedback,
             from: "student",
-          });
+          },req);
         } else if (checkFeedback.feedback !== feedback) {
           await updateFeedbackByStudent({
             ...checkFeedback.toObject(),
@@ -374,6 +421,16 @@ export const updateLessonInMainPanel = async (req, res) => {
 
     res.status(200).json(updatedLesson);
   } catch (err) {
+    logger.error({
+      method: "PATCH",
+      status: 500,
+      message: err.message,
+      updatedData: req.body,
+      lessonId: id,
+      for: "UPDATE LESSON IN MAIN PANEL",
+      user: req.user,
+      functionName: updateLessonInMainPanel.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -400,6 +457,15 @@ export const deleteLessonInTablePanel = async (req, res) => {
 
     res.status(200).json(deletedLesson);
   } catch (err) {
+    logger.error({
+      method: "DELETE",
+      status: 500,
+      message: err.message,
+      lessonId: id,
+      for: "DELETE LESSON IN TABLE PANEL",
+      user: req.user,
+      functionName: deleteLessonInTablePanel.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -460,6 +526,14 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
 
     res.status(201).json({ message: "create current table" });
   } catch (err) {
+    logger.error({
+      method: "POST",
+      status: 500,
+      message: err.message,
+      for: "CREATE CURRENT LESSONS FROM MAIN LESSONS",
+      user: req.user,
+      functionName: getWeeklyLessonsForMainTable.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };

@@ -2,29 +2,50 @@ import { Admin } from "../models/adminModel.js";
 import bcrypt from "bcrypt";
 import { Student } from "../models/studentModel.js";
 import { Teacher } from "../models/teacherModel.js";
+import logger from "../config/logger.js";
 
 // Get admin
 export const getAdmin = async (req, res) => {
-  const { id } = req.user;
+  const { id, fullName } = req.user;
   try {
     const admin = await Admin.findById(id);
+
     if (!admin) {
       return res.status(404).json({ message: "admin not found" });
     }
 
     res.status(200).json(admin);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      for: "GET ADMIN",
+      functionName: getAdmin.name,
+      user: req.user,
+    });
+
     res.status(500).json({ message: { error: err.message } });
   }
 };
 
 // Get admins
 export const getAdmins = async (req, res) => {
+  const { id, fullName, email } = req.user;
   try {
     const admins = await Admin.find({ role: "admin" });
 
     res.status(200).json(admins);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      for: "GET ADMINS",
+      functionName: getAdmins.name,
+      user: req.user,
+    });
+
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -63,6 +84,19 @@ export const updateAdmin = async (req, res) => {
 
     res.status(200).json(newAdmin);
   } catch (err) {
+    logger.error({
+      method: "PATCH",
+      status: 500,
+      message: err.message,
+      for: "UPDATE ADMIN",
+      user: req.user,
+      postedData: {
+        ...req.body,
+        password: "",
+      },
+      functionName: updateAdmin.name,
+    });
+
     res.status(500).json({
       message: {
         error: err.message,
@@ -75,7 +109,6 @@ export const updateAdmin = async (req, res) => {
 export const deleteAdmin = async (req, res) => {
   const { id } = req.params;
 
-  // console.log(id, "delete");
   try {
     const deletedAdmin = await Admin.findByIdAndDelete(id);
 
@@ -85,6 +118,16 @@ export const deleteAdmin = async (req, res) => {
 
     res.status(200).json(deleteAdmin);
   } catch (err) {
+    logger.error({
+      method: "DELETE",
+      status: 500,
+      message: err.message,
+      for: "DELETE ADMIN",
+      user: req.user,
+      deleteAdminId: id,
+      functionName: deleteAdmin.name,
+    });
+
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -117,6 +160,16 @@ export const updateAdminPassword = async (req, res) => {
 
     res.status(200).json(updatedAdmin);
   } catch (err) {
+    logger.error({
+      method: "PATCH",
+      status: 500,
+      message: err.message,
+      for: "UPDATE ADMIN PASSWORD",
+      user: req.user,
+      updatedAdmin: id,
+      functionName: deleteAdmin.name,
+    });
+
     res.status(500).json({ message: { error: err.message } });
   }
 };
