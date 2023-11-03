@@ -26,9 +26,9 @@ export const registerSuperAdmin = async (req, res) => {
     const existingTeacher = await Teacher.findOne({ email });
     const existingAdmin = await Admin.findOne({ role: "super-admin" });
 
-    if (existingAdmin) {
-      return res.status(409).json({ message: "Super Admin already exists" });
-    }
+    // if (existingAdmin) {
+    //   return res.status(409).json({ message: "Super Admin already exists" });
+    // }
 
     if (existingStudent || existingTeacher) {
       return res.status(409).json({ key: "email-already-exist" });
