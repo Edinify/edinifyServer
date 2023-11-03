@@ -46,8 +46,7 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'edinifyProServer'
+          app-name: 'edinify'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_36CB544CAC054E3EB97B7BCDA2A5A96C }}
           package: .
-          # 
