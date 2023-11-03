@@ -439,7 +439,7 @@ const createAccessToken = (user) => {
         fullName: user.fullName,
       },
       process.env.SECRET_KEY,
-      { expiresIn: "6h" }
+      { expiresIn: "10s" }
     );
 
     return AccessToken;
@@ -470,14 +470,14 @@ const createRefreshToken = (user) => {
       fullName: user.fullName,
     },
     process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: "7d" }
+    { expiresIn: "2m" }
   );
   return RefreshToken;
 };
 
 // verify refresh token
 export const refreshToken = async (req, res) => {
-  // console.log(req.headers,'header')
+  console.log(req.headers,'header')
   try {
     const rf_token = req.headers.cookie.split("=")[1];
     // console.log(rf_token);
