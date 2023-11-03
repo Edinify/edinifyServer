@@ -2,6 +2,7 @@ import { Bonus } from "../models/bonusModel.js";
 import { Teacher } from "../models/teacherModel.js";
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import { updateOrCreateSalaryWhenCreateBonus } from "./salaryController.js";
+import logger from "../config/logger.js";
 
 // Create
 export const createBonus = async (req, res) => {
@@ -32,7 +33,24 @@ export const createBonus = async (req, res) => {
 
     if (!updatedSalary) {
       await Bonus.findByIdAndDelete(bonus._id);
-      return res.status(400).json({ key: "create-error-occurred" });
+
+      logger.error({
+        method: "CREATE",
+        status: 400,
+        message: "salary was not updated or created!",
+        for: "CREATE OR UPDATE SALARY WHEN CREATE BONUS",
+        user: req.user,
+        forTeacher: {
+          fullName: bonus.teacher.fullName,
+          email: bonus.teacher.email,
+        },
+        functionName: createBonus.name,
+      });
+
+      return res.status(400).json({
+        key: "create-error-occurred",
+        message: "salary was not updated or created!",
+      });
     }
 
     const bonusCount = await Bonus.countDocuments();
@@ -40,6 +58,15 @@ export const createBonus = async (req, res) => {
 
     res.status(201).json({ bonus, lastPage });
   } catch (err) {
+    logger.error({
+      method: "CREATE",
+      status: 500,
+      message: err.message,
+      for: "CREATE BONUS",
+      user: req.user,
+      forTeacher: teacher,
+      functionName: createBonus.name,
+    });
     res.status(500).json({ message: err.message });
   }
 };
@@ -76,11 +103,37 @@ export const createBonusOnSalary = async (req, res) => {
 
     if (!updatedSalary) {
       await Bonus.findByIdAndDelete(bonus._id);
-      return res.status(400).json({ key: "create-error-occurred" });
+
+      logger.error({
+        method: "CREATE",
+        status: 400,
+        message: "salary was not updated or created!",
+        for: "CREATE OR UPDATE SALARY WHEN CREATE BONUS ON SALARY",
+        user: req.user,
+        forTeacher: {
+          fullName: bonus.teacher.fullName,
+          email: bonus.teacher.email,
+        },
+        functionName: createBonusOnSalary.name,
+      });
+
+      return res.status(400).json({
+        key: "create-error-occurred",
+        message: "salary was not updated or created!",
+      });
     }
 
     res.status(201).json({ message: "create bonus successfull" });
   } catch (err) {
+    logger.error({
+      method: "CREATE",
+      status: 500,
+      message: err.message,
+      for: "CREATE BONUS ON SALARY",
+      user: req.user,
+      forTeacher: teacher,
+      functionName: createBonusOnSalary.name,
+    });
     res.status(500).json({ message: err.message });
   }
 };
@@ -143,6 +196,15 @@ export const getBonusesWithPagination = async (req, res) => {
 
     res.status(200).json({ bonuses, totalPages });
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      for: "GET BONUSES PAGINATION",
+      user: req.user,
+      functionName: getBonusesWithPagination.name,
+    });
+
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -171,6 +233,15 @@ export const getBonusesForTeacher = async (req, res) => {
 
     res.status(200).json(bonuses);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      for: "GET BONUSES FOR TEACHER",
+      user: req.user,
+      functionName: getBonusesForTeacher.name,
+    });
+
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -190,6 +261,16 @@ export const updateBonus = async (req, res) => {
 
     res.status(200).json(updatedBonus);
   } catch (err) {
+    logger.error({
+      method: "PATCH",
+      status: 500,
+      message: err.message,
+      for: "UPDATE BONUS",
+      postedBonus: req.body,
+      user: req.user,
+      functionName: updateBonus.name,
+    });
+
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -206,6 +287,14 @@ export const deleteBonus = async (req, res) => {
 
     res.status(200).json({ message: "Bonus successfully deleted" });
   } catch (err) {
+    logger.error({
+      method: "DELETE",
+      status: 500,
+      message: err.message,
+      for: "DELETE BONUS",
+      user: req.user,
+      functionName: deleteBonus.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };

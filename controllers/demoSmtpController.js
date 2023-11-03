@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
+import logger from "../config/logger.js";
 
 dotenv.config();
 
@@ -46,7 +47,15 @@ export const sendEmailForDemo = async (req, res) => {
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
-      // console.log(error);
+      console.log(error);
+      logger.error({
+        method: "POST",
+        status: 500,
+        message: error,
+        for: "SEND EMAIL FROM DEMO",
+        postedData: req.body,
+        functionName: sendEmailForDemo.name,
+      });
       return res.status(500).json({ error: error });
     } else {
       res.status(200).json({ message: "request for demo sent successfuly" });

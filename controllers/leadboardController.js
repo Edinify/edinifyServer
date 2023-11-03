@@ -4,7 +4,7 @@ import { Leaderboard } from "../models/leaderboardModel.js";
 export const createOrUpdaeteLeadboard = async (lesson) => {
   try {
     const targetDate = new Date(lesson.date);
-    const targetMonth = targetDate.getMonth() + 1;
+    const targetMonth = targetDate.getMonth();
     const targetYear = targetDate.getFullYear();
     let totalLessonCount = 0;
     let totalStarCount = 0;
@@ -16,7 +16,7 @@ export const createOrUpdaeteLeadboard = async (lesson) => {
       $expr: {
         $and: [
           { $eq: [{ $year: "$date" }, targetYear] },
-          { $eq: [{ $month: "$date" }, targetMonth] },
+          { $eq: [{ $month: "$date" }, targetMonth + 1] },
         ],
       },
     });
@@ -31,33 +31,29 @@ export const createOrUpdaeteLeadboard = async (lesson) => {
       });
     });
 
-    const checkLeadboard = await Leaderboard.findOne({
-      teacherId: lesson.teacher._id,
+    const checkLeadboard = await Leaderboard.find({
       $expr: {
         $and: [
           { $eq: [{ $year: "$date" }, targetYear] },
-          { $eq: [{ $month: "$date" }, targetMonth] },
+          { $eq: [{ $month: "$date" }, targetMonth + 1] },
         ],
       },
+      teacherId: lesson.teacher._id,
     });
 
-    let newLeaderBoard;
+    const leaderBoardIds = checkLeadboard.map((item) => item._id);
 
-    if (!checkLeadboard) {
-      newLeaderBoard = await Leaderboard.create({
-        teacherId: lesson.teacher._id,
-        lessonCount: totalLessonCount,
-        starCount: totalStarCount,
-        date: lesson.date,
-      });
-    } else {
-      checkLeadboard.lessonCount = totalLessonCount;
-      checkLeadboard.starCount = totalStarCount;
-      newLeaderBoard = await checkLeadboard.save();
-    }
+    await Leaderboard.deleteMany({ _id: { $in: leaderBoardIds } });
+
+    let newLeaderBoard = await Leaderboard.create({
+      teacherId: lesson.teacher._id,
+      lessonCount: totalLessonCount,
+      starCount: totalStarCount,
+      date: lesson.date,
+    });
 
     return newLeaderBoard;
   } catch (err) {
-    // console.log({ message: { error: err.message } });
+    console.log({ message: { error: err.message } }, "leaderboard error");
   }
 };

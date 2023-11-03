@@ -1,4 +1,5 @@
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
+import logger from "../config/logger.js";
 import { Earning } from "../models/earningsModel.js";
 import { Expense } from "../models/expenseModel.js";
 import { Income } from "../models/incomeModel.js";
@@ -57,6 +58,15 @@ export const getFinance = async (req, res) => {
 
     res.status(200).json(result);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET FINANCE",
+      user: req.user,
+      functionName: getFinance.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -159,6 +169,15 @@ export const getChartData = async (req, res) => {
       .status(200)
       .json({ months, chartIncome, chartExpense, chartTurnover, chartProfit });
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET CHART DATA",
+      user: req.user,
+      functionName: getChartData.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
