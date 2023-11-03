@@ -56,7 +56,7 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'enteskcrmserver'
+          app-name: 'enteskNerimanov'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F613AF4CE196487A9BEF15B1938BB096 }}
           package: .
