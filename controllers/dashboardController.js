@@ -1,3 +1,4 @@
+// import { log } from "winston";
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import logger from "../config/logger.js";
 import { Course } from "../models/courseModel.js";
@@ -271,6 +272,7 @@ export const getTachersResults = async (req, res) => {
 
   console.log(req.query);
   try {
+    
     if (monthCount) {
       targetDate = calcDate(monthCount);
     } else if (startDate && endDate) {
@@ -310,27 +312,28 @@ export const getTachersResults = async (req, res) => {
 
     let index;
     if (byFilter === "lessonCount" && teachersResultsList.length) {
+      console.log(teachersResultsList);
       teachersResultsList.sort((a, b) => b.lessonCount - a.lessonCount);
       index =
-        teachersResultsList[2].lessonCount > 0
+      teachersResultsList[2] !== undefined && teachersResultsList[2].lessonCount > 0
           ? 3
-          : teachersResultsList[1].lessonCount > 0
+          : teachersResultsList[1] !== undefined && teachersResultsList[1].lessonCount > 0
           ? 2
-          : teachersResultsList[0].lessonCount > 0
+          : teachersResultsList[0] !== undefined && teachersResultsList[0].lessonCount > 0
           ? 1
           : 0;
     } else if (byFilter === "starCount" && teachersResultsList.length) {
       teachersResultsList.sort((a, b) => b.starCount - a.starCount);
       index =
-        teachersResultsList[2].starCount > 0
+      teachersResultsList[2] !== undefined && teachersResultsList[2].starCount > 0
           ? 3
-          : teachersResultsList[1].starCount > 0
+          : teachersResultsList[1] !== undefined && teachersResultsList[1].starCount > 0
           ? 2
-          : teachersResultsList[0].starCount > 0
+          : teachersResultsList[0] !== undefined && teachersResultsList[0].starCount > 0
           ? 1
           : 0;
     }
-
+    
     const result = {
       leaderTeacher: [...teachersResultsList.slice(0, index)],
       otherTeacher: [...teachersResultsList.slice(index)],
@@ -348,6 +351,7 @@ export const getTachersResults = async (req, res) => {
       functionName: getTachersResults.name,
     });
     res.status(500).json({ message: { error: err.message } });
+    console.log(err.message);
   }
 };
 
