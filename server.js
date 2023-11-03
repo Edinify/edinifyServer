@@ -36,7 +36,7 @@ import logger from "./config/logger.js";
 dotenv.config();
 const app = express();
 const port = process.env.PORT;
-const uri = process.env.DB_URI;
+const uri = process.env.DATABASE_URI;
 
 app.use(
   cors({
