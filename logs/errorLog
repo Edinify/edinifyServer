@@ -1,0 +1,6 @@
+
+{"for":"VERIFY REFRESH TOKEN","functionName":"refreshToken","level":"error","message":"Cannot read properties of undefined (reading 'split')","method":"POST","status":500,"timestamp":"2023-11-03T06:56:11.546Z"}
+{"for":"VERIFY REFRESH TOKEN","functionName":"refreshToken","level":"error","message":"Cannot read properties of undefined (reading 'split')","method":"POST","status":500,"timestamp":"2023-11-03T06:56:11.584Z"}
+{"for":"VERIFY REFRESH TOKEN","functionName":"refreshToken","level":"error","message":"Cannot read properties of undefined (reading 'split')","method":"POST","status":500,"timestamp":"2023-11-03T06:56:11.586Z"}
+{"for":"VERIFY REFRESH TOKEN","functionName":"refreshToken","level":"error","message":"Cannot read properties of undefined (reading 'split')","method":"POST","status":500,"timestamp":"2023-11-03T06:56:11.588Z"}
+{"for":"VERIFY REFRESH TOKEN","functionName":"refreshToken","level":"error","message":"Cannot read properties of undefined (reading 'split')","method":"POST","status":500,"timestamp":"2023-11-03T06:56:11.591Z"}
