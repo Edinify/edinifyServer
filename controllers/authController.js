@@ -220,6 +220,8 @@ export const login = async (req, res) => {
   try {
     const regexEmail = new RegExp(email, "i");
 
+    throw Error("Login error");
+
     const admin = await Admin.findOne({ email: regexEmail });
     const student = await Student.findOne({ email: regexEmail });
     const teacher = await Teacher.findOne({ email: regexEmail });

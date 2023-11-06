@@ -86,7 +86,6 @@ export const getStudentsForPagination = async (req, res) => {
 export const getStudentsByCourseId = async (req, res) => {
   const { courseId, day, time, role, date } = req.query;
 
-  console.log(role);
 
   const targetDate = new Date(date);
   const targetMonth = targetDate.getMonth() + 1;
