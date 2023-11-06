@@ -86,7 +86,6 @@ export const getStudentsForPagination = async (req, res) => {
 export const getStudentsByCourseId = async (req, res) => {
   const { courseId, day, time, role, date } = req.query;
 
-
   const targetDate = new Date(date);
   const targetMonth = targetDate.getMonth() + 1;
   const targetYear = targetDate.getFullYear();
@@ -192,8 +191,9 @@ export const updateStudent = async (req, res) => {
     }
 
     if (
-      student.birthday.getDate() != updatedStudent.birthday.getDate() ||
-      student.birthday.getMonth() != updatedStudent.birthday.getMonth()
+      student.birthday &&
+      (student.birthday.getDate() != updatedStudent.birthday.getDate() ||
+        student.birthday.getMonth() != updatedStudent.birthday.getMonth())
     ) {
       createNotificationForBirthdayAtCreateAndUpdateStudent(updatedStudent);
     }
