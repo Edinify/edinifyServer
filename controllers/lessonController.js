@@ -314,13 +314,16 @@ export const updateLessonInMainPanel = async (req, res) => {
 
       if (feedback) {
         if (!checkFeedback) {
-          await createFeedbackByStudent({
-            teacher: lesson.teacher,
-            student: studentId,
-            lessonId: lesson._id,
-            feedback,
-            from: "student",
-          },req);
+          await createFeedbackByStudent(
+            {
+              teacher: lesson.teacher,
+              student: studentId,
+              lessonId: lesson._id,
+              feedback,
+              from: "student",
+            },
+            req
+          );
         } else if (checkFeedback.feedback !== feedback) {
           await updateFeedbackByStudent({
             ...checkFeedback.toObject(),
@@ -445,7 +448,7 @@ export const deleteLessonInTablePanel = async (req, res) => {
     );
 
     if (!deletedLesson) {
-      res.status(404).json({ message: "Lesson not found" });
+      return res.status(404).json({ message: "Lesson not found" });
     }
 
     if (deletedLesson.role === "current") {
@@ -532,7 +535,7 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
       message: err.message,
       for: "CREATE CURRENT LESSONS FROM MAIN LESSONS",
       user: req.user,
-      functionName: getWeeklyLessonsForMainTable.name,
+      functionName: createCurrentLessonsFromMainLessons.name,
     });
     res.status(500).json({ message: { error: err.message } });
   }
