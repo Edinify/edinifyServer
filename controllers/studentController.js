@@ -87,17 +87,16 @@ export const getStudentsForPagination = async (req, res) => {
 export const getStudentsByCourseId = async (req, res) => {
   const { courseId, day, time, role, date, studentsCount, searchQuery } =
     req.query;
-
   const targetDate = new Date(date);
   const targetMonth = targetDate.getMonth() + 1;
   const targetYear = targetDate.getFullYear();
   const targetDayOfMonth = targetDate.getDate();
 
   try {
-    const regexSearchQuery = new RegExp(searchQuery, "i");
+    const regexSearchQuery = new RegExp(searchQuery.trim(), "i");
 
     const students = await Student.find({
-      fullName: regexSearchQuery,
+      fullName: { $regex: regexSearchQuery },
       "courses.course": courseId,
       status: true,
       deleted: false,
