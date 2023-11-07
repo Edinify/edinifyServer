@@ -67,7 +67,6 @@ export const getWeeklyLessonsForMainTable = async (req, res) => {
       role: "main",
     }).populate("teacher course students.student");
 
-    console.log(lessons);
     res.status(200).json(lessons);
   } catch (err) {
     logger.error({

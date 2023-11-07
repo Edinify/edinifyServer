@@ -10,6 +10,7 @@ import {
 } from "./notificationController.js";
 import { Admin } from "../models/adminModel.js";
 import { Teacher } from "../models/teacherModel.js";
+import logger from "../config/logger.js";
 
 // Get students
 
@@ -84,7 +85,8 @@ export const getStudentsForPagination = async (req, res) => {
 
 // Get students by course id
 export const getStudentsByCourseId = async (req, res) => {
-  const { courseId, day, time, role, date } = req.query;
+  const { courseId, day, time, role, date, studentsCount, searchQuery } =
+    req.query;
 
   const targetDate = new Date(date);
   const targetMonth = targetDate.getMonth() + 1;
@@ -92,14 +94,20 @@ export const getStudentsByCourseId = async (req, res) => {
   const targetDayOfMonth = targetDate.getDate();
 
   try {
+    const regexSearchQuery = new RegExp(searchQuery, "i");
+
     const students = await Student.find({
+      fullName: regexSearchQuery,
       "courses.course": courseId,
       status: true,
       deleted: false,
-    });
+    })
+      .skip(parseInt(studentsCount))
+      .limit(parseInt(studentsCount) + 30);
 
     let checkStudent;
 
+    console.log(students);
     const newStudents = await Promise.all(
       students.map(async (student) => {
         if (role === "main") {
@@ -109,8 +117,6 @@ export const getStudentsByCourseId = async (req, res) => {
             time: time,
             role: role,
           });
-
-          console.log("main");
         } else if (role === "current") {
           // console.log(targetYear, "target year");
           // console.log(targetMonth, "target month");
@@ -150,6 +156,15 @@ export const getStudentsByCourseId = async (req, res) => {
 
     res.status(200).json(newStudents);
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET STUDENTS BY COURSE ID",
+      user: req.user,
+      functionName: getStudentsByCourseId.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
