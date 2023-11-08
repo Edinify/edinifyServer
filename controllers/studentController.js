@@ -92,8 +92,10 @@ export const getStudentsByCourseId = async (req, res) => {
   const targetYear = targetDate.getFullYear();
   const targetDayOfMonth = targetDate.getDate();
 
+  console.log(req.query);
+
   try {
-    const regexSearchQuery = new RegExp(searchQuery.trim(), "i");
+    const regexSearchQuery = new RegExp(searchQuery?.trim() || "", "i");
 
     const students = await Student.find({
       fullName: { $regex: regexSearchQuery },
@@ -101,12 +103,18 @@ export const getStudentsByCourseId = async (req, res) => {
       status: true,
       deleted: false,
     })
-      .skip(parseInt(studentsCount))
-      .limit(parseInt(studentsCount) + 30);
+      .skip(parseInt(studentsCount || 0))
+      .limit(parseInt(studentsCount || 0) + 30);
+
+    const totalLength = await Student.countDocuments({
+      fullName: { $regex: regexSearchQuery },
+      "courses.course": courseId,
+      status: true,
+      deleted: false,
+    });
 
     let checkStudent;
 
-    console.log(students);
     const newStudents = await Promise.all(
       students.map(async (student) => {
         if (role === "main") {
@@ -153,7 +161,7 @@ export const getStudentsByCourseId = async (req, res) => {
       })
     );
 
-    res.status(200).json(newStudents);
+    res.status(200).json({ students: newStudents, totalLength });
   } catch (err) {
     logger.error({
       method: "GET",
