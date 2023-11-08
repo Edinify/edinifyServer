@@ -350,7 +350,7 @@ export const getSalariesForTeacher = async (req, res) => {
     salaries.forEach((salary) => {
       participantCount += salary.participantCount;
       // bonus da id gelirdi
-      totalBonus += (salary.bonus !== null && salary.bonus.amount) || 0;
+      totalBonus += salary?.bonus?.amount || 0;
       console.log(salary);
       if (salary.teacherSalary.monthly) {
         totalSalary += salary.teacherSalary.value;
