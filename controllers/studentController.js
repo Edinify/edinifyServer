@@ -15,8 +15,8 @@ import logger from "../config/logger.js";
 // Get students
 
 export const getStudents = async (req, res) => {
-  try {
-    const students = await Student.find()
+    try {
+        const students = await Student.find()
       .select("-password")
       .populate("courses.course");
     res.status(200).json(students);
@@ -104,7 +104,8 @@ export const getStudentsByCourseId = async (req, res) => {
       deleted: false,
     })
       .skip(parseInt(studentsCount || 0))
-      .limit(parseInt(studentsCount || 0) + 30);
+      .limit(parseInt(studentsCount || 0) + 30)
+      .select("-password");
 
     const totalLength = await Student.countDocuments({
       fullName: { $regex: regexSearchQuery },
