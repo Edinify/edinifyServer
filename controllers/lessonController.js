@@ -515,9 +515,12 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
         delete dataObj.status;
 
         const students = data.students.map((item) => ({
-          ...item,
+          ...item.toObject(),
+          student: item.student._id,
           payment: item.student.payment,
         }));
+
+        console.log(students);
         return {
           ...dataObj,
           teacher: data.teacher._id,
