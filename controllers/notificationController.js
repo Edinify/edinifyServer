@@ -206,7 +206,7 @@ export const getNotificationsForAdmin = async (req, res) => {
     const notifications = await Notification.find({
       role: { $in: ["birthday", "count"] },
     })
-      .select("isViewedAdmins role")
+      .select("isViewedAdmins role createdAt")
       .populate({ path: "student", select: "fullName createdAt birthday" });
 
     res.status(200).json(notifications);

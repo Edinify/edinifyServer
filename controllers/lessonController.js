@@ -23,6 +23,7 @@ import {
 // Create lesson
 export const createLesson = async (req, res) => {
   try {
+    console.log(req.body);
     const teacher = await Teacher.findById(req.body.teacher);
 
     const newLesson = new Lesson({
@@ -67,7 +68,6 @@ export const getWeeklyLessonsForMainTable = async (req, res) => {
       role: "main",
     }).populate("teacher course students.student");
 
-    console.log(lessons);
     res.status(200).json(lessons);
   } catch (err) {
     logger.error({
@@ -314,13 +314,16 @@ export const updateLessonInMainPanel = async (req, res) => {
 
       if (feedback) {
         if (!checkFeedback) {
-          await createFeedbackByStudent({
-            teacher: lesson.teacher,
-            student: studentId,
-            lessonId: lesson._id,
-            feedback,
-            from: "student",
-          },req);
+          await createFeedbackByStudent(
+            {
+              teacher: lesson.teacher,
+              student: studentId,
+              lessonId: lesson._id,
+              feedback,
+              from: "student",
+            },
+            req
+          );
         } else if (checkFeedback.feedback !== feedback) {
           await updateFeedbackByStudent({
             ...checkFeedback.toObject(),
@@ -445,7 +448,7 @@ export const deleteLessonInTablePanel = async (req, res) => {
     );
 
     if (!deletedLesson) {
-      res.status(404).json({ message: "Lesson not found" });
+      return res.status(404).json({ message: "Lesson not found" });
     }
 
     if (deletedLesson.role === "current") {
@@ -475,7 +478,7 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
   try {
     const mainTableData = await Lesson.find({
       role: "main",
-    }).populate("teacher");
+    }).populate("teacher students.student");
 
     const currentWeekStart = new Date();
     const currentWeekEnd = new Date();
@@ -510,12 +513,21 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
         const dataObj = data.toObject();
         delete dataObj._id;
         delete dataObj.status;
+
+        const students = data.students.map((item) => ({
+          ...item.toObject(),
+          student: item.student._id,
+          payment: item.student.payment,
+        }));
+
+        console.log(students);
         return {
           ...dataObj,
           teacher: data.teacher._id,
           date: date,
           role: "current",
           salary: data.teacher.salary,
+          students: students,
         };
       })
     );
@@ -532,7 +544,7 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
       message: err.message,
       for: "CREATE CURRENT LESSONS FROM MAIN LESSONS",
       user: req.user,
-      functionName: getWeeklyLessonsForMainTable.name,
+      functionName: createCurrentLessonsFromMainLessons.name,
     });
     res.status(500).json({ message: { error: err.message } });
   }
