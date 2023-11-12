@@ -22,8 +22,10 @@ export const registerSuperAdmin = async (req, res) => {
   const { email, role } = req.body;
 
   try {
-    const existingStudent = await Student.findOne({ email });
-    const existingTeacher = await Teacher.findOne({ email });
+    const regexEmail = new RegExp(email, "i");
+
+    const existingStudent = await Student.findOne({ email: regexEmail });
+    const existingTeacher = await Teacher.findOne({ email: regexEmail });
     const existingAdmin = await Admin.findOne({ role: "super-admin" });
 
     if (existingAdmin) {
@@ -57,9 +59,11 @@ export const registerAdmin = async (req, res) => {
   const { email } = req.body;
 
   try {
-    const existingStudent = await Student.findOne({ email });
-    const existingTeacher = await Teacher.findOne({ email });
-    const existingAdmin = await Admin.findOne({ email });
+    const regexEmail = new RegExp(email, "i");
+
+    const existingStudent = await Student.findOne({ email: regexEmail });
+    const existingTeacher = await Teacher.findOne({ email: regexEmail });
+    const existingAdmin = await Admin.findOne({ email: regexEmail });
 
     if (existingStudent || existingTeacher || existingAdmin) {
       return res.status(409).json({ key: "email-already-exist" });
@@ -96,9 +100,11 @@ export const registerStudent = async (req, res) => {
   const { email, courses } = req.body;
 
   try {
-    const existingAdmin = await Admin.findOne({ email });
-    const existingStudent = await Student.findOne({ email });
-    const existingTeacher = await Teacher.findOne({ email });
+    const regexEmail = new RegExp(email, "i");
+
+    const existingAdmin = await Admin.findOne({ email: regexEmail });
+    const existingStudent = await Student.findOne({ email: regexEmail });
+    const existingTeacher = await Teacher.findOne({ email: regexEmail });
 
     if (existingAdmin || existingStudent || existingTeacher) {
       return res.status(409).json({ key: "email-already-exist" });
@@ -158,9 +164,11 @@ export const registerTeacher = async (req, res) => {
   const { email } = req.body;
 
   try {
-    const existingAdmin = await Admin.findOne({ email });
-    const existingStudent = await Student.findOne({ email });
-    const existingTeacher = await Teacher.findOne({ email });
+    const regexEmail = new RegExp(email, "i");
+
+    const existingAdmin = await Admin.findOne({ email: regexEmail });
+    const existingStudent = await Student.findOne({ email: regexEmail });
+    const existingTeacher = await Teacher.findOne({ email: regexEmail });
 
     if (existingAdmin || existingStudent || existingTeacher) {
       return res.status(409).json({ key: "email-already-exist" });
