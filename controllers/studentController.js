@@ -15,8 +15,8 @@ import logger from "../config/logger.js";
 // Get students
 
 export const getStudents = async (req, res) => {
-    try {
-        const students = await Student.find()
+  try {
+    const students = await Student.find()
       .select("-password")
       .populate("courses.course");
     res.status(200).json(students);
@@ -183,10 +183,12 @@ export const updateStudent = async (req, res) => {
   let updatedData = req.body;
 
   try {
+    const regexEmail = new RegExp(updatedData.email, "i");
+
     const student = await Student.findById(id);
-    const existingAdmin = await Admin.findOne({ email: updatedData.email });
-    const existingStudent = await Student.findOne({ email: updatedData.email });
-    const existingTeacher = await Teacher.findOne({ email: updatedData.email });
+    const existingAdmin = await Admin.findOne({ email: regexEmail });
+    const existingStudent = await Student.findOne({ email: regexEmail });
+    const existingTeacher = await Teacher.findOne({ email: regexEmail });
 
     if (
       (existingStudent && existingStudent._id != id) ||
