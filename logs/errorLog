@@ -1,1 +1,0 @@
-{"for":"CHECK OTP CODE","functionName":"checkOtpCode","level":"error","message":"getaddrinfo ENOTFOUND ac-0hphhfc-shard-00-01.za3n5ll.mongodb.net","method":"POST","postedData":{"otp":"608958"},"status":500,"timestamp":"2023-11-13T09:10:18.780Z"}

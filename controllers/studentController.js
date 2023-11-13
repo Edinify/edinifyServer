@@ -26,7 +26,12 @@ export const getStudents = async (req, res) => {
       .limit(parseInt(studentsCount || 0) + 30)
       .select("-password")
       .populate("courses.course");
-    res.status(200).json(students);
+
+    const totalLength = await Student.countDocuments({
+      fullName: { $regex: regexSearchQuery },
+    });
+
+    res.status(200).json({ students, totalLength });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
