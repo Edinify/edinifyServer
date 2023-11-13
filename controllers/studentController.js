@@ -15,8 +15,37 @@ import logger from "../config/logger.js";
 // Get students
 
 export const getStudents = async (req, res) => {
+  const { studentsCount, searchQuery } = req.query;
   try {
-    const students = await Student.find()
+    const regexSearchQuery = new RegExp(searchQuery?.trim() || "", "i");
+
+    const students = await Student.find({
+      fullName: { $regex: regexSearchQuery },
+    })
+      .skip(parseInt(studentsCount || 0))
+      .limit(parseInt(studentsCount || 0) + 30)
+      .select("-password")
+      .populate("courses.course");
+    res.status(200).json(students);
+  } catch (err) {
+    res.status(500).json({ message: { error: err.message } });
+  }
+};
+
+// Get active students
+
+export const getActiveStudents = async (req, res) => {
+  const { studentsCount, searchQuery } = req.query;
+  try {
+    const regexSearchQuery = new RegExp(searchQuery?.trim() || "", "i");
+
+    const students = await Student.find({
+      fullName: { $regex: regexSearchQuery },
+      deleted: false,
+      status: true,
+    })
+      .skip(parseInt(studentsCount || 0))
+      .limit(parseInt(studentsCount || 0) + 30)
       .select("-password")
       .populate("courses.course");
     res.status(200).json(students);
