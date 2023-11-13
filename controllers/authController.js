@@ -258,6 +258,10 @@ export const login = async (req, res) => {
       secure: true,
     });
 
+    res.on('finish', () => {
+      console.log('Response Cookies:', res.getHeaders()['set-cookie']);
+    });
+
     res.status(200).json({
       AccessToken: AccessToken,
       RefreshToken: RefreshToken,
