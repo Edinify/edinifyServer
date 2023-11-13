@@ -23,6 +23,7 @@ import {
 // Create lesson
 export const createLesson = async (req, res) => {
   try {
+    console.log(req.body);
     const teacher = await Teacher.findById(req.body.teacher);
 
     const newLesson = new Lesson({
@@ -67,7 +68,6 @@ export const getWeeklyLessonsForMainTable = async (req, res) => {
       role: "main",
     }).populate("teacher course students.student");
 
-    console.log(lessons);
     res.status(200).json(lessons);
   } catch (err) {
     logger.error({
@@ -478,7 +478,7 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
   try {
     const mainTableData = await Lesson.find({
       role: "main",
-    }).populate("teacher");
+    }).populate("teacher students.student");
 
     const currentWeekStart = new Date();
     const currentWeekEnd = new Date();
@@ -513,12 +513,21 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
         const dataObj = data.toObject();
         delete dataObj._id;
         delete dataObj.status;
+
+        const students = data.students.map((item) => ({
+          ...item.toObject(),
+          student: item.student._id,
+          payment: item.student.payment,
+        }));
+
+        console.log(students);
         return {
           ...dataObj,
           teacher: data.teacher._id,
           date: date,
           role: "current",
           salary: data.teacher.salary,
+          students: students,
         };
       })
     );

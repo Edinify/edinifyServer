@@ -47,6 +47,10 @@ const lessonSchema = new Schema(
             type: String,
             default: "",
           },
+          payment: {
+            type: Number,
+            required: true,
+          },
         },
       ],
       required: true,

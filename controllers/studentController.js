@@ -10,14 +10,62 @@ import {
 } from "./notificationController.js";
 import { Admin } from "../models/adminModel.js";
 import { Teacher } from "../models/teacherModel.js";
+import logger from "../config/logger.js";
 
 // Get students
 
 export const getStudents = async (req, res) => {
+  const { studentsCount, searchQuery } = req.query;
+
+  console.log(req.query);
   try {
-    const students = await Student.find()
+    const regexSearchQuery = new RegExp(searchQuery?.trim() || "", "i");
+
+    const students = await Student.find({
+      fullName: { $regex: regexSearchQuery },
+    })
+      .skip(parseInt(studentsCount || 0))
+      .limit(parseInt(studentsCount || 0) + 30)
       .select("-password")
       .populate("courses.course");
+
+    const totalLength = await Student.countDocuments({
+      fullName: { $regex: regexSearchQuery },
+    });
+
+    res.status(200).json({ students, totalLength });
+  } catch (err) {
+    res.status(500).json({ message: { error: err.message } });
+  }
+};
+
+// Get active students
+
+export const getActiveStudents = async (req, res) => {
+  const { studentsCount, searchQuery } = req.query;
+  const { id, role } = req.user;
+  try {
+    if (role !== "teacher") return res.status(200).json([]);
+
+    const regexSearchQuery = new RegExp(searchQuery?.trim() || "", "i");
+
+    const teacher = await Teacher.findById(id).select("courses");
+
+    const students = await Student.find({
+      fullName: { $regex: regexSearchQuery },
+      deleted: false,
+      status: true,
+      courses: {
+        $elemMatch: {
+          course: { $in: teacher.courses },
+        },
+      },
+    })
+      .skip(parseInt(studentsCount || 0))
+      .limit(parseInt(studentsCount || 0) + 30)
+      .select("-password")
+      .populate("courses.course");
+
     res.status(200).json(students);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
@@ -25,6 +73,7 @@ export const getStudents = async (req, res) => {
 };
 
 // Get students for pagination
+
 export const getStudentsForPagination = async (req, res) => {
   const { searchQuery, status } = req.query;
   const page = parseInt(req.query.page) || 1;
@@ -83,16 +132,32 @@ export const getStudentsForPagination = async (req, res) => {
 };
 
 // Get students by course id
-export const getStudentsByCourseId = async (req, res) => {
-  const { courseId, day, time, role, date } = req.query;
 
+export const getStudentsByCourseId = async (req, res) => {
+  const { courseId, day, time, role, date, studentsCount, searchQuery } =
+    req.query;
   const targetDate = new Date(date);
   const targetMonth = targetDate.getMonth() + 1;
   const targetYear = targetDate.getFullYear();
   const targetDayOfMonth = targetDate.getDate();
 
+  console.log(req.query);
+
   try {
+    const regexSearchQuery = new RegExp(searchQuery?.trim() || "", "i");
+
     const students = await Student.find({
+      fullName: { $regex: regexSearchQuery },
+      "courses.course": courseId,
+      status: true,
+      deleted: false,
+    })
+      .skip(parseInt(studentsCount || 0))
+      .limit(parseInt(studentsCount || 0) + 30)
+      .select("-password");
+
+    const totalLength = await Student.countDocuments({
+      fullName: { $regex: regexSearchQuery },
       "courses.course": courseId,
       status: true,
       deleted: false,
@@ -109,8 +174,6 @@ export const getStudentsByCourseId = async (req, res) => {
             time: time,
             role: role,
           });
-
-          console.log("main");
         } else if (role === "current") {
           // console.log(targetYear, "target year");
           // console.log(targetMonth, "target month");
@@ -148,22 +211,34 @@ export const getStudentsByCourseId = async (req, res) => {
       })
     );
 
-    res.status(200).json(newStudents);
+    res.status(200).json({ students: newStudents, totalLength });
   } catch (err) {
+    logger.error({
+      method: "GET",
+      status: 500,
+      message: err.message,
+      query: req.query,
+      for: "GET STUDENTS BY COURSE ID",
+      user: req.user,
+      functionName: getStudentsByCourseId.name,
+    });
     res.status(500).json({ message: { error: err.message } });
   }
 };
 
 // Update student
+
 export const updateStudent = async (req, res) => {
   const { id } = req.params;
   let updatedData = req.body;
 
   try {
+    const regexEmail = new RegExp(updatedData.email, "i");
+
     const student = await Student.findById(id);
-    const existingAdmin = await Admin.findOne({ email: updatedData.email });
-    const existingStudent = await Student.findOne({ email: updatedData.email });
-    const existingTeacher = await Teacher.findOne({ email: updatedData.email });
+    const existingAdmin = await Admin.findOne({ email: regexEmail });
+    const existingStudent = await Student.findOne({ email: regexEmail });
+    const existingTeacher = await Teacher.findOne({ email: regexEmail });
 
     if (
       (existingStudent && existingStudent._id != id) ||
@@ -343,6 +418,7 @@ export const updateStudentPassword = async (req, res) => {
 };
 
 // Student lesson amount
+
 export const decrementLessonAmount = async (lesson) => {
   try {
     const studentsIds = lesson.students
