@@ -16,6 +16,8 @@ import logger from "../config/logger.js";
 
 export const getStudents = async (req, res) => {
   const { studentsCount, searchQuery } = req.query;
+
+  console.log(req.query);
   try {
     const regexSearchQuery = new RegExp(searchQuery?.trim() || "", "i");
 
@@ -41,18 +43,29 @@ export const getStudents = async (req, res) => {
 
 export const getActiveStudents = async (req, res) => {
   const { studentsCount, searchQuery } = req.query;
+  const { id, role } = req.user;
   try {
+    if (role !== "teacher") return res.status(200).json([]);
+
     const regexSearchQuery = new RegExp(searchQuery?.trim() || "", "i");
+
+    const teacher = await Teacher.findById(id).select("courses");
 
     const students = await Student.find({
       fullName: { $regex: regexSearchQuery },
       deleted: false,
       status: true,
+      courses: {
+        $elemMatch: {
+          course: { $in: teacher.courses },
+        },
+      },
     })
       .skip(parseInt(studentsCount || 0))
       .limit(parseInt(studentsCount || 0) + 30)
       .select("-password")
       .populate("courses.course");
+
     res.status(200).json(students);
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
@@ -60,6 +73,7 @@ export const getActiveStudents = async (req, res) => {
 };
 
 // Get students for pagination
+
 export const getStudentsForPagination = async (req, res) => {
   const { searchQuery, status } = req.query;
   const page = parseInt(req.query.page) || 1;
@@ -118,6 +132,7 @@ export const getStudentsForPagination = async (req, res) => {
 };
 
 // Get students by course id
+
 export const getStudentsByCourseId = async (req, res) => {
   const { courseId, day, time, role, date, studentsCount, searchQuery } =
     req.query;
@@ -212,6 +227,7 @@ export const getStudentsByCourseId = async (req, res) => {
 };
 
 // Update student
+
 export const updateStudent = async (req, res) => {
   const { id } = req.params;
   let updatedData = req.body;
@@ -402,6 +418,7 @@ export const updateStudentPassword = async (req, res) => {
 };
 
 // Student lesson amount
+
 export const decrementLessonAmount = async (lesson) => {
   try {
     const studentsIds = lesson.students
