@@ -51,7 +51,6 @@ export const getActiveStudents = async (req, res) => {
 
     const teacher = await Teacher.findById(id).select("courses");
 
-    console.log(teacher, "teacher");
     const students = await Student.find({
       fullName: { $regex: regexSearchQuery },
       deleted: false,
@@ -67,7 +66,18 @@ export const getActiveStudents = async (req, res) => {
       .select("-password")
       .populate("courses.course");
 
-    res.status(200).json(students);
+    const totalLength = await Student.countDocuments({
+      fullName: { $regex: regexSearchQuery },
+      deleted: false,
+      status: true,
+      courses: {
+        $elemMatch: {
+          course: { $in: teacher.courses },
+        },
+      },
+    });
+
+    res.status(200).json({ students, totalLength });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
