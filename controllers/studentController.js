@@ -51,6 +51,7 @@ export const getActiveStudents = async (req, res) => {
 
     const teacher = await Teacher.findById(id).select("courses");
 
+    console.log(teacher, "teacher");
     const students = await Student.find({
       fullName: { $regex: regexSearchQuery },
       deleted: false,

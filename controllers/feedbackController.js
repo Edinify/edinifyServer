@@ -167,7 +167,9 @@ export const getFeedbacksForTeacher = async (req, res) => {
       };
     }
 
-    const feedbacks = await Feedback.find(filterObj);
+    const feedbacks = await Feedback.find(filterObj).populate("student");
+
+    console.log(feedbacks);
 
     res.status(200).json(feedbacks);
   } catch (err) {
