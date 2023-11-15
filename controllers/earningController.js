@@ -28,7 +28,6 @@ export const createEarnings = async (date) => {
       0
     );
 
-
     const checkEarnings = await Earning.find({
       $expr: {
         $and: [
@@ -37,7 +36,6 @@ export const createEarnings = async (date) => {
         ],
       },
     });
-
 
     const checkEarningsIds = checkEarnings.map((item) => item._id);
 
@@ -66,8 +64,6 @@ export const createEarnings = async (date) => {
     //   console.log(6);
     //   console.log(newEarnings);
     // }
-
-
 
     return newEarnings;
   } catch (err) {

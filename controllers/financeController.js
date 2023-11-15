@@ -3,27 +3,31 @@ import logger from "../config/logger.js";
 import { Earning } from "../models/earningsModel.js";
 import { Expense } from "../models/expenseModel.js";
 import { Income } from "../models/incomeModel.js";
+import { Lesson } from "../models/lessonModel.js";
 
 export const getFinance = async (req, res) => {
   const { monthCount, startDate, endDate } = req.query;
-  const targetDate = calcDate(monthCount, startDate, endDate);
 
   try {
+    let targetDate;
+
+    if (monthCount) {
+      targetDate = calcDate(monthCount);
+    } else if (startDate && endDate) {
+      targetDate = calcDateWithMonthly(startDate, endDate);
+    }
+
+    console.log(startDate, endDate);
+    console.log(targetDate, "--------");
+
     const incomes = await Income.find({
-      createdAt: {
+      date: {
         $gte: targetDate.startDate,
         $lte: targetDate.endDate,
       },
     });
 
     const expenses = await Expense.find({
-      createdAt: {
-        $gte: targetDate.startDate,
-        $lte: targetDate.endDate,
-      },
-    });
-
-    const earnings = await Earning.find({
       date: {
         $gte: targetDate.startDate,
         $lte: targetDate.endDate,
@@ -40,20 +44,29 @@ export const getFinance = async (req, res) => {
       0
     );
 
-    const totalEarnings = earnings.reduce(
-      (total, curr) => (total += curr.earnings),
+    const confirmedLessons = await Lesson.find({
+      date: {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
+      },
+      role: "current",
+      status: "confirmed",
+    });
+
+    const totalEarnings = confirmedLessons.reduce(
+      (total, lesson) => total + lesson.earnings,
       0
     );
 
-    const turnover = totalIncome > totalEarnings ? totalEarnings : totalIncome;
+    const turnover = totalEarnings;
 
     const profit = turnover - totalExpense;
 
     const result = {
-      income: totalIncome,
-      expense: totalExpense,
-      turnover: turnover,
-      profit: profit,
+      income: totalIncome.toFixed(2),
+      expense: totalExpense.toFixed(2),
+      turnover: turnover.toFixed(2),
+      profit: profit.toFixed(2),
     };
 
     res.status(200).json(result);
@@ -84,24 +97,26 @@ export const getChartData = async (req, res) => {
     }
 
     const incomes = await Income.find({
-      createdAt: {
+      date: {
         $gte: targetDate.startDate,
         $lte: targetDate.endDate,
       },
     });
 
     const expenses = await Expense.find({
-      createdAt: {
+      date: {
         $gte: targetDate.startDate,
         $lte: targetDate.endDate,
       },
     });
 
-    const earnings = await Earning.find({
+    const confirmedLessons = await Lesson.find({
       date: {
         $gte: targetDate.startDate,
         $lte: targetDate.endDate,
       },
+      role: "current",
+      status: "confirmed",
     });
 
     const months = [];
@@ -126,10 +141,10 @@ export const getChartData = async (req, res) => {
           expense.date?.getFullYear() === targetYear
       );
 
-      const filteredEarnings = earnings.filter(
-        (earning) =>
-          earning.date?.getMonth() === targetMonth &&
-          earning.date?.getFullYear() === targetYear
+      const filteredLessons = confirmedLessons.filter(
+        (lesson) =>
+          lesson.date?.getMonth() === targetMonth &&
+          lesson.date?.getFullYear() === targetYear
       );
 
       const totalIncome = filteredIncomes.reduce(
@@ -142,13 +157,12 @@ export const getChartData = async (req, res) => {
         0
       );
 
-      const totalEarnings = filteredEarnings.reduce(
-        (total, curr) => (total += curr.earnings),
+      const totalEarnings = filteredLessons.reduce(
+        (total, lesson) => total + lesson.earnings,
         0
       );
 
-      const turnover =
-        totalIncome > totalEarnings ? totalEarnings : totalIncome;
+      const turnover = totalEarnings;
 
       const profit = turnover - totalExpense;
 
@@ -157,10 +171,10 @@ export const getChartData = async (req, res) => {
       }).format(targetDate.startDate);
 
       months.push({ month: monthName, year: targetYear });
-      chartIncome.push(totalIncome);
-      chartExpense.push(totalExpense);
-      chartTurnover.push(turnover);
-      chartProfit.push(profit);
+      chartIncome.push(totalIncome.toFixed(2));
+      chartExpense.push(totalExpense.toFixed(2));
+      chartTurnover.push(turnover.toFixed(2));
+      chartProfit.push(profit.toFixed(2));
 
       targetDate.startDate.setMonth(targetDate.startDate.getMonth() + 1);
     }

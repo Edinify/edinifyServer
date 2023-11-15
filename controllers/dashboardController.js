@@ -1,7 +1,6 @@
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import logger from "../config/logger.js";
 import { Course } from "../models/courseModel.js";
-import { Earning } from "../models/earningsModel.js";
 import { Expense } from "../models/expenseModel.js";
 import { Income } from "../models/incomeModel.js";
 import { Leaderboard } from "../models/leaderboardModel.js";
@@ -16,6 +15,7 @@ export const getConfirmedLessonsCount = async (req, res) => {
   try {
     const confirmedCount = await Lesson.countDocuments({
       status: "confirmed",
+      role: "current",
       date: {
         $gte: targetDate.startDate,
         $lte: targetDate.endDate,
@@ -43,6 +43,7 @@ export const getCancelledLessonsCount = async (req, res) => {
   try {
     const cancelledCount = await Lesson.countDocuments({
       status: "cancelled",
+      role: "current",
       date: {
         $gte: targetDate.startDate,
         $lte: targetDate.endDate,
@@ -112,30 +113,21 @@ export const getUnviewedLessons = async (req, res) => {
 
 export const getFinance = async (req, res) => {
   const targetDate = calcDate(1);
-  console.log(targetDate.startDate, targetDate.endDate);
+
   try {
     const incomes = await Income.find({
-      createdAt: {
-        $gte: targetDate.startDate,
-        $lte: targetDate.endDate,
-      },
-    });
-
-    const expenses = await Expense.find({
-      createdAt: {
-        $gte: targetDate.startDate,
-        $lte: targetDate.endDate,
-      },
-    });
-
-    const earnings = await Earning.find({
       date: {
         $gte: targetDate.startDate,
         $lte: targetDate.endDate,
       },
     });
 
-    console.log(earnings)
+    const expenses = await Expense.find({
+      date: {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
+      },
+    });
 
     const totalIncome = incomes.reduce(
       (total, income) => (total += income.amount),
@@ -147,20 +139,29 @@ export const getFinance = async (req, res) => {
       0
     );
 
-    const totalEarnings = earnings.reduce(
-      (total, curr) => (total += curr.earnings),
+    const confirmedLessons = await Lesson.find({
+      date: {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
+      },
+      status: "confirmed",
+      role: "current",
+    });
+
+    const totalEarnings = confirmedLessons.reduce(
+      (total, lesson) => total + lesson.earnings,
       0
     );
 
-    const turnover = totalIncome > totalEarnings ? totalEarnings : totalIncome;
+    const turnover = totalEarnings;
 
     const profit = turnover - totalExpense;
 
     const result = {
-      income: totalIncome,
-      expense: totalExpense,
-      turnover: turnover,
-      profit: profit,
+      income: totalIncome.toFixed(2),
+      expense: totalExpense.toFixed(2),
+      turnover: turnover.toFixed(2),
+      profit: profit.toFixed(2),
     };
 
     res.status(200).json(result);
@@ -269,7 +270,6 @@ export const getTachersResults = async (req, res) => {
   const { monthCount, startDate, endDate, byFilter } = req.query;
   let targetDate;
 
-  console.log(req.query);
   try {
     if (monthCount) {
       targetDate = calcDate(monthCount);
@@ -277,7 +277,6 @@ export const getTachersResults = async (req, res) => {
       targetDate = calcDateWithMonthly(startDate, endDate);
     }
 
-    console.log(targetDate.startDate, targetDate.endDate);
     const teachers = await Teacher.find().select("_id fullName");
     const leaderboardData = await Leaderboard.find({
       date: {

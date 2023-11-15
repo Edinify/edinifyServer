@@ -383,7 +383,7 @@ export const updateLessonInMainPanel = async (req, res) => {
     // Calculate updated lesson earnings
     const earnings = updatedLesson.students.reduce((total, curr) => {
       if (curr.attendance === 1 || curr.attendance === -1) {
-        return (total += curr.student.payment);
+        return total + curr.payment;
       } else {
         return total;
       }
