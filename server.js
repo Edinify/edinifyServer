@@ -28,7 +28,6 @@ import {
 } from "./controllers/notificationController.js";
 import { calcDate } from "./calculate/calculateDate.js";
 import { getUnviewedLessons } from "./controllers/dashboardController.js";
-import { createSalariesAtEachMonth } from "./controllers/salaryController.js";
 
 import cron from "node-cron";
 import logger from "./config/logger.js";
@@ -92,9 +91,6 @@ mongoose
       // deleteNotificationsForBirthday()
       // });
 
-      // cron.schedule("0 0 * * *", () => {
-      //   createSalariesAtEachMonth();
-      // });
     });
   })
   .catch((err) => console.log(err));

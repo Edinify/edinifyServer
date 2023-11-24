@@ -436,6 +436,9 @@ export const decrementLessonAmount = async (lesson) => {
       .filter((item) => item.attendance !== 2)
       .map((item) => item.student._id);
 
+    console.log(lesson);
+    console.log(studentsIds);
+
     await Student.updateMany(
       {
         _id: { $in: studentsIds },
@@ -452,9 +455,11 @@ export const decrementLessonAmount = async (lesson) => {
       { $inc: { "courses.$.lessonAmount": -1 } }
     );
 
-    console.log(updatedStudent);
-
-    if (!updatedStudent.acknowledged || updatedStudent.modifiedCount < 1) {
+    if (
+      !updatedStudent.acknowledged ||
+      updatedStudent.modifiedCount !== studentsIds.length
+    ) {
+      console.log("salam error");
       return false;
     }
 
@@ -495,7 +500,7 @@ export const incrementLessonAmount = async (lesson) => {
 
     if (
       !updatedStudent.acknowledged ||
-      updatedStudent.modifiedCount < studentsIds.length
+      updatedStudent.modifiedCount !== studentsIds.length
     ) {
       return false;
     }
@@ -505,6 +510,89 @@ export const incrementLessonAmount = async (lesson) => {
     });
 
     deleteNotificationForLessonCount(targetStudents);
+
+    return true;
+  } catch (err) {
+    console.log(err);
+    return false;
+  }
+};
+
+export const icrementAndDecrementLessonAmount = async (
+  oldLesson,
+  newLesson
+) => {
+  try {
+    const oldStudents = oldLesson.students.map((item) => item);
+    const newStudents = newLesson.students.map((item) => item);
+
+    const incrementedStudentsIds = newStudents
+      .filter(
+        (newItem) =>
+          newItem.attendance === 2 &&
+          oldStudents.find(
+            (oldItem) => oldItem._id.toString() == newItem._id.toString()
+          )?.attendance !== 2
+      )
+      .map((item) => item.student._id);
+
+    const decrementedStudentsIds = newStudents
+      .filter(
+        (newItem) =>
+          newItem.attendance !== 2 &&
+          oldStudents.find(
+            (oldItem) => oldItem._id.toString() == newItem._id.toString()
+          )?.attendance === 2
+      )
+      .map((item) => item.student._id);
+
+    await Student.updateMany(
+      {
+        _id: { $in: [...incrementedStudentsIds, ...decrementedStudentsIds] },
+        "courses.course": { $ne: newLesson.course._id },
+      },
+      {
+        $addToSet: {
+          courses: { course: newLesson.course._id, lessonAmount: 0 },
+        },
+      }
+    );
+
+    const updatedIncStudent = await Student.updateMany(
+      {
+        _id: { $in: decrementedStudentsIds },
+        "courses.course": newLesson.course._id,
+      },
+      { $inc: { "courses.$.lessonAmount": -1 } }
+    );
+
+    const updatedDecStudent = await Student.updateMany(
+      {
+        _id: { $in: incrementedStudentsIds },
+        "courses.course": newLesson.course._id,
+      },
+      { $inc: { "courses.$.lessonAmount": 1 } }
+    );
+
+    if (
+      !updatedIncStudent.acknowledged ||
+      !updatedDecStudent.acknowledged ||
+      updatedIncStudent.modifiedCount !== decrementedStudentsIds.length ||
+      updatedDecStudent.modifiedCount !== incrementedStudentsIds.length
+    ) {
+      return false;
+    }
+
+    const targetIncStudents = await Student.find({
+      _id: { $in: incrementedStudentsIds },
+    });
+
+    const targetDecStudents = await Student.find({
+      _id: { $in: decrementedStudentsIds },
+    });
+
+    createNotificationForLessonsCount(targetDecStudents);
+    deleteNotificationForLessonCount(targetIncStudents);
 
     return true;
   } catch (err) {

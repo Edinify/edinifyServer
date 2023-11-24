@@ -1,6 +1,5 @@
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import logger from "../config/logger.js";
-import { Earning } from "../models/earningsModel.js";
 import { Expense } from "../models/expenseModel.js";
 import { Income } from "../models/incomeModel.js";
 import { Lesson } from "../models/lessonModel.js";
