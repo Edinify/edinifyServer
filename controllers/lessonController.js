@@ -3,20 +3,18 @@ import { Feedback } from "../models/feedbackModel.js";
 import { Lesson } from "../models/lessonModel.js";
 import { Student } from "../models/studentModel.js";
 import { Teacher } from "../models/teacherModel.js";
-import { createEarnings } from "./earningController.js";
 import {
   createFeedbackByStudent,
   deleteFeedbackByStudent,
   updateFeedbackByStudent,
 } from "./feedbackController.js";
-import { createOrUpdaeteLeadboard } from "./leadboardController.js";
 import {
   createNotificationForUpdate,
   deleteNotificationForUpdateTable,
 } from "./notificationController.js";
-import { updateSalaryWhenUpdateLesson } from "./salaryController.js";
 import {
   decrementLessonAmount,
+  icrementAndDecrementLessonAmount,
   incrementLessonAmount,
 } from "./studentController.js";
 
@@ -349,16 +347,6 @@ export const updateLessonInMainPanel = async (req, res) => {
         { new: true }
       ).populate("teacher course students.student");
 
-      const newSalary = updateSalaryWhenUpdateLesson(updatedLesson);
-      const newEarning = createEarnings(lesson.date);
-      const newLeaderboard = createOrUpdaeteLeadboard(updatedLesson);
-
-      if (!newSalary || !newEarning || !newLeaderboard) {
-        await Lesson.findByIdAndUpdate(lesson);
-
-        return res.status(400).json({ key: "create-error-occurred" });
-      }
-
       const updatedLessonObj = updatedLesson.toObject();
 
       const lessonWithOneStudent = {
@@ -383,7 +371,7 @@ export const updateLessonInMainPanel = async (req, res) => {
     // Calculate updated lesson earnings
     const earnings = updatedLesson.students.reduce((total, curr) => {
       if (curr.attendance === 1 || curr.attendance === -1) {
-        return (total += curr.student.payment);
+        return total + curr.payment;
       } else {
         return total;
       }
@@ -398,7 +386,10 @@ export const updateLessonInMainPanel = async (req, res) => {
 
       if (!updatedStudents) {
         await Lesson.findByIdAndUpdate(lesson._id, lesson);
-        return res.status(400).json({ key: "create-error-occurred" });
+        return res.status(400).json({
+          key: "create-error-occurred",
+          message: "error in increment lesson amount",
+        });
       }
     } else if (
       lesson.status !== "confirmed" &&
@@ -408,18 +399,27 @@ export const updateLessonInMainPanel = async (req, res) => {
 
       if (!updatedStudents) {
         await Lesson.findByIdAndUpdate(lesson._id, lesson);
-        return res.status(400).json({ key: "create-error-occurred" });
+        return res.status(400).json({
+          key: "create-error-occurred",
+          message: "error in decrementLessonAmount",
+        });
       }
-    }
+    } else if (
+      lesson.status === "confirmed" &&
+      updatedLesson.status === "confirmed"
+    ) {
+      const updatedStudents = await icrementAndDecrementLessonAmount(
+        lesson,
+        updatedLesson
+      );
 
-    const newSalary = updateSalaryWhenUpdateLesson(updatedLesson);
-    const newEarning = createEarnings(lesson.date);
-    const newLeaderboard = createOrUpdaeteLeadboard(updatedLesson);
-
-    if (!newSalary || !newEarning || !newLeaderboard) {
-      await Lesson.findByIdAndUpdate(lesson);
-
-      return res.status(400).json({ key: "create-error-occurred" });
+      if (!updatedStudents) {
+        await Lesson.findByIdAndUpdate(lesson._id, lesson);
+        return res.status(400).json({
+          key: "create-error-occurred",
+          message: "error in icrement and decrement lessonAmount ",
+        });
+      }
     }
 
     res.status(200).json(updatedLesson);

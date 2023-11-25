@@ -12,7 +12,6 @@ import {
   createNotificationForLessonsCount,
   createNotificationForOneStudentLessonsCount,
 } from "./notificationController.js";
-import { createSalaryWhenCreateTeacher } from "./salaryController.js";
 import logger from "../config/logger.js";
 
 dotenv.config();
@@ -182,13 +181,7 @@ export const registerTeacher = async (req, res) => {
     await teacher.populate("courses");
     await teacher.save();
 
-    const newSalary = createSalaryWhenCreateTeacher(teacher);
 
-    if (!newSalary) {
-      Teacher.findByIdAndDelete(teacher._id);
-
-      return res.status(400).json({ key: "create-error-occurred" });
-    }
 
     await Course.updateMany(
       { _id: { $in: coursesId } },
@@ -245,6 +238,10 @@ export const login = async (req, res) => {
       path: "/api/user/auth/refresh_token",
       sameSite: "None",
       secure: true,
+    });
+
+    res.on("finish", () => {
+      console.log("Response Cookies:", res.getHeaders()["set-cookie"]);
     });
 
 
