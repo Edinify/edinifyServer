@@ -6,6 +6,7 @@ import {
   updateStudentPassword,
   getStudentsByCourseId,
   getStudentsForPagination,
+  getActiveStudents,
 } from "../controllers/studentController.js";
 import { authMiddleware, checkAdminAndSuperAdmin } from "../middleware/auth.js";
 
@@ -24,6 +25,7 @@ router.get(
   checkAdminAndSuperAdmin,
   getStudentsByCourseId
 );
+router.get("/active", authMiddleware, getActiveStudents);
 router.patch("/:id", authMiddleware, checkAdminAndSuperAdmin, updateStudent);
 router.delete("/:id", authMiddleware, checkAdminAndSuperAdmin, deleteStudent);
 router.patch("/me/password", authMiddleware, updateStudentPassword);

@@ -1,6 +1,5 @@
-import { calcDateWithMonthly } from "../calculate/calculateDate.js";
+import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import { Lesson } from "../models/lessonModel.js";
-import { Salary } from "../models/salaryModel.js";
 import { Teacher } from "../models/teacherModel.js";
 
 // CREATE SALARY
@@ -23,7 +22,7 @@ export const createSalariesAtEachMonth = async () => {
 
     console.log("success create salary with cron");
   } catch (err) {
-    // console.log(err);
+    console.log(err);
   }
 };
 
@@ -34,9 +33,10 @@ export const createSalaryWhenCreateTeacher = async (teacher) => {
       teacherId: teacher._id,
       teacherSalary: teacher.salary,
     });
-    console.log("success");
+
+    return newSalary;
   } catch (err) {
-    // console.log(err);
+    console.log(err);
   }
 };
 
@@ -202,7 +202,7 @@ export const updateSalaryWhenUpdateLesson = async (lesson) => {
 
     return updatedSalary;
   } catch (err) {
-    // console.log(err);
+    console.log(err);
   }
 };
 
@@ -213,14 +213,20 @@ export const getSalariesForAdmins = async (req, res) => {
   const limit = 10;
 
   try {
+    let targetDate;
     let teachers;
     let totalPages;
-    let salaries;
     let result;
-    let filterObj = {};
 
+    if (startDate && endDate) {
+      targetDate = calcDate(null, startDate, endDate);
+    } else {
+      targetDate = calcDateWithMonthly(startDate, endDate);
+    }
+
+    console.log(targetDate);
     if (searchQuery && searchQuery.trim() !== "") {
-      // console.log("check search");
+      console.log("check search");
       const regexSearchQuery = new RegExp(searchQuery, "i");
 
       const teachersCount = await Teacher.countDocuments({
@@ -244,79 +250,68 @@ export const getSalariesForAdmins = async (req, res) => {
         .limit(limit);
     }
 
-    const teachersIds = teachers.map((teacher) => teacher._id);
+    result = await Promise.all(
+      teachers.map(async (teacher) => {
+        let targetMonth;
 
-    filterObj.teacherId = {
-      $in: teachersIds,
-    };
+        const targetLessons = await Lesson.find({
+          teacher: teacher._id,
+          status: "confirmed",
+          role: "current",
+          date: {
+            $gte: targetDate.startDate,
+            $lte: targetDate.endDate,
+          },
+        });
 
-    if (startDate && endDate) {
-      const targetStartDate = new Date(startDate);
-      const targetEndDate = new Date(endDate);
+        console.log(teacher.fullName);
+        console.log(targetLessons);
 
-      targetStartDate.setDate(1);
-      targetEndDate.setMonth(targetEndDate.getMonth() + 1);
-      targetEndDate.setDate(0);
+        let totalConfirmed = targetLessons.length;
+        let totalCancelled = await Lesson.countDocuments({
+          teacher: teacher._id,
+          role: "current",
+          status: "cancelled",
+          date: {
+            $gte: targetDate.startDate,
+            $lte: targetDate.endDate,
+          },
+        });
+        let totalSalary = 0;
+        let participantCount = 0;
+        let totalBonus = 0;
 
-      targetStartDate.setHours(0, 0, 0, 0);
-      targetEndDate.setHours(23, 59, 59, 999);
+        targetLessons?.forEach((lesson) => {
+          participantCount += lesson.students.filter(
+            (item) => item.attendance === 1 || item.attendance === -1
+          ).length;
 
-      filterObj.date = {
-        $gte: targetStartDate,
-        $lte: targetEndDate,
-      };
-    } else {
-      const targetDate = new Date();
-      const targetYear = targetDate.getFullYear();
-      const targetMonth = targetDate.getMonth() + 1;
+          if (lesson.salary.monthly) {
+            if (targetMonth !== lesson.date.getMonth()) {
+              totalSalary += lesson.salary.value;
+              targetMonth = lesson.date.getMonth();
+            }
+          } else if (lesson.salary.hourly) {
+            totalSalary +=
+              lesson.salary.value *
+              lesson.students.filter(
+                (item) => item.attendance === 1 || item.attendance === -1
+              ).length;
+          }
+        });
 
-      filterObj.$expr = {
-        $and: [
-          { $eq: [{ $year: "$date" }, targetYear] },
-          { $eq: [{ $month: "$date" }, targetMonth] },
-        ],
-      };
-    }
-
-    salaries = await Salary.find(filterObj).populate("bonus");
-
-    result = teachers.map((teacher) => {
-      const targetSalaries = salaries.filter(
-        (salary) => salary.teacherId.toString() === teacher._id.toString()
-      );
-
-      let totalConfirmed = 0;
-      let totalCancelled = 0;
-      let totalSalary = 0;
-      let participantCount = 0;
-      let totalBonus = 0;
-
-      console.log(targetSalaries);
-
-      targetSalaries.forEach((salary) => {
-        totalConfirmed += salary.confirmedCount;
-        totalCancelled += salary.cancelledCount;
-        participantCount += salary.participantCount;
-        totalBonus += salary.bonus?.amount || 0;
-
-        if (salary.teacherSalary.monthly) {
-          totalSalary += salary.teacherSalary.value;
-        } else if (salary.teacherSalary.hourly) {
-          totalSalary += salary.teacherSalary.value * salary.participantCount;
-        }
-      });
-
-      return {
-        _id: teacher._id,
-        teacherName: teacher.fullName,
-        salary: teacher.salary,
-        totalSalary: totalSalary,
-        confirmedCount: totalConfirmed,
-        cancelledCount: totalCancelled,
-        participantCount: participantCount,
-        bonus: totalBonus,
-      };
-    });
+        return {
+          _id: teacher._id,
+          teacherName: teacher.fullName,
+          salary: teacher.salary,
+          totalSalary: totalSalary,
+          confirmedCount: totalConfirmed,
+          cancelledCount: totalCancelled,
+          participantCount: participantCount,
+          bonus: totalBonus,
+        };
+      })
+    );
 
     res.status(200).json({ salaries: result, totalPages });
   } catch (err) {
@@ -325,23 +320,23 @@ export const getSalariesForAdmins = async (req, res) => {
 };
 
 export const getSalariesForTeacher = async (req, res) => {
-  const { startDate, endDate } = req.query;
+  const { startDate, endDate, monthCount } = req.query;
   const { id } = req.user;
-  console.log(req.user);
-  try {
-    const targetDate = calcDateWithMonthly(startDate, endDate);
 
+  try {
+    let targetMonth;
+    let targetDate = calcDate(monthCount, startDate, endDate);
     const teacher = await Teacher.findById(id);
-    let salaries;
-    let filterObj = {
-      teacherId: id,
+
+    const confirmedLessons = await Lesson.find({
+      teacher: id,
+      role: "current",
+      status: "confirmed",
       date: {
         $gte: targetDate.startDate,
         $lte: targetDate.endDate,
       },
-    };
-
-    salaries = await Salary.find(filterObj).populate("bonus");
+    });
 
     let totalSalary = 0;
     let participantCount = 0;
@@ -349,9 +344,7 @@ export const getSalariesForTeacher = async (req, res) => {
 
     salaries.forEach((salary) => {
       participantCount += salary.participantCount;
-      // bonus da id gelirdi
-      totalBonus += (salary.bonus !== null && salary.bonus.amount) || 0;
-      console.log(salary);
+      totalBonus += salary?.bonus?.amount || 0;
       if (salary.teacherSalary.monthly) {
         totalSalary += salary.teacherSalary.value;
       } else if (salary.teacherSalary.hourly) {

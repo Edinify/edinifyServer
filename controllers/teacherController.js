@@ -1,9 +1,7 @@
 import { Lesson } from "../models/lessonModel.js";
 import { Teacher } from "../models/teacherModel.js";
 import bcrypt from "bcrypt";
-import { updateSalaryWhenUpdateTeacher } from "./salaryController.js";
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
-import { Leaderboard } from "../models/leaderboardModel.js";
 import { Admin } from "../models/adminModel.js";
 import { Student } from "../models/studentModel.js";
 
@@ -132,13 +130,6 @@ export const updateTeacher = async (req, res) => {
       return res.status(404).json({ message: "Teacher not found" });
     }
 
-    const updatedSalary = updateSalaryWhenUpdateTeacher(updatedTeacher);
-
-    if (!updatedSalary) {
-      await Teacher.findByIdAndUpdate(teacher._id, teacher);
-
-      return res.status(400).json({ key: "create-error-occurred" });
-    }
 
     if (teacher.status && !updatedTeacher.status) {
       const firstDayCurrWeek = new Date();
@@ -402,43 +393,45 @@ export const getTeacherLeadboardOrder = async (req, res) => {
   const { monthCount, startDate, endDate, byFilter } = req.query;
   const { id } = req.user;
 
-  let targetDate;
+  const targetDate = calcDate(monthCount, startDate, endDate);
+
   try {
-    if (monthCount) {
-      targetDate = calcDate(monthCount);
-    } else if (startDate && endDate) {
-      targetDate = calcDateWithMonthly(startDate, endDate);
-    }
-
     const teachers = await Teacher.find().select("_id fullName");
-    const leaderboardData = await Leaderboard.find({
-      date: {
-        $gte: targetDate.startDate,
-        $lte: targetDate.endDate,
-      },
-    });
 
-    const teachersResultsList = teachers.map((teacher) => {
-      const targetLeaderboardData = leaderboardData.filter(
-        (item) => item.teacherId.toString() == teacher._id.toString()
-      );
+    const teachersResultsList = await Promise.all(
+      teachers.map(async (teacher) => {
+        const confirmedLessons = await Lesson.find({
+          teacher: teacher._id,
+          role: "current",
+          status: "confirmed",
+          date: {
+            $gte: targetDate.startDate,
+            $lte: targetDate.endDate,
+          },
+        }).select("students");
 
-      const totalLessonCount = targetLeaderboardData.reduce(
-        (total, item) => (total += item.lessonCount),
-        0
-      );
+        const totalLessonsCount = confirmedLessons.reduce(
+          (total, lesson) =>
+            total +
+            lesson.students.filter((item) => item.attendance === 1).length,
+          0
+        );
+        const totalStarsCount = confirmedLessons.reduce(
+          (total, lesson) =>
+            total +
+            lesson.students
+              .filter((item) => item.attendance === 1)
+              .reduce((total, item) => total + item.ratingByStudent, 0),
+          0
+        );
 
-      const totalStarCount = targetLeaderboardData.reduce(
-        (total, item) => (total += item.starCount),
-        0
-      );
-
-      return {
-        teacher,
-        lessonCount: totalLessonCount,
-        starCount: totalStarCount,
-      };
-    });
+        return {
+          teacher,
+          lessonCount: totalLessonsCount,
+          starCount: totalStarsCount,
+        };
+      })
+    );
 
     if (byFilter === "lessonCount") {
       teachersResultsList.sort((a, b) => b.lessonCount - a.lessonCount);

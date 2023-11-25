@@ -12,7 +12,6 @@ import {
   createNotificationForLessonsCount,
   createNotificationForOneStudentLessonsCount,
 } from "./notificationController.js";
-import { createSalaryWhenCreateTeacher } from "./salaryController.js";
 import logger from "../config/logger.js";
 
 dotenv.config();
@@ -22,8 +21,10 @@ export const registerSuperAdmin = async (req, res) => {
   const { email, role } = req.body;
 
   try {
-    const existingStudent = await Student.findOne({ email });
-    const existingTeacher = await Teacher.findOne({ email });
+    const regexEmail = new RegExp(email, "i");
+
+    const existingStudent = await Student.findOne({ email: regexEmail });
+    const existingTeacher = await Teacher.findOne({ email: regexEmail });
     const existingAdmin = await Admin.findOne({ role: "super-admin" });
 
     if (existingAdmin) {
@@ -57,9 +58,11 @@ export const registerAdmin = async (req, res) => {
   const { email } = req.body;
 
   try {
-    const existingStudent = await Student.findOne({ email });
-    const existingTeacher = await Teacher.findOne({ email });
-    const existingAdmin = await Admin.findOne({ email });
+    const regexEmail = new RegExp(email, "i");
+
+    const existingStudent = await Student.findOne({ email: regexEmail });
+    const existingTeacher = await Teacher.findOne({ email: regexEmail });
+    const existingAdmin = await Admin.findOne({ email: regexEmail });
 
     if (existingStudent || existingTeacher || existingAdmin) {
       return res.status(409).json({ key: "email-already-exist" });
@@ -96,9 +99,11 @@ export const registerStudent = async (req, res) => {
   const { email, courses } = req.body;
 
   try {
-    const existingAdmin = await Admin.findOne({ email });
-    const existingStudent = await Student.findOne({ email });
-    const existingTeacher = await Teacher.findOne({ email });
+    const regexEmail = new RegExp(email, "i");
+
+    const existingAdmin = await Admin.findOne({ email: regexEmail });
+    const existingStudent = await Student.findOne({ email: regexEmail });
+    const existingTeacher = await Teacher.findOne({ email: regexEmail });
 
     if (existingAdmin || existingStudent || existingTeacher) {
       return res.status(409).json({ key: "email-already-exist" });
@@ -158,9 +163,11 @@ export const registerTeacher = async (req, res) => {
   const { email } = req.body;
 
   try {
-    const existingAdmin = await Admin.findOne({ email });
-    const existingStudent = await Student.findOne({ email });
-    const existingTeacher = await Teacher.findOne({ email });
+    const regexEmail = new RegExp(email, "i");
+
+    const existingAdmin = await Admin.findOne({ email: regexEmail });
+    const existingStudent = await Student.findOne({ email: regexEmail });
+    const existingTeacher = await Teacher.findOne({ email: regexEmail });
 
     if (existingAdmin || existingStudent || existingTeacher) {
       return res.status(409).json({ key: "email-already-exist" });
@@ -174,13 +181,7 @@ export const registerTeacher = async (req, res) => {
     await teacher.populate("courses");
     await teacher.save();
 
-    const newSalary = createSalaryWhenCreateTeacher(teacher);
 
-    if (!newSalary) {
-      Teacher.findByIdAndDelete(teacher._id);
-
-      return res.status(400).json({ key: "create-error-occurred" });
-    }
 
     await Course.updateMany(
       { _id: { $in: coursesId } },
@@ -236,6 +237,10 @@ export const login = async (req, res) => {
       path: "/api/user/auth/refresh_token",
       sameSite: "Lax",
       secure: true,
+    });
+
+    res.on("finish", () => {
+      console.log("Response Cookies:", res.getHeaders()["set-cookie"]);
     });
 
 
@@ -515,6 +520,7 @@ const revokeTokenFromDatabase = async (id) => {
   }
   
 };
+// 
 
 // Get user
 export const getUser = async (req, res) => {
