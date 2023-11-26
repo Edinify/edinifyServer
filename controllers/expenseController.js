@@ -2,7 +2,7 @@
 import { calcDate } from "../calculate/calculateDate.js";
 import logger from "../config/logger.js";
 import { Expense } from "../models/expenseModel.js";
-// 
+
 // Get expenses for pagination
 export const getExpensesForPagination = async (req, res) => {
   const { monthCount, startDate, endDate, category, sort } = req.query;

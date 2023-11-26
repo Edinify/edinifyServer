@@ -1,6 +1,6 @@
 //
 import { Lesson } from "../models/lessonModel.js";
-// 
+
 // Get update button disable status
 export const getUpdateButtonStatus = async (req, res) => {
   const currentDate = new Date();
@@ -20,7 +20,7 @@ export const getUpdateButtonStatus = async (req, res) => {
       },
     });
 
-    // console.log(currentLessonsCount);
+    console.log(currentLessonsCount);
 
     const disabled = currentLessonsCount > 0;
 

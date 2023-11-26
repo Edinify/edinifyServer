@@ -25,12 +25,12 @@ export const createFeedbackByTeacher = async (req, res) => {
     res.status(500).json({ message: { error: err.message } });
   }
 };
-// 
+
 export const createFeedbackByStudent = async (feedback, req) => {
   try {
     await Feedback.create(feedback);
 
-    // console.log({ message: "feedback created succuessfully" });
+    console.log({ message: "feedback created succuessfully" });
   } catch (err) {
     logger.error({
       method: "POST",
@@ -228,7 +228,7 @@ export const updateFeedbackByStudent = async (feedback) => {
       throw new Error("feedback not found");
     }
   } catch (err) {
-    // console.log({ message: err.message });
+    console.log({ message: err.message });
   }
 };
 
@@ -266,6 +266,6 @@ export const deleteFeedbackByStudent = async (id) => {
       throw new Error("feedback not found");
     }
   } catch (err) {
-    // console.log({ message: err.message });
+    console.log({ message: err.message });
   }
 };
