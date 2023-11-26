@@ -1,6 +1,6 @@
 import logger from "../config/logger.js";
 import { Course } from "../models/courseModel.js";
-
+// 
 // Get courses
 export const getCourses = async (req, res) => {
   try {

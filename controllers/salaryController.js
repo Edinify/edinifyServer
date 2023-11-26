@@ -1,7 +1,7 @@
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import { Lesson } from "../models/lessonModel.js";
 import { Teacher } from "../models/teacherModel.js";
-
+// 
 // Get salaries
 export const getSalariesForAdmins = async (req, res) => {
   const { startDate, endDate, searchQuery } = req.query;

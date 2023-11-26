@@ -441,7 +441,7 @@ export const updateLessonInMainPanel = async (req, res) => {
 // Delete lesson in table panel
 export const deleteLessonInTablePanel = async (req, res) => {
   const { id } = req.params;
-
+// 
   try {
     const deletedLesson = await Lesson.findByIdAndDelete(id).populate(
       "teacher students.student"

@@ -1,5 +1,5 @@
 import { ProfileImage } from "../models/profileImageModel.js";
-
+// 
 // Get profile image
 export const getProfileImage = async (req, res) => {
   const { id } = req.user;
