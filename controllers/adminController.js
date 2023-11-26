@@ -200,3 +200,4 @@ export const updateAdminPasswordWithoutCheckingOldPassword = async (
     res.status(500).json({ message: { error: err.message } });
   }
 };
+// 
