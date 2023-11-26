@@ -7,7 +7,7 @@ import { Income } from "../models/incomeModel.js";
 import { Lesson } from "../models/lessonModel.js";
 import { Student } from "../models/studentModel.js";
 import { Teacher } from "../models/teacherModel.js";
-// 
+
 export const getConfirmedLessonsCount = async (req, res) => {
   const { startDate, endDate, monthCount } = req.query;
   const targetDate = calcDate(monthCount, startDate, endDate);
@@ -219,7 +219,6 @@ export const getCoursesStatistics = async (req, res) => {
 
 export const getAdvertisingStatistics = async (req, res) => {
   const { monthCount, startDate, endDate } = req.query;
-  // console.log(req.query);
   const targetDate = calcDate(monthCount, startDate, endDate);
   try {
     const students = await Student.find({
@@ -251,7 +250,7 @@ export const getAdvertisingStatistics = async (req, res) => {
         value,
       };
     });
-    // console.log(result);
+
     res.status(200).json(result);
   } catch (err) {
     logger.error({

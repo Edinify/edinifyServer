@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import { Admin } from "../models/adminModel.js";
 import { Student } from "../models/studentModel.js";
-// 
+
 // Get teachers
 
 export const getAllTeachers = async (req, res) => {
@@ -223,7 +223,7 @@ export const deleteTeacher = async (req, res) => {
 export const updateTeacherPassword = async (req, res) => {
   const { oldPassword, newPassword } = req.body;
   const { id } = req.user;
-  // console.log(req.body);
+
   try {
     const teacher = await Teacher.findById(id);
 

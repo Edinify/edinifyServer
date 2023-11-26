@@ -1,7 +1,7 @@
 //
 import logger from "../config/logger.js";
 import { Course } from "../models/courseModel.js";
-// 
+
 // Get courses
 export const getCourses = async (req, res) => {
   try {
@@ -94,7 +94,7 @@ export const createCourse = async (req, res) => {
         ) + 1;
       const lastPage = Math.ceil(index / 10);
 
-      // console.log(index, lastPage);
+      console.log(index, lastPage);
 
       return res.status(201).json({ course: newCourse, lastPage });
     }

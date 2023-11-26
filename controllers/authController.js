@@ -193,9 +193,25 @@ export const registerTeacher = async (req, res) => {
     const lastPage = Math.ceil(teachersCount / 10);
 
     res.status(201).json({ teacher: { ...teacher, password: "" }, lastPage });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    logger.error({
+      method: "CREATE",
+      status: 500,
+      message: err.message,
+      for: "CREATE TEACHER",
+      user: req.user,
+      postedData: {
+        ...req.body,
+        password: "",
+        fin: "",
+        seria: "",
+        phone: "",
+        otp: "",
+      },
+      functionName: registerTeacher.name,
+    });
+
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -227,27 +243,22 @@ export const login = async (req, res) => {
     const AccessToken = createAccessToken(user);
     const RefreshToken = createRefreshToken(user);
 
-    console.log(AccessToken);
-    console.log(RefreshToken);
-
     saveTokensToDatabase(user._id, RefreshToken, AccessToken);
     // send refresh token to cookies
-    console.log(RefreshToken);
-    res.cookie( "refreshtoken", RefreshToken, {
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
+    res.cookie("refreshtoken", RefreshToken, {
       httpOnly: true,
       path: "/api/user/auth/refresh_token",
       sameSite: "None",
       secure: true,
     });
-// 
+
     res.on("finish", () => {
       console.log("Response Cookies:", res.getHeaders()["set-cookie"]);
     });
 
-
     res.status(200).json({
       AccessToken: AccessToken,
+      RefreshToken: RefreshToken,
     });
   } catch (err) {
     logger.error({
@@ -303,7 +314,7 @@ export const sendCodeToEmail = async (req, res) => {
 
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        // console.log(error);
+        console.log(error);
         return res.status(500).json({ error: error });
       } else {
         res.status(200).json({ message: "Code sent successfuly" });
@@ -428,13 +439,30 @@ export const changeForgottenPassword = async (req, res) => {
 const createAccessToken = (user) => {
   try {
     const AccessToken = jwt.sign(
-      { email: user.email, role: user.role, id: user._id },
+      {
+        email: user.email,
+        role: user.role,
+        id: user._id,
+        fullName: user.fullName,
+      },
       process.env.SECRET_KEY,
       { expiresIn: "6h" }
     );
 
     return AccessToken;
   } catch (error) {
+    logger.error({
+      method: "POST",
+      message: error.message,
+      for: "CREATE ACCESS TOKEN",
+      functionName: createAccessToken.name,
+      tokenInfo: {
+        email: user.email,
+        role: user.role,
+        id: user._id,
+        fullName: user.fullName,
+      },
+    });
     console.log(error);
   }
 };
@@ -456,15 +484,14 @@ const createRefreshToken = (user) => {
 
 // verify refresh token
 export const refreshToken = async (req, res) => {
-  console.log(req.headers,'header')
+  // console.log(req.headers,'header')
   try {
-    const parts = req.headers.cookie.split('=')[1];
-    const refreshToken = parts.split(';')[0];
-    console.log(refreshToken);
-    const token = await Token.findOne({ refreshToken: refreshToken });
-    console.log(token,'db');
+    const rf_token = req.headers.cookie.split("=")[1];
+    // console.log(rf_token);
+    const token = await Token.findOne({ refreshToken: rf_token });
+    // console.log(token,'db');
     if (token) {
-      jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+      jwt.verify(rf_token, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
         if (err) {
           res.clearCookie("refreshtoken", {
             httpOnly: true,
@@ -473,10 +500,10 @@ export const refreshToken = async (req, res) => {
             secure: true,
           });
           console.log(err.message);
-          revokeTokenFromDatabase(token._id);
+          revokeTokenFromDatabase(rf_token);
           return res.status(401).json({ message: { error: err.message } });
         } else {
-          // console.log(user, "new acces ");
+          console.log(user, "new acces ");
           const accesstoken = createAccessToken({
             email: user.mail,
             _id: user.id,
@@ -485,8 +512,6 @@ export const refreshToken = async (req, res) => {
           res.json({ accesstoken });
         }
       });
-    }else{
-      return res.status(401).json({ message: "logout" });
     }
   } catch (err) {
     logger.error({
@@ -511,18 +536,9 @@ const saveTokensToDatabase = async (userId, refreshToken, accessToken) => {
   await token.save();
 };
 
-const revokeTokenFromDatabase = async (id) => {
-  try {
-    console.log(id);
-    await Token.findByIdAndDelete({_id:id});
-    let test = await Token.findById({_id:id})
-    console.log(test);
-  } catch (error) {
-    console.log(error);
-  }
-  
+const revokeTokenFromDatabase = async (refreshToken) => {
+  await Token.deleteOne({ refreshToken });
 };
-// 
 
 // Get user
 export const getUser = async (req, res) => {

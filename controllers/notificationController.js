@@ -42,7 +42,7 @@ export const createNotificationForBirthdayWithCron = async () => {
 
     await Notification.insertMany(notifications);
   } catch (err) {
-    // console.log({ message: { error: err.message } });
+    console.log({ message: { error: err.message } });
   }
 };
 
@@ -86,7 +86,7 @@ export const createNotificationForBirthdayAtCreateAndUpdateStudent = async (
     });
   }
 };
-// 
+
 // Create notification for update table
 export const createNotificationForUpdate = async (teacherId, students) => {
   try {
@@ -119,7 +119,7 @@ export const createNotificationForUpdate = async (teacherId, students) => {
 
     await Notification.insertMany(notifications);
   } catch (err) {
-    // console.log({ message: { error: err.message } });
+    console.log({ message: { error: err.message } });
   }
 };
 
@@ -296,7 +296,7 @@ export const deleteNotificationForUpdateTable = async () => {
       role: "update-table",
     });
   } catch (err) {
-    // console.log({ message: { error: err.message } });
+    console.log({ message: { error: err.message } });
   }
 };
 
@@ -329,7 +329,7 @@ export const deleteNotificationsForBirthday = async () => {
   }
 };
 
-// Do as notification seen..
+// Do as notification seen
 export const doAsNotificationsSeen = async (req, res) => {
   const { role, id } = req.user;
 

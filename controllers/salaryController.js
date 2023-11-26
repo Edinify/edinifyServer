@@ -23,7 +23,6 @@ export const getSalariesForAdmins = async (req, res) => {
 
     console.log(targetDate);
     if (searchQuery && searchQuery.trim() !== "") {
-      console.log("check search");
       const regexSearchQuery = new RegExp(searchQuery, "i");
 
       const teachersCount = await Teacher.countDocuments({
@@ -120,6 +119,8 @@ export const getSalariesForTeacher = async (req, res) => {
   const { startDate, endDate, monthCount } = req.query;
   const { id } = req.user;
 
+  console.log(req.query);
+
   try {
     let targetMonth;
     let targetDate = calcDate(monthCount, startDate, endDate);
@@ -139,13 +140,22 @@ export const getSalariesForTeacher = async (req, res) => {
     let participantCount = 0;
     let totalBonus = 0;
 
-    salaries.forEach((salary) => {
-      participantCount += salary.participantCount;
-      totalBonus += salary?.bonus?.amount || 0;
-      if (salary.teacherSalary.monthly) {
-        totalSalary += salary.teacherSalary.value;
-      } else if (salary.teacherSalary.hourly) {
-        totalSalary += salary.teacherSalary.value * salary.participantCount;
+    confirmedLessons.forEach((lesson) => {
+      participantCount += lesson.students.filter(
+        (item) => item.attendance === 1 || item.attendance === -1
+      ).length;
+
+      if (lesson.salary.monthly) {
+        if (targetMonth !== lesson.date.getMonth()) {
+          totalSalary += lesson.salary.value;
+          targetMonth = lesson.date.getMonth();
+        }
+      } else if (lesson.salary.hourly) {
+        totalSalary +=
+          lesson.salary.value *
+          lesson.students.filter(
+            (item) => item.attendance === 1 || item.attendance === -1
+          ).length;
       }
     });
 
