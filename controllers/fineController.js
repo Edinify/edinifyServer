@@ -6,7 +6,7 @@ import { Teacher } from "../models/teacherModel.js";
 import { createNotificationForTeacherFine } from "./notificationController.js";
 
 // Create
-
+// 
 export const createFine = async (req, res) => {
   const { teacher } = req.body;
 

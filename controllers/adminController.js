@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import { Student } from "../models/studentModel.js";
 import { Teacher } from "../models/teacherModel.js";
 import logger from "../config/logger.js";
-
+// 
 // Get admin
 export const getAdmin = async (req, res) => {
   const { id, fullName } = req.user;

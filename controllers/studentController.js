@@ -85,7 +85,7 @@ export const getActiveStudents = async (req, res) => {
 };
 
 // Get students for pagination
-
+// 
 export const getStudentsForPagination = async (req, res) => {
   const { searchQuery, status } = req.query;
   const page = parseInt(req.query.page) || 1;

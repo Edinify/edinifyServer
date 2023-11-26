@@ -4,7 +4,7 @@ import nodemailer from "nodemailer";
 import logger from "../config/logger.js";
 
 dotenv.config();
-
+// 
 export const sendEmailForDemo = async (req, res) => {
   const mainEmail = process.env.EMAIL;
   const password = process.env.PASS;

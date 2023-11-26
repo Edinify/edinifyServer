@@ -7,7 +7,7 @@ import { Income } from "../models/incomeModel.js";
 import { Lesson } from "../models/lessonModel.js";
 import { Student } from "../models/studentModel.js";
 import { Teacher } from "../models/teacherModel.js";
-
+// 
 export const getConfirmedLessonsCount = async (req, res) => {
   const { startDate, endDate, monthCount } = req.query;
   const targetDate = calcDate(monthCount, startDate, endDate);
