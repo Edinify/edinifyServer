@@ -3,6 +3,7 @@ import express from "express";
 import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
+
 import studentRoutes from "./routes/studentRoutes.js";
 import teacherRoutes from "./routes/teacherRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
@@ -31,6 +32,7 @@ import { getUnviewedLessons } from "./controllers/dashboardController.js";
 
 import cron from "node-cron";
 import logger from "./config/logger.js";
+import { Lesson } from "./models/lessonModel.js";
 
 dotenv.config();
 const app = express();
@@ -82,14 +84,13 @@ mongoose
   .connect(uri)
   .then(() => {
     console.log("connected database");
-    app.listen(port, () => {
+    app.listen(port, async () => {
       console.log(`listen server at ${port}`);
       // cron.schedule("* * * * *", () => {
       //   console.log('salam')
       //   createNotificationForBirthdayWithCron();
       // deleteNotificationsForBirthday()
       // });
-
     });
   })
   .catch((err) =>  console.log(err));
