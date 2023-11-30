@@ -1,7 +1,8 @@
+// 
 import mongoose from "mongoose";
 
 const Schema = mongoose.Schema;
-
+// 
 const incomeSchema = new Schema(
   {
     category: {

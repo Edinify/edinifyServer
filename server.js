@@ -3,6 +3,7 @@ import express from "express";
 import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
+
 import studentRoutes from "./routes/studentRoutes.js";
 import teacherRoutes from "./routes/teacherRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
@@ -28,30 +29,25 @@ import {
 } from "./controllers/notificationController.js";
 import { calcDate } from "./calculate/calculateDate.js";
 import { getUnviewedLessons } from "./controllers/dashboardController.js";
-import { createSalariesAtEachMonth } from "./controllers/salaryController.js";
 
 import cron from "node-cron";
 import logger from "./config/logger.js";
+import { Lesson } from "./models/lessonModel.js";
 
 dotenv.config();
-
 const app = express();
 const port = process.env.PORT;
 const uri = process.env.DB_URI;
 
-// 
-
 app.use(
   cors({
-    origin: "*",
-    credentials: true,
+    origin: process.env.URL_PORT,
+    credentials:true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],
     exposedHeaders: ["Content-Type"],
   })
 );
-
-// 
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json({ limit: "15mb" }));
@@ -74,31 +70,27 @@ app.use("/api/finance", financeRoutes);
 app.use("/api/feedback", feedbackRoutes);
 
 app.get("/", (req, res) => {
-  res.send("hello");
+  res.send("salam");
 });
-
+// 
 // wbm.start().then(async () => {
 //   const phones = ['123456'];
 //   const message = 'Good Morning.';
 //   await wbm.send(phones, message);
 //   await wbm.end();
-// }).catch(err => console.log(err));
+// }).catch(err => // console.log(err));
 
 mongoose
   .connect(uri)
   .then(() => {
     console.log("connected database");
-    app.listen(port, () => {
+    app.listen(port, async () => {
       console.log(`listen server at ${port}`);
       // cron.schedule("* * * * *", () => {
       //   console.log('salam')
       //   createNotificationForBirthdayWithCron();
       // deleteNotificationsForBirthday()
       // });
-
-      // cron.schedule("0 0 * * *", () => {
-      //   createSalariesAtEachMonth();
-      // });
     });
   })
-  .catch((err) => console.log(err));
+  .catch((err) =>  console.log(err));

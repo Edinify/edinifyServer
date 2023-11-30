@@ -1,7 +1,7 @@
+//
 import { Bonus } from "../models/bonusModel.js";
 import { Teacher } from "../models/teacherModel.js";
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
-import { updateOrCreateSalaryWhenCreateBonus } from "./salaryController.js";
 import logger from "../config/logger.js";
 
 // Create
@@ -28,30 +28,6 @@ export const createBonus = async (req, res) => {
 
     const bonus = await Bonus.create(req.body);
     await bonus.populate("teacher");
-
-    const updatedSalary = await updateOrCreateSalaryWhenCreateBonus(bonus);
-
-    if (!updatedSalary) {
-      await Bonus.findByIdAndDelete(bonus._id);
-
-      logger.error({
-        method: "CREATE",
-        status: 400,
-        message: "salary was not updated or created!",
-        for: "CREATE OR UPDATE SALARY WHEN CREATE BONUS",
-        user: req.user,
-        forTeacher: {
-          fullName: bonus.teacher.fullName,
-          email: bonus.teacher.email,
-        },
-        functionName: createBonus.name,
-      });
-
-      return res.status(400).json({
-        key: "create-error-occurred",
-        message: "salary was not updated or created!",
-      });
-    }
 
     const bonusCount = await Bonus.countDocuments();
     const lastPage = Math.ceil(bonusCount / 10);
@@ -97,30 +73,6 @@ export const createBonusOnSalary = async (req, res) => {
     } else {
       bonus = await Bonus.create(req.body);
       await bonus.populate("teacher");
-    }
-
-    const updatedSalary = await updateOrCreateSalaryWhenCreateBonus(bonus);
-
-    if (!updatedSalary) {
-      await Bonus.findByIdAndDelete(bonus._id);
-
-      logger.error({
-        method: "CREATE",
-        status: 400,
-        message: "salary was not updated or created!",
-        for: "CREATE OR UPDATE SALARY WHEN CREATE BONUS ON SALARY",
-        user: req.user,
-        forTeacher: {
-          fullName: bonus.teacher.fullName,
-          email: bonus.teacher.email,
-        },
-        functionName: createBonusOnSalary.name,
-      });
-
-      return res.status(400).json({
-        key: "create-error-occurred",
-        message: "salary was not updated or created!",
-      });
     }
 
     res.status(201).json({ message: "create bonus successfull" });

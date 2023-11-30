@@ -1,7 +1,8 @@
+// 
 import mongoose from "mongoose";
 
 const Schema = mongoose.Schema;
-
+// 
 const lessonSchema = new Schema(
   {
     role: {
@@ -46,6 +47,10 @@ const lessonSchema = new Schema(
           feedback: {
             type: String,
             default: "",
+          },
+          payment: {
+            type: Number,
+            required: true,
           },
         },
       ],
