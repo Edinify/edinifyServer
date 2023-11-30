@@ -1,3 +1,4 @@
+//
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import logger from "../config/logger.js";
 import { Course } from "../models/courseModel.js";
@@ -267,15 +268,7 @@ export const getAdvertisingStatistics = async (req, res) => {
 
 export const getTachersResults = async (req, res) => {
   const { monthCount, startDate, endDate, byFilter } = req.query;
-  let targetDate;
-
-  console.log(req.query);
-  try {
-    if (monthCount) {
-      targetDate = calcDate(monthCount);
-    } else if (startDate && endDate) {
-      targetDate = calcDateWithMonthly(startDate, endDate);
-    }
+  let targetDate = calcDate(monthCount, startDate, endDate);
 
   try {
     const teachers = await Teacher.find().select("_id fullName");
