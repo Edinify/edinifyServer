@@ -138,7 +138,7 @@ export const getWeeklyLessonsForMainPanel = async (req, res) => {
 
   newStartDate.setHours(0, 0, 0, 0);
   newEndDate.setHours(23, 59, 59, 999);
-
+  
   try {
     const filterObj = {
       role: "current",
