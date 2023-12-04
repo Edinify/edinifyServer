@@ -522,7 +522,7 @@ export const refreshToken = async (req, res) => {
       functionName: refreshToken.name,
     });
 
-    return res.status(404).json({ msg: err.message });
+    return res.status(401).json({ msg: err.message });
   }
 };
 
