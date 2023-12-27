@@ -21,7 +21,7 @@ import bonusRoutes from "./routes/bonusRoutes.js";
 import financeRoutes from "./routes/financeRoutes.js";
 import fineRoutes from "./routes/fineRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
-// import updateButtonRoutes from "./routes/updateButtonRoutes.js";
+import emailRoutes from './routes/email/emailRoutes.js'
 
 import {
   createNotificationForBirthdayWithCron,
@@ -34,6 +34,7 @@ import cron from "node-cron";
 import logger from "./config/logger.js";
 import { Lesson } from "./models/lessonModel.js";
 
+
 dotenv.config();
 const app = express();
 const port = process.env.PORT;
@@ -41,8 +42,8 @@ const uri = process.env.DB_URI;
 
 app.use(
   cors({
-    origin: process.env.URL_PORT,
-    credentials:true,
+    origin: "*",
+    // credentials:true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],
     exposedHeaders: ["Content-Type"],
@@ -67,7 +68,8 @@ app.use("/api/demo", demoSmtpRoutes);
 app.use("/api/expense", expenseRoutes);
 app.use("/api/income", incomeRoutes);
 app.use("/api/finance", financeRoutes);
-app.use("/api/feedback", feedbackRoutes);
+app.use("/api/feedback", feedbackRoutes); 
+app.use("/api/email", emailRoutes)
 
 app.get("/", (req, res) => {
   res.send("salam");
