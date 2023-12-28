@@ -34,7 +34,7 @@ export const emailSender = async (req,res) =>{
       to: "samedovrasul7@gmail.com",
       subject: " from Edinify ",
       html:  `<ul>
-          <p> İstənilən xüsusiyyətlər, </p>
+          <p> İstənilən xüsusiyyətlər. </p>
           <li>   ${ features.map((data) =>  `${data} /`) } </li>
           <p> Şirkət haqqında </p>
           <li> <b> Şirkət adı: </b>  ${companyName} </li>
