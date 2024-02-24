@@ -445,7 +445,7 @@ const createAccessToken = (user) => {
         fullName: user.fullName,
       },
       process.env.SECRET_KEY,
-      { expiresIn: "6h" }
+      { expiresIn: "1w" }
     );
 
     return AccessToken;
