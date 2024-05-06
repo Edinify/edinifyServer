@@ -1,3 +1,4 @@
+//
 import { Student } from "../models/studentModel.js";
 import { Course } from "../models/courseModel.js";
 import { Teacher } from "../models/teacherModel.js";
@@ -520,7 +521,7 @@ export const refreshToken = async (req, res) => {
       functionName: refreshToken.name,
     });
 
-    return res.status(404).json({ msg: err.message });
+    return res.status(401).json({ msg: err.message });
   }
 };
 
