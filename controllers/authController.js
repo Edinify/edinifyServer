@@ -1,4 +1,3 @@
-//
 import { Student } from "../models/studentModel.js";
 import { Course } from "../models/courseModel.js";
 import { Teacher } from "../models/teacherModel.js";
