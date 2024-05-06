@@ -20,6 +20,7 @@ dotenv.config();
 export const registerSuperAdmin = async (req, res) => {
   const { email, role } = req.body;
 
+  console.log(req.body);
   try {
     const regexEmail = new RegExp(email, "i");
 
@@ -180,8 +181,6 @@ export const registerTeacher = async (req, res) => {
     const teacher = new Teacher({ ...req.body, password: hashedPassword });
     await teacher.populate("courses");
     await teacher.save();
-
-
 
     await Course.updateMany(
       { _id: { $in: coursesId } },
