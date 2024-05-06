@@ -28,6 +28,9 @@ const demoSchema = new Schema(
     date: {
       type: Date,
     },
+    time: {
+      type: String,
+    },
     status: {
       type: String,
       enum: ["held", "notHeld", "confirmed", "cancelled"],
