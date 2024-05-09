@@ -31,6 +31,10 @@ const demoSchema = new Schema(
     time: {
       type: String,
     },
+    teacher: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Teacher'
+    },
     status: {
       type: String,
       enum: ["held", "notHeld", "confirmed", "cancelled"],

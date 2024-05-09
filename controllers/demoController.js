@@ -21,7 +21,8 @@ export const getDemosForPagination = async (req, res) => {
         fullName: { $regex: regexSearchQuery },
       })
         .skip((page - 1) * limit)
-        .limit(limit);
+        .limit(limit)
+        .populate("teacher");
 
       totalPages = Math.ceil(demosCount / limit);
     } else {
@@ -29,7 +30,8 @@ export const getDemosForPagination = async (req, res) => {
       totalPages = Math.ceil(demosCount / limit);
       demos = await Demo.find()
         .skip((page - 1) * limit)
-        .limit(limit);
+        .limit(limit)
+        .populate("teacher");
     }
 
     res.status(200).json({ demos, totalPages });
@@ -42,6 +44,7 @@ export const getDemosForPagination = async (req, res) => {
 export const createDemo = async (req, res) => {
   try {
     const newDemo = new Demo(req.body);
+    await newDemo.populate("teacher");
     await newDemo.save();
 
     const demosCount = await Demo.countDocuments();
@@ -60,7 +63,7 @@ export const updateDemo = async (req, res) => {
   try {
     const updatedDemo = await Demo.findByIdAndUpdate(id, req.body, {
       new: true,
-    });
+    }).populate("teacher");
 
     if (!updatedDemo) {
       return res.status(404).json({ message: "Demo not found" });
