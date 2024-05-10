@@ -2,6 +2,7 @@
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import logger from "../config/logger.js";
 import { Course } from "../models/courseModel.js";
+import { Demo } from "../models/demoModel.js";
 import { Expense } from "../models/expenseModel.js";
 import { Income } from "../models/incomeModel.js";
 import { Lesson } from "../models/lessonModel.js";
@@ -9,9 +10,8 @@ import { Student } from "../models/studentModel.js";
 import { Teacher } from "../models/teacherModel.js";
 
 export const getConfirmedLessonsCount = async (req, res) => {
-  const { startDate, endDate, monthCount } = req.query;
-  const targetDate = calcDate(monthCount, startDate, endDate);
-
+  const { startDate, endDate, monthCount, weekly } = req.query;
+  const targetDate = calcDate(monthCount, startDate, endDate, weekly);
   try {
     const confirmedCount = await Lesson.countDocuments({
       status: "confirmed",
@@ -38,8 +38,9 @@ export const getConfirmedLessonsCount = async (req, res) => {
 };
 
 export const getCancelledLessonsCount = async (req, res) => {
-  const { startDate, endDate, monthCount } = req.query;
-  const targetDate = calcDate(monthCount, startDate, endDate);
+  const { startDate, endDate, monthCount, weekly } = req.query;
+  const targetDate = calcDate(monthCount, startDate, endDate, weekly);
+
   try {
     const cancelledCount = await Lesson.countDocuments({
       status: "cancelled",
@@ -267,8 +268,8 @@ export const getAdvertisingStatistics = async (req, res) => {
 };
 
 export const getTachersResults = async (req, res) => {
-  const { monthCount, startDate, endDate, byFilter } = req.query;
-  let targetDate = calcDate(monthCount, startDate, endDate);
+  const { monthCount, startDate, endDate, weekly, byFilter } = req.query;
+  let targetDate = calcDate(monthCount, startDate, endDate, weekly);
 
   try {
     const teachers = await Teacher.find().select("_id fullName");
@@ -402,6 +403,69 @@ export const getLessonsCountChartData = async (req, res) => {
       user: req.user,
       functionName: getLessonsCountChartData.name,
     });
+    res.status(500).json({ message: { error: err.message } });
+  }
+};
+
+export const getActiveStudentsCount = async (req, res) => {
+  try {
+    const studentsCount = await Student.countDocuments({
+      status: true,
+      deleted: false,
+    });
+
+    res.status(200).json(studentsCount);
+  } catch (err) {
+    res.status(500).json({ message: { error: err.message } });
+  }
+};
+
+export const getHeldDemosCount = async (req, res) => {
+  const { startDate, endDate, monthCount, weekly } = req.query;
+  const targetDate = calcDate(monthCount, startDate, endDate, weekly);
+
+  console.log(targetDate, "in demosss");
+  try {
+    const demosCount = await Demo.countDocuments({
+      status: {
+        $in: ["held", "confirmed", "cancelled"],
+      },
+      date: {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
+      },
+    });
+
+    res.status(200).json(demosCount);
+  } catch (err) {
+    res.status(500).json({ message: { error: err.message } });
+  }
+};
+
+export const getConfirmedDemosCount = async (req, res) => {
+  const { startDate, endDate, monthCount, weekly } = req.query;
+  const targetDate = calcDate(monthCount, startDate, endDate, weekly);
+
+  try {
+    const demosCount = await Demo.countDocuments({
+      status: "confirmed",
+      date: {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
+      },
+    });
+
+    const demos = await Demo.find({
+      date: {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
+      },
+    });
+
+    console.log(demos);
+
+    res.status(200).json(demosCount);
+  } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }
 };

@@ -1,4 +1,4 @@
-export const calcDate = (monthCount, start, end) => {
+export const calcDate = (monthCount, start, end, weekly) => {
   if (monthCount) {
     monthCount = Number(monthCount);
     const startDate = new Date();
@@ -21,8 +21,23 @@ export const calcDate = (monthCount, start, end) => {
     endDate.setHours(23, 59, 59, 999);
 
     return { startDate, endDate };
+  } else if (weekly) {
+    const currentDate = new Date();
+    const currentDay = currentDate.getDay() === 0 ? 7 : currentDate.getDay();
+
+    const startDate = new Date();
+    const endDate = new Date();
+
+    startDate.setDate(startDate.getDate() - (currentDay - 1));
+    endDate.setDate(startDate.getDate() + 6);
+
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+
+    return { startDate, endDate };
   }
 };
+
 
 export const calcDateWithMonthly = (start, end) => {
   let startDate;

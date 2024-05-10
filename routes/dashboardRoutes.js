@@ -1,11 +1,14 @@
 import express from "express";
 import { authMiddleware, checkSuperAdmin } from "../middleware/auth.js";
 import {
+  getActiveStudentsCount,
   getAdvertisingStatistics,
   getCancelledLessonsCount,
+  getConfirmedDemosCount,
   getConfirmedLessonsCount,
   getCoursesStatistics,
   getFinance,
+  getHeldDemosCount,
   getLessonsCountChartData,
   getTachersResults,
   getUnviewedLessons,
@@ -41,5 +44,18 @@ router.get(
 );
 router.get("/leadboard", authMiddleware, checkSuperAdmin, getTachersResults);
 router.get("/chart", getLessonsCountChartData);
+router.get(
+  "/active-student",
+  authMiddleware,
+  checkSuperAdmin,
+  getActiveStudentsCount
+);
+router.get("/held-demo", authMiddleware, checkSuperAdmin, getHeldDemosCount);
+router.get(
+  "/confirmed-demo",
+  authMiddleware,
+  checkSuperAdmin,
+  getConfirmedDemosCount
+);
 
 export default router;

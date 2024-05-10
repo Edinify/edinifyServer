@@ -33,12 +33,12 @@ const demoSchema = new Schema(
     },
     teacher: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Teacher'
+      ref: "Teacher",
     },
     status: {
       type: String,
-      enum: ["held", "notHeld", "confirmed", "cancelled"],
-      default: "notHeld",
+      enum: ["appointed", "held", "notHeld", "confirmed", "cancelled"],
+      default: "appointed",
     },
   },
   { timestamps: true }
