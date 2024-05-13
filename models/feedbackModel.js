@@ -1,4 +1,3 @@
-//
 import mongoose from "mongoose";
 
 const Schema = mongoose.Schema;
@@ -19,6 +18,7 @@ const feedbackSchema = new Schema(
     },
     parentName: {
       type: String,
+      required: true,
     },
     lessonId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -31,6 +31,12 @@ const feedbackSchema = new Schema(
     feedback: {
       type: String,
       required: true,
+    },
+    date: {
+      type: Date,
+      required: function () {
+        return this.from === "parent";
+      },
     },
   },
   { timestamps: true }

@@ -47,10 +47,19 @@ export const createFeedbackByStudent = async (feedback, req) => {
 
 export const createFeedbackByParent = async (req, res) => {
   try {
-    const feedback = await Feedback.create({ ...req.body, from: "parent" });
+    const limit = 10;
+    const feedback = await Feedback.create({
+      ...req.body,
+      from: "parent",
+    });
+    await feedback.populate("student");
 
-    res.status(201).json(feedback);
+    const feedbackCount = await Feedback.countDocuments({ from: "parent" });
+    const totalPages = Math.ceil(feedbackCount / limit);
+
+    res.status(201).json({ feedback, totalPages });
   } catch (err) {
+    console.log(err);
     logger.error({
       method: "POST",
       status: 500,
@@ -263,12 +272,13 @@ export const updateFeedbackByStudent = async (feedback) => {
   }
 };
 
-export const updateFeedbackByParent= async (req, res) => {
+export const updateFeedbackByParent = async (req, res) => {
   const { id } = req.params;
+
   try {
     const updatedFeedback = await Feedback.findByIdAndUpdate(id, req.body, {
       new: true,
-    });
+    }).populate("student");
 
     if (!updatedFeedback) {
       return res.status(404).json({ key: "feedback-not-found" });

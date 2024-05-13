@@ -28,7 +28,7 @@ router.get("/", authMiddleware, getFeedbacksWithPagination);
 router.get("/teacher", authMiddleware, checkTeacher, getFeedbacksForTeacher);
 router.patch("/:id", authMiddleware, checkTeacher, updateFeedbackByTeacher);
 router.patch(
-  "parent/:id",
+  "/parent/:id",
   authMiddleware,
   checkAdminAndSuperAdmin,
   updateFeedbackByParent
