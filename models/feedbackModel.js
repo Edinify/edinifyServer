@@ -7,8 +7,10 @@ const feedbackSchema = new Schema(
   {
     teacher: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
       ref: "Teacher",
+      required: function () {
+        return this.from !== "parent";
+      },
     },
     student: {
       type: mongoose.Schema.Types.ObjectId,
