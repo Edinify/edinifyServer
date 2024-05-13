@@ -34,6 +34,8 @@ import { getUnviewedLessons } from "./controllers/dashboardController.js";
 import cron from "node-cron";
 import logger from "./config/logger.js";
 import { Lesson } from "./models/lessonModel.js";
+import { Admin } from "./models/adminModel.js";
+import { ProfileImage } from "./models/profileImageModel.js";
 
 dotenv.config();
 

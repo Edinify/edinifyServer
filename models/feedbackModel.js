@@ -15,6 +15,9 @@ const feedbackSchema = new Schema(
       required: true,
       ref: "Student",
     },
+    parentName: {
+      type: String,
+    },
     lessonId: {
       type: mongoose.Schema.Types.ObjectId,
     },
