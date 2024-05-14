@@ -138,7 +138,8 @@ export const getWeeklyLessonsForMainPanel = async (req, res) => {
 
   newStartDate.setHours(0, 0, 0, 0);
   newEndDate.setHours(23, 59, 59, 999);
-  
+
+  console.log(req.query, "test test test");
   try {
     const filterObj = {
       role: "current",
@@ -195,6 +196,8 @@ export const getWeeklyLessonsForMainPanel = async (req, res) => {
         "teacher course students.student"
       );
     }
+
+    console.log(lessons);
 
     res.status(200).json(lessons);
   } catch (err) {

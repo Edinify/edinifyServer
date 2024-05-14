@@ -1,4 +1,4 @@
-// 
+//
 import mongoose from "mongoose";
 
 const Schema = mongoose.Schema;
@@ -20,7 +20,7 @@ const feedbackSchema = new Schema(
     },
     from: {
       type: String,
-      enum: ["teacher", "student"],
+      enum: ["teacher", "student", "parent"],
       required: true,
     },
     feedback: {
