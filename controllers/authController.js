@@ -443,7 +443,7 @@ const createAccessToken = (user) => {
         fullName: user.fullName,
       },
       process.env.SECRET_KEY,
-      { expiresIn: "7d" }
+      { expiresIn: "1w" }
     );
 
     return AccessToken;
