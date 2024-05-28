@@ -272,82 +272,107 @@ export const getTachersResults = async (req, res) => {
   let targetDate = calcDate(monthCount, startDate, endDate, weekly);
 
   try {
+    let teachersResultsList = await Teacher.aggregate([
+      {
+        $lookup: {
+          from: "lessons",
+          localField: "_id",
+          foreignField: "teacher",
+          as: "lessons",
+        },
+      },
+      {
+        $unwind: "$lessons",
+      },
+      {
+        $match: {
+          "lessons.role": "current",
+          "lessons.status": "confirmed",
+          "lessons.date": {
+            $gte: new Date(targetDate.startDate),
+            $lte: new Date(targetDate.endDate),
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          fullName: 1,
+          "lessons.students": 1,
+        },
+      },
+      {
+        $unwind: "$lessons.students",
+      },
+      {
+        $match: {
+          "lessons.students.attendance": 1,
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          fullName: { $first: "$fullName" },
+          lessonCount: { $sum: 1 },
+          starCount: { $sum: "$lessons.students.ratingByStudent" },
+        },
+      },
+      {
+        $sort: {
+          [byFilter === "starCount" ? "starCount" : "lessonCount"]: -1,
+        },
+      },
+    ]);
+
     const teachers = await Teacher.find().select("_id fullName");
 
-    const teachersResultsList = await Promise.all(
-      teachers.map(async (teacher) => {
-        const confirmedLessons = await Lesson.find({
-          teacher: teacher._id,
-          role: "current",
-          status: "confirmed",
-          date: {
-            $gte: targetDate.startDate,
-            $lte: targetDate.endDate,
-          },
-        }).select("students");
+    const zeroTeachers = teachers.reduce((list, teacher) => {
+      const checkTeacher = teachersResultsList.find(
+        (item) => item._id.toString() == teacher._id.toString()
+      );
+      console.log(list);
 
-        const totalLessonsCount = confirmedLessons.reduce(
-          (total, lesson) =>
-            total +
-            lesson.students.filter((item) => item.attendance === 1).length,
-          0
-        );
-        const totalStarsCount = confirmedLessons.reduce(
-          (total, lesson) =>
-            total +
-            lesson.students
-              .filter((item) => item.attendance === 1)
-              .reduce((total, item) => total + item.ratingByStudent, 0),
-          0
-        );
+      if (!checkTeacher)
+        return [
+          ...list,
+          { ...teacher.toObject(), lessonCount: 0, starCount: 0 },
+        ];
+      else return list;
+    }, []);
 
-        return {
-          teacher,
-          lessonCount: totalLessonsCount,
-          starCount: totalStarsCount,
-        };
-      })
-    );
+    teachersResultsList = [...teachersResultsList, ...zeroTeachers];
 
     let index;
-    if (byFilter === "lessonCount" && teachersResultsList.length) {
-      teachersResultsList.sort((a, b) => b.lessonCount - a.lessonCount);
-      index =
-        teachersResultsList[2].lessonCount > 0
-          ? 3
-          : teachersResultsList[1].lessonCount > 0
-          ? 2
-          : teachersResultsList[0].lessonCount > 0
-          ? 1
-          : 0;
-    } else if (byFilter === "starCount" && teachersResultsList.length) {
-      teachersResultsList.sort((a, b) => b.starCount - a.starCount);
-      index =
-        teachersResultsList[2].starCount > 0
-          ? 3
-          : teachersResultsList[1].starCount > 0
-          ? 2
-          : teachersResultsList[0].starCount > 0
-          ? 1
-          : 0;
+    if (teachersResultsList.length) {
+      if (byFilter === "lessonCount") {
+        index =
+          teachersResultsList[2]?.lessonCount > 0
+            ? 3
+            : teachersResultsList[1]?.lessonCount > 0
+            ? 2
+            : teachersResultsList[0]?.lessonCount > 0
+            ? 1
+            : 0;
+      } else if (byFilter === "starCount") {
+        index =
+          teachersResultsList[2]?.starCount > 0
+            ? 3
+            : teachersResultsList[1]?.starCount > 0
+            ? 2
+            : teachersResultsList[0]?.starCount > 0
+            ? 1
+            : 0;
+      }
     }
 
     const result = {
-      leaderTeacher: [...teachersResultsList.slice(0, index)],
-      otherTeacher: [...teachersResultsList.slice(index)],
+      leaderTeacher: teachersResultsList.slice(0, index),
+      otherTeacher: teachersResultsList.slice(index),
     };
 
     res.status(200).json(result);
   } catch (err) {
-    logger.error({
-      method: "GET",
-      status: 500,
-      message: err.message,
-      query: req.query,
-      for: "GET TEACHERS RESULTS FOR DASHBOARD",
-      user: req.user,
-      functionName: getTachersResults.name,
-    });
+    console.error(err);
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -424,7 +449,6 @@ export const getHeldDemosCount = async (req, res) => {
   const { startDate, endDate, monthCount, weekly } = req.query;
   const targetDate = calcDate(monthCount, startDate, endDate, weekly);
 
-  console.log(targetDate, "in demosss");
   try {
     const demosCount = await Demo.countDocuments({
       status: {
