@@ -1,4 +1,3 @@
-//
 import { Lesson } from "../models/lessonModel.js";
 import { Student } from "../models/studentModel.js";
 import bcrypt from "bcrypt";
@@ -24,6 +23,7 @@ export const getStudents = async (req, res) => {
 
     const students = await Student.find({
       fullName: { $regex: regexSearchQuery },
+      deleted: false,
     })
       .skip(parseInt(studentsCount || 0))
       .limit(parseInt(studentsCount || 0) + 30)
