@@ -486,6 +486,8 @@ export const incrementLessonAmount = async (lesson) => {
       .filter((item) => item.attendance !== 2)
       .map((item) => item.student._id);
 
+    if (studentsIds.length == 0) return true;
+
     await Student.updateMany(
       {
         _id: { $in: studentsIds },
