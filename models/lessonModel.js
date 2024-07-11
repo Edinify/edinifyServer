@@ -1,4 +1,4 @@
-// 
+//
 import mongoose from "mongoose";
 
 const Schema = mongoose.Schema;
@@ -65,6 +65,20 @@ const lessonSchema = new Schema(
       type: String,
       enum: ["unviewed", "confirmed", "cancelled"],
       default: "unviewed",
+    },
+    cancelReason: {
+      key: {
+        type: String,
+        required: function () {
+          return this.status === "cancelled";
+        },
+      },
+      label: {
+        type: String,
+        required: function () {
+          return this.status === "cancelled";
+        },
+      },
     },
     feedback: {
       type: String,
