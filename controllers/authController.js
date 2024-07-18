@@ -2,6 +2,7 @@ import { Student } from "../models/studentModel.js";
 import { Course } from "../models/courseModel.js";
 import { Teacher } from "../models/teacherModel.js";
 import { Admin } from "../models/adminModel.js";
+import { Worker } from "../models/workerModal.js";
 import { Token } from "../models/tokenSchema.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -20,7 +21,7 @@ dotenv.config();
 export const registerSuperAdmin = async (req, res) => {
   const { email, role } = req.body;
 
-  console.log(req.body);
+  // console.log(req.body);
   try {
     const regexEmail = new RegExp(email, "i");
 
@@ -89,6 +90,47 @@ export const registerAdmin = async (req, res) => {
       user: req.user,
       postedData: { ...req.body, password: "" },
       functionName: registerAdmin.name,
+    });
+
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Register Worker 
+export const registerWorker = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const regexEmail = new RegExp(email, "i");
+
+    const existingStudent = await Student.findOne({ email: regexEmail });
+    const existingTeacher = await Teacher.findOne({ email: regexEmail });
+    const existingAdmin = await Admin.findOne({ email: regexEmail });
+    const existingWorker = await Admin.findOne({ email: regexEmail });
+
+    if (existingStudent || existingTeacher || existingAdmin || existingWorker) {
+      return res.status(409).json({ key: "email-already-exist" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+    const worker = new Worker({
+      ...req.body,
+      password: hashedPassword,
+    });
+    await worker.save();
+
+    res.status(201).json(worker);
+  } catch (err) {
+    logger.error({
+      method: "CREATE",
+      status: 500,
+      message: err.message,
+      for: "CREATE Worker",
+      user: req.user,
+      postedData: { ...req.body, password: "" },
+      functionName: registerWorker.name,
     });
 
     res.status(500).json({ error: err.message });
@@ -226,7 +268,7 @@ export const login = async (req, res) => {
 
     const user = admin || student || teacher;
 
-    console.log(user);
+    // console.log(user);
     if (!user) {
       return res.status(404).json({ key: "user-not-found" });
     }
@@ -501,7 +543,7 @@ export const refreshToken = async (req, res) => {
           revokeTokenFromDatabase(rf_token);
           return res.status(401).json({ message: { error: err.message } });
         } else {
-          console.log(user, "new acces ");
+          // console.log(user, "new acces ");
           const accesstoken = createAccessToken({
             email: user.mail,
             _id: user.id,

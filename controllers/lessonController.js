@@ -22,7 +22,7 @@ import {
 // Create lesson
 export const createLesson = async (req, res) => {
   try {
-    console.log(req.body);
+    // console.log(req.body);
     const teacher = await Teacher.findById(req.body.teacher);
 
     const newLesson = new Lesson({
@@ -197,7 +197,7 @@ export const getWeeklyLessonsForMainPanel = async (req, res) => {
       );
     }
 
-    console.log(lessons);
+    // console.log(lessons);
 
     res.status(200).json(lessons);
   } catch (err) {
@@ -524,7 +524,7 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
           payment: item.student.payment,
         }));
 
-        console.log(students);
+        // console.log(students);
         return {
           ...dataObj,
           teacher: data.teacher._id,

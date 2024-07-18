@@ -17,7 +17,7 @@ import logger from "../config/logger.js";
 export const getStudents = async (req, res) => {
   const { studentsCount, searchQuery } = req.query;
 
-  console.log(req.query);
+  // console.log(req.query);
   try {
     const regexSearchQuery = new RegExp(searchQuery?.trim() || "", "i");
 
@@ -87,11 +87,11 @@ export const getActiveStudents = async (req, res) => {
 // Get students for pagination
 
 export const getStudentsForPagination = async (req, res) => {
-  const { searchQuery, status } = req.query;
+  const { searchQuery, status,courseId } = req.query;
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
 
-  console.log(req.query, "======");
+  console.log(req.query);
   try {
     let totalPages;
     let students;
@@ -131,6 +131,28 @@ export const getStudentsForPagination = async (req, res) => {
         .limit(limit)
         .populate("courses.course");
     }
+
+    if (courseId){
+      // const regexSearchQuery = new RegExp(searchQuery, "i");
+
+      const studentsCount = await Student.countDocuments({
+        "courses.course": courseId,
+        deleted: false,
+        ...filterObj,
+      });
+
+      students = await Student.find({
+        "courses.course": courseId,
+        deleted: false,
+        ...filterObj,
+      })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .populate("courses.course");
+
+      totalPages = Math.ceil(studentsCount / limit);
+    }
+
 
     const studentList = students.map((student) => ({
       ...student.toObject(),
@@ -432,8 +454,8 @@ export const updateStudentPassword = async (req, res) => {
 // Student lesson amount
 
 export const decrementLessonAmount = async (lesson) => {
-  console.log("------------ bla bla bla");
-  console.log(lesson);
+  // console.log("------------ bla bla bla");
+  // console.log(lesson);
   try {
     const studentsIds = lesson.students
       .filter((item) => item.attendance !== 2)

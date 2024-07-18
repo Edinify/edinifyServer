@@ -330,7 +330,7 @@ export const getTachersResults = async (req, res) => {
       const checkTeacher = teachersResultsList.find(
         (item) => item._id.toString() == teacher._id.toString()
       );
-      console.log(list);
+      // console.log(list);
 
       if (!checkTeacher)
         return [
@@ -486,7 +486,7 @@ export const getConfirmedDemosCount = async (req, res) => {
       },
     });
 
-    console.log(demos);
+    // console.log(demos);
 
     res.status(200).json(demosCount);
   } catch (err) {
