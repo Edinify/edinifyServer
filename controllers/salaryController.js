@@ -1,8 +1,7 @@
-//
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import { Lesson } from "../models/lessonModel.js";
 import { Teacher } from "../models/teacherModel.js";
-// 
+
 // Get salaries
 export const getSalariesForAdmins = async (req, res) => {
   const { startDate, endDate, searchQuery } = req.query;
@@ -21,7 +20,6 @@ export const getSalariesForAdmins = async (req, res) => {
       targetDate = calcDateWithMonthly(startDate, endDate);
     }
 
-    console.log(targetDate);
     if (searchQuery && searchQuery.trim() !== "") {
       const regexSearchQuery = new RegExp(searchQuery, "i");
 
@@ -46,71 +44,87 @@ export const getSalariesForAdmins = async (req, res) => {
         .limit(limit);
     }
 
-    result = await Promise.all(
-      teachers.map(async (teacher) => {
-        let targetMonth;
+    const lessons = await Lesson.find({
+      role: "current",
+      date: {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
+      },
+    });
 
-        const targetLessons = await Lesson.find({
-          teacher: teacher._id,
-          status: "confirmed",
-          role: "current",
-          date: {
-            $gte: targetDate.startDate,
-            $lte: targetDate.endDate,
-          },
-        });
+    result = teachers.map((teacher) => {
+      let targetMonth;
 
-        console.log(teacher.fullName);
-        console.log(targetLessons);
+      // const targetLessons = await Lesson.find({
+      //   teacher: teacher._id,
+      //   status: "confirmed",
+      //   role: "current",
+      //   date: {
+      //     $gte: targetDate.startDate,
+      //     $lte: targetDate.endDate,
+      //   },
+      // });
 
-        let totalConfirmed = targetLessons.length;
-        let totalCancelled = await Lesson.countDocuments({
-          teacher: teacher._id,
-          role: "current",
-          status: "cancelled",
-          date: {
-            $gte: targetDate.startDate,
-            $lte: targetDate.endDate,
-          },
-        });
-        let totalSalary = 0;
-        let participantCount = 0;
-        let totalBonus = 0;
+      const targetLessons = lessons.filter(
+        (lesson) =>
+          lesson.teacher.toString() === teacher._id.toString() &&
+          lesson.status == "confirmed"
+      );
 
-        targetLessons?.forEach((lesson) => {
-          participantCount += lesson.students.filter(
-            (item) => item.attendance === 1 || item.attendance === -1
-          ).length;
+      let totalConfirmed = targetLessons.length;
+      // let totalCancelled = await Lesson.countDocuments({
+      //   teacher: teacher._id,
+      //   role: "current",
+      //   status: "cancelled",
+      //   date: {
+      //     $gte: targetDate.startDate,
+      //     $lte: targetDate.endDate,
+      //   },
+      // });
+      const totalCancelled = lessons.filter(
+        (lesson) =>
+          lesson.teacher.toString() === teacher._id.toString() &&
+          lesson.status == "cancelled"
+      );
 
-          if (lesson.salary.monthly) {
-            if (targetMonth !== lesson.date.getMonth()) {
-              totalSalary += lesson.salary.value;
-              targetMonth = lesson.date.getMonth();
-            }
-          } else if (lesson.salary.hourly) {
-            totalSalary +=
-              lesson.salary.value *
-              lesson.students.filter(
-                (item) => item.attendance === 1 || item.attendance === -1
-              ).length;
+      let totalSalary = 0;
+      let participantCount = 0;
+      let totalBonus = 0;
+
+      targetLessons?.forEach((lesson) => {
+        participantCount += lesson.students.filter(
+          (item) => item.attendance === 1 || item.attendance === -1
+        ).length;
+
+        if (lesson.salary.monthly) {
+          if (targetMonth !== lesson.date.getMonth()) {
+            totalSalary += lesson.salary.value;
+            targetMonth = lesson.date.getMonth();
           }
-        });
+        } else if (lesson.salary.hourly) {
+          totalSalary +=
+            lesson.salary.value *
+            lesson.students.filter(
+              (item) => item.attendance === 1 || item.attendance === -1
+            ).length;
+        }
+      });
 
-        return {
-          _id: teacher._id,
-          teacherName: teacher.fullName,
-          salary: teacher.salary,
-          totalSalary: totalSalary,
-          confirmedCount: totalConfirmed,
-          cancelledCount: totalCancelled,
-          participantCount: participantCount,
-          bonus: totalBonus,
-        };
-      })
-    );
+      return {
+        _id: teacher._id,
+        teacherName: teacher.fullName,
+        salary: teacher.salary,
+        totalSalary: totalSalary,
+        confirmedCount: totalConfirmed,
+        cancelledCount: totalCancelled,
+        participantCount: participantCount,
+        bonus: totalBonus,
+      };
+    });
 
     res.status(200).json({ salaries: result, totalPages });
   } catch (err) {
+    console.log(err.message);
     res.status(500).json({ message: { error: err.message } });
   }
 };

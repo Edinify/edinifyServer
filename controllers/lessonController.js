@@ -1,4 +1,3 @@
-//
 import logger from "../config/logger.js";
 import { Feedback } from "../models/feedbackModel.js";
 import { Lesson } from "../models/lessonModel.js";
@@ -195,9 +194,23 @@ export const getWeeklyLessonsForMainPanel = async (req, res) => {
       lessons = await Lesson.find(filterObj).populate(
         "teacher course students.student"
       );
-    }
 
-    console.log(lessons);
+      lessons.forEach((lesson) => {
+        const currentDate = new Date();
+        const lessonDateLastHours = new Date(lesson.date);
+        const lessonDateFirstHours = new Date(lesson.date);
+        lessonDateLastHours.setHours(23, 59, 59, 999);
+        lessonDateFirstHours.setHours(4, 0, 0, 0);
+        console.log(lesson)
+        console.log(lesson.course.name, "course name");
+        console.log(lesson.day, "lesson day");
+        console.log(lesson.date, "lesson date");
+        console.log(currentDate, "current date");
+        console.log(lessonDateFirstHours, "first hourse");
+        console.log(lessonDateLastHours, "last hourse");
+        console.log(lessonDateFirstHours.getDate(), "first date");
+      });
+    }
 
     res.status(200).json(lessons);
   } catch (err) {

@@ -432,8 +432,6 @@ export const updateStudentPassword = async (req, res) => {
 // Student lesson amount
 
 export const decrementLessonAmount = async (lesson) => {
-  console.log("------------ bla bla bla");
-  console.log(lesson);
   try {
     const studentsIds = lesson.students
       .filter((item) => item.attendance !== 2)

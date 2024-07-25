@@ -22,6 +22,7 @@ import financeRoutes from "./routes/financeRoutes.js";
 import fineRoutes from "./routes/fineRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
 import demoRoutes from "./routes/demoRoutes.js";
+import receiptRoutes from "./routes/receiptRoutes.js";
 // import updateButtonRoutes from "./routes/updateButtonRoutes.js";
 
 import {
@@ -73,17 +74,11 @@ app.use("/api/income", incomeRoutes);
 app.use("/api/finance", financeRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/demo", demoRoutes);
+app.use("/api/receipt", receiptRoutes);
 
 app.get("/", (req, res) => {
   res.send("hello");
 });
-
-// wbm.start().then(async () => {
-//   const phones = ['123456'];
-//   const message = 'Good Morning.';
-//   await wbm.send(phones, message);
-//   await wbm.end();
-// }).catch(err => console.log(err));
 
 mongoose
   .connect(uri)
@@ -91,11 +86,6 @@ mongoose
     console.log("connected database");
     app.listen(port, async () => {
       console.log(`listen server at ${port}`);
-      // cron.schedule("* * * * *", () => {
-      //   console.log('salam')
-      //   createNotificationForBirthdayWithCron();
-      // deleteNotificationsForBirthday()
-      // });
     });
   })
   .catch((err) => console.log(err));
