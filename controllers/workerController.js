@@ -1,9 +1,9 @@
-
 import { Worker } from "../models/workerModal.js";
 import { Admin } from "../models/adminModel.js";
 import bcrypt from "bcrypt";
 import { Student } from "../models/studentModel.js";
 import { Teacher } from "../models/teacherModel.js";
+import logger from "../config/logger.js";
 
 export const getWorkers = async (req, res) => {
   const { id, fullName, email } = req.user;
@@ -21,6 +21,44 @@ export const getWorkers = async (req, res) => {
       user: req.user,
     });
 
+    res.status(500).json({ message: { error: err.message } });
+  }
+};
+
+//  get workers for pagination
+
+export const getWorkersForPagination = async (req, res) => {
+  const { searchQuery } = req.query;
+  const page = parseInt(req.query.page) || 1;
+  const limit = 10;
+
+  try {
+    let totalPages;
+    let workers;
+
+    if (searchQuery && searchQuery.trim() !== "") {
+      const regexSearchQuery = new RegExp(searchQuery, "i");
+
+      const workersCount = await Worker.countDocuments({
+        fullName: { $regex: regexSearchQuery },
+      });
+
+      workers = await Worker.find({
+        fullName: { $regex: regexSearchQuery },
+      })
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+      totalPages = Math.ceil(workersCount / limit);
+    } else {
+      const workersCount = await Worker.countDocuments();
+      totalPages = Math.ceil(workersCount / limit);
+      workers = await Worker.find()
+        .skip((page - 1) * limit)
+        .limit(limit);
+    }
+    res.status(200).json({ workers, totalPages });
+  } catch (error) {
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -85,22 +123,23 @@ export const deleteWorker = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const deletedWorker = await Worker.findByIdAndDelete(id);
+    const worker = await Worker.findById(id);
 
-    if (!deletedWorker) {
+    if (!worker) {
       return res.status(404).json({ key: "worker-not-found" });
     }
+    await Worker.findByIdAndUpdate(id, { deleted: true });
 
-    res.status(200).json(deletedWorker);
+    res.status(200).json(worker);
   } catch (err) {
     logger.error({
       method: "DELETE",
       status: 500,
       message: err.message,
-      for: "DELETE ADMIN",
+      for: "DELETE WORKER",
       user: req.user,
-      deleteAdminId: id,
-      functionName: deleteAdmin.name,
+      workerdId: id,
+      functionName: deleteWorker.name,
     });
 
     res.status(500).json({ message: { error: err.message } });
