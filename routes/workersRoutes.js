@@ -2,7 +2,8 @@ import express from "express";
 import {
   getWorkers,
   updateWorker,
-  deleteWorker
+  deleteWorker,
+  getWorkersForPagination
 } from "../controllers/workerController.js";
 import {
   authMiddleware,
@@ -13,6 +14,7 @@ import {
 const router = express.Router();
 
 router.get("/", authMiddleware, checkSuperAdmin, getWorkers);
+router.get("/pagination",authMiddleware,getWorkersForPagination,checkSuperAdmin)
 router.patch("/:id", authMiddleware, checkSuperAdmin, updateWorker);
 // router.patch(
 //   "/me/password",
