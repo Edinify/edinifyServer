@@ -46,7 +46,7 @@ const uri = process.env.DB_URI;
 
 app.use(
   cors({
-    origin: process.env.URL_PORT,
+    origin: [process.env.URL_PORT1,process.env.URL_PORT1],
     credentials:true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],
