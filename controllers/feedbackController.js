@@ -30,7 +30,7 @@ export const createFeedbackByStudent = async (feedback, req) => {
   try {
     await Feedback.create(feedback);
 
-    console.log({ message: "feedback created succuessfully" });
+    // console.log({ message: "feedback created succuessfully" });
   } catch (err) {
     logger.error({
       method: "POST",
@@ -210,7 +210,7 @@ export const getFeedbacksForTeacher = async (req, res) => {
 
     const feedbacks = await Feedback.find(filterObj).populate("student");
 
-    console.log(feedbacks);
+    // console.log(feedbacks);
 
     res.status(200).json(feedbacks);
   } catch (err) {

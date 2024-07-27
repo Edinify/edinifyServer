@@ -21,7 +21,7 @@ import {
 // Create lesson
 export const createLesson = async (req, res) => {
   try {
-    console.log(req.body);
+    // console.log(req.body);
     const teacher = await Teacher.findById(req.body.teacher);
 
     const newLesson = new Lesson({
@@ -137,8 +137,8 @@ export const getWeeklyLessonsForMainPanel = async (req, res) => {
 
   newStartDate.setHours(0, 0, 0, 0);
   newEndDate.setHours(23, 59, 59, 999);
-
-  console.log(req.query, "test test test");
+  // console.log(req.query)
+  // console.log(newStartDate, newEndDate)
   try {
     const filterObj = {
       role: "current",
@@ -194,22 +194,6 @@ export const getWeeklyLessonsForMainPanel = async (req, res) => {
       lessons = await Lesson.find(filterObj).populate(
         "teacher course students.student"
       );
-
-      lessons.forEach((lesson) => {
-        const currentDate = new Date();
-        const lessonDateLastHours = new Date(lesson.date);
-        const lessonDateFirstHours = new Date(lesson.date);
-        lessonDateLastHours.setHours(23, 59, 59, 999);
-        lessonDateFirstHours.setHours(4, 0, 0, 0);
-        console.log(lesson)
-        console.log(lesson.course.name, "course name");
-        console.log(lesson.day, "lesson day");
-        console.log(lesson.date, "lesson date");
-        console.log(currentDate, "current date");
-        console.log(lessonDateFirstHours, "first hourse");
-        console.log(lessonDateLastHours, "last hourse");
-        console.log(lessonDateFirstHours.getDate(), "first date");
-      });
     }
 
     res.status(200).json(lessons);
@@ -537,7 +521,7 @@ export const createCurrentLessonsFromMainLessons = async (req, res) => {
           payment: item.student.payment,
         }));
 
-        console.log(students);
+        // console.log(students);
         return {
           ...dataObj,
           teacher: data.teacher._id,

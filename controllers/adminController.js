@@ -116,7 +116,7 @@ export const deleteAdmin = async (req, res) => {
       return res.status(404).json({ key: "admin-not-found" });
     }
 
-    res.status(200).json(deleteAdmin);
+    res.status(200).json(deletedAdmin);
   } catch (err) {
     logger.error({
       method: "DELETE",

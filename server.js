@@ -7,7 +7,9 @@ import mongoose from "mongoose";
 import studentRoutes from "./routes/studentRoutes.js";
 import teacherRoutes from "./routes/teacherRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import workerRoutes from "./routes/workersRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
+import syllabusRoutes from "./routes/syllabusRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import lessonRoutes from "./routes/lessonRotes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
@@ -39,14 +41,13 @@ import { Admin } from "./models/adminModel.js";
 import { ProfileImage } from "./models/profileImageModel.js";
 
 dotenv.config();
-
 const app = express();
 const port = process.env.PORT;
 const uri = process.env.DB_URI;
 
 app.use(
   cors({
-    origin: [process.env.URL_PORT1, process.env.URL_PORT2],
+    origin: process.env.URL_PORT1,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],
@@ -60,7 +61,9 @@ app.use("/api/user/auth", authRoutes);
 app.use("/api/user/student", studentRoutes);
 app.use("/api/user/teacher", teacherRoutes);
 app.use("/api/user/admin", adminRoutes);
+app.use("/api/user/worker", workerRoutes);
 app.use("/api/course", courseRoutes);
+app.use("/api/syllabus", syllabusRoutes);
 app.use("/api/lesson", lessonRoutes);
 app.use("/api/notification", notificationRoutes);
 app.use("/api/salary", salaryRoutes);
@@ -77,7 +80,7 @@ app.use("/api/demo", demoRoutes);
 app.use("/api/receipt", receiptRoutes);
 
 app.get("/", (req, res) => {
-  res.send("hello");
+  res.send("salam");
 });
 
 mongoose

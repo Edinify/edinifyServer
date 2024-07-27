@@ -45,7 +45,7 @@ export const getIncomesForPagination = async (req, res) => {
       .limit(limit);
 
     const allIncomes = await Income.find();
-    console.log(allIncomes);
+    // console.log(allIncomes);
 
     res.status(200).json({ incomes, totalPages });
   } catch (err) {
@@ -71,8 +71,8 @@ export const createIncome = async (req, res) => {
     const incomesCount = await Income.countDocuments();
     const lastPage = Math.ceil(incomesCount / 10);
 
-    console.log(incomesCount, "incomes count");
-    console.log(lastPage, "last page");
+    // console.log(incomesCount, "incomes count");
+    // console.log(lastPage, "last page");
 
     res.status(201).json({ income: newIncome, lastPage });
   } catch (err) {

@@ -1,4 +1,5 @@
 import { Receipt } from "../models/receiptModel.js";
+import { Worker } from "../models/workerModal.js";
 
 // Get receipts for pagination
 export const getReceiptForPagination = async (req, res) => {
@@ -7,7 +8,6 @@ export const getReceiptForPagination = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
 
-  console.log(user);
   try {
     let totalPages;
     let receipts;
@@ -18,10 +18,10 @@ export const getReceiptForPagination = async (req, res) => {
     }
 
     if (user.role === "worker") {
-      const worker = await Worker.findbyId(user.id);
+      const worker = await Worker.findById(user.id);
 
       const checkWorkerPosition = worker.positions.find(
-        (position) => position === '"accounting-officer"'
+        (position) => position.key === "accounting-officer"
       );
 
       if (!checkWorkerPosition) {
@@ -58,6 +58,7 @@ export const getReceiptForPagination = async (req, res) => {
 
     res.status(200).json({ receipts, totalPages });
   } catch (err) {
+    console.log(err);
     res.status(500).json({ message: { error: err.message } });
   }
 };
@@ -107,10 +108,10 @@ export const deleteReceipt = async (req, res) => {
     const receipt = await Receipt.findByIdAndDelete(id);
 
     if (!receipt) {
-      res.status(404).json({ message: "demo not found" });
+      res.status(404).json({ message: "receipt not found" });
     }
 
-    res.status(200).json({ message: "demo successfully deleted" });
+    res.status(200).json({ message: "receipt successfully deleted" });
   } catch (err) {
     res.status(500).json({ message: { error: err.message } });
   }

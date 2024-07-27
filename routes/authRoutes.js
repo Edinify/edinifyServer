@@ -10,6 +10,7 @@ import {
   sendCodeToEmail,
   checkOtpCode,
   registerSuperAdmin,
+  registerWorker
 } from "../controllers/authController.js";
 import {
   authMiddleware,
@@ -33,6 +34,11 @@ router.post(
   authMiddleware,
   checkAdminAndSuperAdmin,
   registerTeacher
+);
+router.post(
+  "/worker/sign",
+  authMiddleware,
+  registerWorker
 );
 router.post("/login", login);
 router.get("/refresh_token", refreshToken);

@@ -17,8 +17,8 @@ export const getFinance = async (req, res) => {
       targetDate = calcDateWithMonthly(startDate, endDate);
     }
 
-    console.log(startDate, endDate);
-    console.log(targetDate, "--------");
+    // console.log(startDate, endDate);
+    // console.log(targetDate, "--------");
 
     const incomes = await Income.find({
       date: {
