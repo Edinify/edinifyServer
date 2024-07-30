@@ -66,13 +66,33 @@ export const getReceiptForPagination = async (req, res) => {
 // Create receipt
 export const createReceipt = async (req, res) => {
   const { creator } = req.body;
+  const user = req.user;
+
+  console.log(user, "hddhdhdhddhd");
   try {
+    const filterObj = {};
     const newReceipt = new Receipt({ ...req.body, creatorRole: creator.role });
     await newReceipt.populate("creator");
     newReceipt.populate("creator");
     await newReceipt.save();
 
-    const receiptsCount = await Receipt.countDocuments();
+    if (user.role === "teacher" || user.role === "admin") {
+      filterObj.creator = user.id;
+    }
+
+    if (user.role === "worker") {
+      const worker = await Worker.findById(user.id);
+
+      const checkWorkerPosition = worker.positions.find(
+        (position) => position.key === "accounting-officer"
+      );
+
+      if (!checkWorkerPosition) {
+        filterObj.creator = user.id;
+      }
+    }
+
+    const receiptsCount = await Receipt.countDocuments(filterObj);
     const lastPage = Math.ceil(receiptsCount / 10);
 
     res.status(201).json({ receipt: newReceipt, lastPage });
