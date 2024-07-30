@@ -1,4 +1,3 @@
-//
 import { Lesson } from "../models/lessonModel.js";
 import { Student } from "../models/studentModel.js";
 import bcrypt from "bcrypt";
@@ -18,12 +17,13 @@ import logger from "../config/logger.js";
 export const getStudents = async (req, res) => {
   const { studentsCount, searchQuery } = req.query;
 
-  console.log(req.query);
+  // console.log(req.query);
   try {
     const regexSearchQuery = new RegExp(searchQuery?.trim() || "", "i");
 
     const students = await Student.find({
       fullName: { $regex: regexSearchQuery },
+      deleted: false,
     })
       .skip(parseInt(studentsCount || 0))
       .limit(parseInt(studentsCount || 0) + 30)
@@ -90,11 +90,11 @@ export const getActiveStudents = async (req, res) => {
 // Get students for pagination
 
 export const getStudentsForPagination = async (req, res) => {
-  const { searchQuery, status } = req.query;
+  const { searchQuery, status, courseId } = req.query;
   const page = parseInt(req.query.page) || 1;
   const limit = 10;
 
-  console.log(req.query, "======");
+  console.log(req.query);
   try {
     let totalPages;
     let students;
@@ -103,6 +103,8 @@ export const getStudentsForPagination = async (req, res) => {
     if (status === "active") filterObj.status = true;
 
     if (status === "deactive") filterObj.status = false;
+
+    if (courseId) filterObj["courses.course"] = courseId;
 
     if (searchQuery && searchQuery.trim() !== "") {
       const regexSearchQuery = new RegExp(searchQuery, "i");
@@ -190,16 +192,6 @@ export const getStudentsByCourseId = async (req, res) => {
             role: role,
           });
         } else if (role === "current") {
-          // console.log(targetYear, "target year");
-          // console.log(targetMonth, "target month");
-          // console.log(targetDayOfMonth, "target day");
-          // console.log(day, "day");
-          // console.log(time, "time");
-          // console.log(role, "role");
-          // console.log(student._id, "student id");
-          // console.log(student.fullName, "student name");
-          // console.log(student);
-
           checkStudent = await Lesson.find({
             "students.student": student._id,
             day: Number(day),
@@ -435,8 +427,6 @@ export const updateStudentPassword = async (req, res) => {
 // Student lesson amount
 
 export const decrementLessonAmount = async (lesson) => {
-  console.log("------------ bla bla bla");
-  console.log(lesson);
   try {
     const studentsIds = lesson.students
       .filter((item) => item.attendance !== 2)
@@ -488,6 +478,8 @@ export const incrementLessonAmount = async (lesson) => {
     const studentsIds = lesson.students
       .filter((item) => item.attendance !== 2)
       .map((item) => item.student._id);
+
+    if (studentsIds.length == 0) return true;
 
     await Student.updateMany(
       {

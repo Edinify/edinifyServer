@@ -1,4 +1,4 @@
-// 
+//
 import { calcDate, calcDateWithMonthly } from "../calculate/calculateDate.js";
 import logger from "../config/logger.js";
 import { Feedback } from "../models/feedbackModel.js";
@@ -30,7 +30,7 @@ export const createFeedbackByStudent = async (feedback, req) => {
   try {
     await Feedback.create(feedback);
 
-    console.log({ message: "feedback created succuessfully" });
+    // console.log({ message: "feedback created succuessfully" });
   } catch (err) {
     logger.error({
       method: "POST",
@@ -45,6 +45,34 @@ export const createFeedbackByStudent = async (feedback, req) => {
   }
 };
 
+export const createFeedbackByParent = async (req, res) => {
+  try {
+    const limit = 10;
+    const feedback = await Feedback.create({
+      ...req.body,
+      from: "parent",
+    });
+    await feedback.populate("student");
+
+    const feedbackCount = await Feedback.countDocuments({ from: "parent" });
+    const totalPages = Math.ceil(feedbackCount / limit);
+
+    res.status(201).json({ feedback, totalPages });
+  } catch (err) {
+    console.log(err);
+    logger.error({
+      method: "POST",
+      status: 500,
+      message: err.message,
+      postedData: req.body,
+      for: "CREATE FEEDBACK BY TEACHER",
+      user: req.user,
+      functionName: createFeedbackByTeacher.name,
+    });
+    res.status(500).json({ message: { error: err.message } });
+  }
+};
+
 // GET
 
 export const getFeedbacksWithPagination = async (req, res) => {
@@ -53,7 +81,6 @@ export const getFeedbacksWithPagination = async (req, res) => {
   const limit = 10;
 
   try {
-    let targetDate;
     let totalPages;
     let feedbacks;
     const filterObj = {
@@ -61,15 +88,13 @@ export const getFeedbacksWithPagination = async (req, res) => {
     };
 
     if (startDate && endDate) {
-      targetDate = calcDate(null, startDate, endDate);
-    } else {
-      targetDate = calcDateWithMonthly();
-    }
+      let targetDate = calcDate(null, startDate, endDate);
 
-    filterObj.createdAt = {
-      $gte: targetDate.startDate,
-      $lte: targetDate.endDate,
-    };
+      filterObj.createdAt = {
+        $gte: targetDate.startDate,
+        $lte: targetDate.endDate,
+      };
+    }
 
     if (searchQuery && searchQuery.trim() !== "") {
       const regexSearchQuery = new RegExp(searchQuery, "i");
@@ -103,6 +128,21 @@ export const getFeedbacksWithPagination = async (req, res) => {
         const feedbackCount = await Feedback.countDocuments({
           student: { $in: studentsIds },
           ...filterObj,
+        });
+
+        feedbacks = await Feedback.find({
+          student: { $in: studentsIds },
+          ...filterObj,
+        })
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .populate("teacher student");
+
+        totalPages = Math.ceil(feedbackCount / limit);
+      } else if (from === "parent") {
+        const feedbackCount = await Feedback.countDocuments({
+          ...filterObj,
+          parentName: { $regex: regexSearchQuery },
         });
 
         feedbacks = await Feedback.find({
@@ -170,7 +210,7 @@ export const getFeedbacksForTeacher = async (req, res) => {
 
     const feedbacks = await Feedback.find(filterObj).populate("student");
 
-    console.log(feedbacks);
+    // console.log(feedbacks);
 
     res.status(200).json(feedbacks);
   } catch (err) {
@@ -229,6 +269,34 @@ export const updateFeedbackByStudent = async (feedback) => {
     }
   } catch (err) {
     console.log({ message: err.message });
+  }
+};
+
+export const updateFeedbackByParent = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const updatedFeedback = await Feedback.findByIdAndUpdate(id, req.body, {
+      new: true,
+    }).populate("student");
+
+    if (!updatedFeedback) {
+      return res.status(404).json({ key: "feedback-not-found" });
+    }
+
+    res.status(200).json({ feedback: updatedFeedback });
+  } catch (err) {
+    logger.error({
+      method: "PATCH",
+      status: 500,
+      message: err.message,
+      updateData: req.body,
+      feedbackId: id,
+      for: "UPDATE FEEDBACK BY TEACHER",
+      user: req.user,
+      functionName: updateFeedbackByTeacher.name,
+    });
+    res.status(500).json({ message: { error: err.message } });
   }
 };
 

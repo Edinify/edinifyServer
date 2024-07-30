@@ -7,7 +7,9 @@ import mongoose from "mongoose";
 import studentRoutes from "./routes/studentRoutes.js";
 import teacherRoutes from "./routes/teacherRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import workerRoutes from "./routes/workersRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
+import syllabusRoutes from "./routes/syllabusRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import lessonRoutes from "./routes/lessonRotes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
@@ -22,6 +24,7 @@ import financeRoutes from "./routes/financeRoutes.js";
 import fineRoutes from "./routes/fineRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
 import demoRoutes from "./routes/demoRoutes.js";
+import receiptRoutes from "./routes/receiptRoutes.js";
 // import updateButtonRoutes from "./routes/updateButtonRoutes.js";
 
 import {
@@ -34,6 +37,8 @@ import { getUnviewedLessons } from "./controllers/dashboardController.js";
 import cron from "node-cron";
 import logger from "./config/logger.js";
 import { Lesson } from "./models/lessonModel.js";
+import { Admin } from "./models/adminModel.js";
+import { ProfileImage } from "./models/profileImageModel.js";
 
 dotenv.config();
 const app = express();
@@ -56,7 +61,9 @@ app.use("/api/user/auth", authRoutes);
 app.use("/api/user/student", studentRoutes);
 app.use("/api/user/teacher", teacherRoutes);
 app.use("/api/user/admin", adminRoutes);
+app.use("/api/user/worker", workerRoutes);
 app.use("/api/course", courseRoutes);
+app.use("/api/syllabus", syllabusRoutes);
 app.use("/api/lesson", lessonRoutes);
 app.use("/api/notification", notificationRoutes);
 app.use("/api/salary", salaryRoutes);
@@ -70,17 +77,11 @@ app.use("/api/income", incomeRoutes);
 app.use("/api/finance", financeRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/demo", demoRoutes);
+app.use("/api/receipt", receiptRoutes);
 
 app.get("/", (req, res) => {
   res.send("salam");
 });
-// 
-// wbm.start().then(async () => {
-//   const phones = ['123456'];
-//   const message = 'Good Morning.';
-//   await wbm.send(phones, message);
-//   await wbm.end();
-// }).catch(err => // console.log(err));
 
 mongoose
   .connect(uri)
@@ -88,11 +89,6 @@ mongoose
     console.log("connected database");
     app.listen(port, async () => {
       console.log(`listen server at ${port}`);
-      // cron.schedule("* * * * *", () => {
-      //   console.log('salam')
-      //   createNotificationForBirthdayWithCron();
-      // deleteNotificationsForBirthday()
-      // });
     });
   })
-  .catch((err) =>  console.log(err));
+  .catch((err) => console.log(err));

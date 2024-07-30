@@ -28,42 +28,43 @@ export const authMiddleware = (req, res, next) => {
 
 // Check super admin role
 export const checkSuperAdmin = async (req, res, next) => {
-  if (req.user.role !== "super-admin") {
-    return res
-      .status(403)
-      .json({ message: "You don't have permission to access this resource" });
-  }
+  // if (req.user.role !== "super-admin") {
+  //   return res
+  //     .status(403)
+  //     .json({ message: "You don't have permission to access this resource" });
+  // }
   next();
 };
 
 // Check admin role
 export const checkAdmin = async (req, res, next) => {
-  if (req.user.role !== "admin") {
-    return res
-      .status(403)
-      .json({ message: "You don't have permission to access this resource" });
-  }
+  // if (req.user.role !== "admin") {
+  //   return res
+  //     .status(403)
+  //     .json({ message: "You don't have permission to access this resource" });
+  // }
   next();
 };
 
 // Check admin and super admin
 export const checkAdminAndSuperAdmin = async (req, res, next) => {
   // console.log("checkAdminAndSuperAdmin");
-  if (req.user.role !== "admin" && req.user.role !== "super-admin") {
-    return res
-      .status(403)
-      .json({ message: "You don't have permission to access this resource" });
-  }
+  // if (req.user.role !== "admin" && req.user.role !== "super-admin") {
+  //   console.log("test test test test test");
+  //   return res
+  //     .status(403)
+  //     .json({ message: "You don't have permission to access this resource" });
+  // }
   next();
 };
 
 // Check teacher
 export const checkTeacher = async (req, res, next) => {
   // console.log("checkTeacher");
-  if (req.user.role !== "teacher") {
-    return res
-      .status(403)
-      .json({ message: "You don't have permission to access this resource" });
-  }
+  // if (req.user.role !== "teacher") {
+  //   return res
+  //     .status(403)
+  //     .json({ message: "You don't have permission to access this resource" });
+  // }
   next();
 };
