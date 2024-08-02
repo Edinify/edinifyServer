@@ -1,12 +1,15 @@
 import mongoose from "mongoose";
 
 const Schema = mongoose.Schema;
-// 
+//
 const studentSchema = new Schema(
   {
     fullName: {
       type: String,
       required: true,
+    },
+    englishFullName: {
+      type: String,
     },
     motherName: {
       type: String,
